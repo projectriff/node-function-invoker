@@ -5,8 +5,15 @@
   "license": "Apache-2.0",
   "description": "node function invoker for riff",
   "private": true,
+  "scripts": {
+    "test": "jasmine"
+  },
   "dependencies": {
     "body-parser": "^1.18.2",
     "express": "^4.15.5"
+  },
+  "devDependencies": {
+    "jasmine": "^2.8.0",
+    "supertest": "^3.0.0"
   }
 }

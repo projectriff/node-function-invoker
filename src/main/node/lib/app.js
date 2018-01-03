@@ -1,3 +1,5 @@
+const logger = require('util').debuglog('riff');
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const Negotiator = require('negotiator');
@@ -21,7 +23,7 @@ function makeApp(fn) {
 
     app.post('/', asyncMiddleware(async (req, res) => {
         const resultx = await fn(req.body);
-        console.log("Result " + resultx);
+        logger('Result:', resultx);
 
         negotiator = new Negotiator(req);
 
@@ -38,6 +40,12 @@ function makeApp(fn) {
 
         res.status(200);
     }));
+
+    // handle errors
+    app.use((err, req, res, next) => {
+        logger('Error:', err);
+        res.status(500).end();
+    });
 
     return app;
 }

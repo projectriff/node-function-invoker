@@ -1,8 +1,17 @@
+const logger = require('util').debuglog('riff');
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const Negotiator = require('negotiator');
 
 const SUPPORTED_MEDIA_TYPES = ['text/plain', 'application/json' /*TODO add more*/]; // In preference order
+
+function asyncMiddleware(middleware) {
+    return (req, res, next) => {
+        // handles thrown errors from middleware
+        middleware(req, res, next).catch(err => next(err));
+    };
+}
 
 function makeApp(fn) {
     const app = express();
@@ -12,9 +21,9 @@ function makeApp(fn) {
     app.use('/', bodyParser.json({ strict: false }));           // Supports application/json by default
     app.use('/', bodyParser.urlencoded({ extended: false }));   // Supports application/x-www-form-urlencoded by default
 
-    app.post('/', function (req, res) {
-        var resultx = fn(req.body);
-        console.log("Result " + resultx);
+    app.post('/', asyncMiddleware(async (req, res) => {
+        const resultx = await fn(req.body);
+        logger('Result:', resultx);
 
         negotiator = new Negotiator(req);
 
@@ -30,6 +39,12 @@ function makeApp(fn) {
         }
 
         res.status(200);
+    }));
+
+    // handle errors
+    app.use((err, req, res, next) => {
+        logger('Error:', err);
+        res.status(500).end();
     });
 
     return app;

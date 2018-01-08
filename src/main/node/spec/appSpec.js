@@ -4,6 +4,60 @@ describe('app', () => {
     const makeApp = require('../lib/app');
     let app;
 
+    describe('when functions throw', () => {
+        beforeEach(() => {
+            app = makeApp(() => { throw new Error(); });
+        });
+
+        it('should respond with a 500', () => {
+            return request(app)
+                .post('/')
+                .expect(500);
+        });
+    });
+
+    describe('when async functions are invoked', () => {
+        beforeEach(() => {
+            app = makeApp(async name => `Hello ${name}!`);
+        });
+
+        it('should respond with the result', () => {
+            return request(app)
+                .post('/')
+                .accept('text/plain')
+                .type('text/plain')
+                .send('riff')
+                .expect(200)
+                .expect('content-type', /plain/)
+                .expect(res => {
+                    expect(res.text).toBe('Hello riff!');
+                });
+        });
+    });
+
+    describe('when functions return a Promise', () => {
+        beforeEach(() => {
+            app = makeApp(name => {
+                return new Promise(resolve => {
+                    resolve(`Hello ${name}!`);
+                });
+            });
+        });
+
+        it('should respond with the result', () => {
+            return request(app)
+                .post('/')
+                .accept('text/plain')
+                .type('text/plain')
+                .send('riff')
+                .expect(200)
+                .expect('content-type', /plain/)
+                .expect(res => {
+                    expect(res.text).toBe('Hello riff!');
+                });
+        });
+    });
+
     describe('when plain text is accepted', () => {
         beforeEach(() => {
             app = makeApp(name => `Hello ${name}!`);

@@ -29,16 +29,16 @@ function makeApp(fn) {
 
         switch (negotiator.mediaType(SUPPORTED_MEDIA_TYPES)) { // returns the most preferred Accept'ed type intersected with our list
             case 'application/json':
-                res.type("application/json").json(resultx);
+                res.json(resultx);
                 break;
             case 'text/plain':
                 // Force text/plain before calling send, as it defaults to html for strings
-                res.type("text/plain").send("" + resultx);
+                res.type('text/plain').send('' + resultx);
                 break;
-
+            default:
+                res.status(406).type('text/plain').send('' + resultx);
+                break;
         }
-
-        res.status(200);
     }));
 
     // handle errors

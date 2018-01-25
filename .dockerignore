@@ -1,2 +1,8 @@
-src/main/node/node_modules
-src/main/node/spec
+.dockerignore
+.git
+.gitignore
+.editorconfig
+build.sh
+Dockerfile
+node_modules
+spec

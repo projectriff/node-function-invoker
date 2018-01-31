@@ -1,8 +1,5 @@
-.dockerignore
-.git
-.gitignore
-.editorconfig
-build.sh
-Dockerfile
-node_modules
-spec
+*
+!server.js
+!package.json
+!package-lock.json
+!lib/

@@ -1,8 +1,0 @@
-.dockerignore
-.git
-.gitignore
-.editorconfig
-build.sh
-Dockerfile
-node_modules
-spec

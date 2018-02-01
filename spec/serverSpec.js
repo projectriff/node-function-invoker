@@ -6,7 +6,9 @@ const util = require('util');
 const waitForPort = util.promisify(require('wait-for-port'));
 
 const HOST = '127.0.0.1';
-const PORT = 8080
+const GRPC_PORT = 50051;
+const HTTP_PORT = 8080;
+
 
 const serverPath = path.join(__dirname, '..', 'server.js');
 
@@ -15,10 +17,16 @@ describe('server', () => {
         return childProcess.execFile('node', [serverPath], {
             env: Object.assign({}, process.env, {
                 HOST,
-                PORT,
+                GRPC_PORT,
+                HTTP_PORT,
                 FUNCTION_URI: path.join(__dirname, 'support', `${func}.js`)
             })
         });
+    }
+
+    async function waitForServer() {
+        await waitForPort(HOST, GRPC_PORT);
+        await waitForPort(HOST, HTTP_PORT);
     }
 
     it('runs the echo function', async () => {
@@ -28,10 +36,10 @@ describe('server', () => {
             server.on('exit', (code, status) => resolve(code));
         });
 
-        await waitForPort(HOST, PORT);
+        await waitForServer();
 
         await new Promise(resolve => {
-            request.post(`http://${HOST}:${PORT}/`)
+            request.post(`http://${HOST}:${HTTP_PORT}/`)
                 .accept('text/plain')
                 .type('text/plain')
                 .send('riff')
@@ -55,10 +63,10 @@ describe('server', () => {
             server.on('exit', (code, status) => resolve(code));
         });
 
-        await waitForPort(HOST, PORT);
+        await waitForServer();
 
         const { file, content } = await new Promise(resolve => {
-            request.post(`http://${HOST}:${PORT}/`)
+            request.post(`http://${HOST}:${HTTP_PORT}/`)
                 .accept('application/json')
                 .type('text/plain')
                 .send('riff')
@@ -111,7 +119,7 @@ describe('server', () => {
             server.on('exit', (code, status) => resolve(code));
         });
 
-        await waitForPort(HOST, PORT);
+        await waitForServer();
 
         server.kill('SIGINT');
         expect(await exitCode).toBe(2);
@@ -124,7 +132,7 @@ describe('server', () => {
             server.on('exit', (code, status) => resolve(code));
         });
 
-        await waitForPort(HOST, PORT);
+        await waitForServer();
 
         server.kill('SIGINT');
         expect(await exitCode).toBe(1);

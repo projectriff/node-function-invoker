@@ -1,7 +1,7 @@
 const request = require('supertest');
 
-describe('app', () => {
-    const makeApp = require('../lib/app');
+describe('http', () => {
+    const makeApp = require('../lib/http');
     let app;
 
     describe('when functions throw', () => {

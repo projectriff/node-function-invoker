@@ -14,6 +14,8 @@
   },
   "devDependencies": {
     "jasmine": "^2.8.0",
-    "supertest": "^3.0.0"
+    "superagent": "^3.8.2",
+    "supertest": "^3.0.0",
+    "wait-for-port": "0.0.2"
   }
 }

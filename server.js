@@ -5,8 +5,18 @@ const PORT = 8080;
 const fn = require(process.env.FUNCTION_URI);
 const app = require('./lib/app')(fn);
 
-const server = app.listen(PORT);
-console.log('Running on http://localhost:' + PORT);
+let server;
+
+(async function startup() {
+    if (typeof fn.$init === 'function') {
+        await fn.$init();
+    }
+    server = app.listen(PORT);
+    console.log('Running on http://localhost:' + PORT);
+})().catch(e => {
+    console.log('Startup error:', e);
+    process.exit(-1);
+});
 
 function shutdown() {
     console.log(`Server shutdown, ${((Date.now() - starttime) / 1000).toFixed(1)}s uptime`);
@@ -15,7 +25,17 @@ function shutdown() {
     setTimeout(() => process.exit(-1), 10e3);
 
     // gracefully exit
-    server.close(() => process.exit(0));
+    server.close(async () => {
+        if (typeof fn.$destroy === 'function') {
+            try {
+                await fn.$destroy();
+            } catch (e) {
+                console.log('Shutdown error:', e);
+                process.exit(-1);
+            }
+        }
+        process.exit(0)
+    });
 }
 
 process.on('SIGTERM', shutdown);

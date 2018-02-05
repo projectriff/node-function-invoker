@@ -9,13 +9,13 @@ let server;
     if (typeof fn.$init === 'function') {
         // wait 10s for the sever to start before killing it
         const timeout = setTimeout(() => {
-            console.log('Init timeout');
+            console.log('$init timeout');
             process.exit(1);
         }, 10e3);
         try {
             await fn.$init();
         } catch (e) {
-            console.log('Init error:', e);
+            console.log('$init error:', e);
             process.exit(2);
         }
         clearTimeout(timeout);
@@ -32,7 +32,7 @@ function shutdown() {
 
     // wait 10s for the sever to exit gracefully before killing it
     setTimeout(() => {
-        console.log('Destroy timeout');
+        console.log('$destroy timeout');
         process.exit(1);
     }, 10e3);
 
@@ -42,7 +42,7 @@ function shutdown() {
             try {
                 await fn.$destroy();
             } catch (e) {
-                console.log('Destroy error:', e);
+                console.log('$destroy error:', e);
                 process.exit(2);
             }
         }

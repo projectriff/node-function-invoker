@@ -1,0 +1,1 @@
+= Node Function Invoker image:https://ci.projectriff.io/api/v1/teams/main/pipelines/riff/jobs/build-node-function-invoker-container/badge[NodeJS Invoker, link=https://ci.projectriff.io/teams/main/pipelines/riff/jobs/build-node-function-invoker-container/builds/latest]

@@ -1,5 +1,5 @@
 {
-  "name": "node-function-invoker",
+  "name": "@projectriff/node-function-invoker",
   "version": "1.0.0",
   "author": "Eric Bottard",
   "license": "Apache-2.0",

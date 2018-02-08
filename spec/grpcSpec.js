@@ -329,6 +329,32 @@ describe('grpc', () => {
             call.end();
         });
 
+        it('should handle form urlencoded data', done => {
+            const call = client.call();
+            const onData = jasmine.createSpy('onData');
+            const onEnd = () => {
+                expect(fn).toHaveBeenCalledTimes(1);
+                expect(fn).toHaveBeenCalledWith({ name: 'project riff', email: 'riff@example.com' });
+
+                expect(onData).toHaveBeenCalledTimes(1);
+                const { headers, payload } = onData.calls.first().args[0];
+                expect(headers['Content-Type']).toEqual(headerValue('application/x-www-form-urlencoded'));
+                expect(payload).toEqual(Buffer.from('name=project%20riff&email=riff%40example.com'));
+
+                done();
+            };
+            call.on('data', onData);
+            call.on('end', onEnd);
+            call.write({
+                headers: {
+                    'Content-Type': headerValue('application/x-www-form-urlencoded'),
+                    Accept: headerValue('application/x-www-form-urlencoded')
+                },
+                payload: Buffer.from('name=project+riff&email=riff%40example.com')
+            });
+            call.end();
+        });
+
         it('should reject unsupported content types', done => {
             const call = client.call();
             const onData = jasmine.createSpy('onData');

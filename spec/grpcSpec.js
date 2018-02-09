@@ -1,4 +1,4 @@
-const { FunctionClient } = require('@projectriff/function-proto');
+const { FunctionInvokerClient, MessageBuilder } = require('@projectriff/function-proto');
 const grpc = require('grpc');
 const makeServer = require('../lib/grpc');
 
@@ -14,7 +14,7 @@ function makeLocalServer(fn) {
     server.bind(address, grpc.ServerCredentials.createInsecure());
     server.start();
 
-    const client = new FunctionClient(address, grpc.credentials.createInsecure());
+    const client = new FunctionInvokerClient(address, grpc.credentials.createInsecure());
 
     return { client, server };
 }
@@ -53,10 +53,7 @@ describe('grpc', () => {
             };
             call.on('data', onData);
             call.on('end', onEnd);
-            call.write({
-                headers: {},
-                payload: Buffer.from('riff')
-            });
+            call.write(new MessageBuilder().payload('riff').build());
             call.end();
         });
 
@@ -79,10 +76,7 @@ describe('grpc', () => {
             };
             call.on('data', onData);
             call.on('end', onEnd);
-            call.write({
-                headers: {},
-                payload: Buffer.from('riff')
-            });
+            call.write(new MessageBuilder().payload('riff').build());
             call.end();
         });
 
@@ -105,10 +99,7 @@ describe('grpc', () => {
             };
             call.on('data', onData);
             call.on('end', onEnd);
-            call.write({
-                headers: {},
-                payload: Buffer.from('riff')
-            });
+            call.write(new MessageBuilder().payload('riff').build());
             call.end();
         });
 
@@ -132,10 +123,7 @@ describe('grpc', () => {
             };
             call.on('data', onData);
             call.on('end', onEnd);
-            call.write({
-                headers: {},
-                payload: Buffer.from('riff')
-            });
+            call.write(new MessageBuilder().payload('riff').build());
             call.end();
         });
 
@@ -159,10 +147,7 @@ describe('grpc', () => {
             };
             call.on('data', onData);
             call.on('end', onEnd);
-            call.write({
-                headers: {},
-                payload: Buffer.from('riff')
-            });
+            call.write(new MessageBuilder().payload('riff').build());
             call.end();
         });
 
@@ -186,10 +171,7 @@ describe('grpc', () => {
             };
             call.on('data', onData);
             call.on('end', onEnd);
-            call.write({
-                headers: {},
-                payload: Buffer.from('riff')
-            });
+            call.write(new MessageBuilder().payload('riff').build());
             call.end();
         });
 
@@ -212,12 +194,12 @@ describe('grpc', () => {
             };
             call.on('data', onData);
             call.on('end', onEnd);
-            call.write({
-                headers: {
-                    correlationId: headerValue('12345')
-                },
-                payload: Buffer.from('riff')
-            });
+            call.write(
+                new MessageBuilder()
+                    .addHeader('correlationId', '12345')
+                    .payload('riff')
+                    .build()
+            );
             call.end();
         });
     });
@@ -244,10 +226,7 @@ describe('grpc', () => {
             };
             call.on('data', onData);
             call.on('end', onEnd);
-            call.write({
-                headers: {},
-                payload: Buffer.from('riff')
-            });
+            call.write(new MessageBuilder().payload('riff').build());
             call.end();
         });
 
@@ -267,13 +246,13 @@ describe('grpc', () => {
             };
             call.on('data', onData);
             call.on('end', onEnd);
-            call.write({
-                headers: {
-                    'Content-Type': headerValue('text/plain'),
-                    Accept: headerValue('text/plain')
-                },
-                payload: Buffer.from('riff')
-            });
+            call.write(
+                new MessageBuilder()
+                    .addHeader('Accept', 'text/plain')
+                    .addHeader('Content-Type', 'text/plain')
+                    .payload('riff')
+                    .build()
+            );
             call.end();
         });
 
@@ -293,13 +272,13 @@ describe('grpc', () => {
             };
             call.on('data', onData);
             call.on('end', onEnd);
-            call.write({
-                headers: {
-                    'Content-Type': headerValue('application/json'),
-                    Accept: headerValue('application/json')
-                },
-                payload: Buffer.from('"riff"')
-            });
+            call.write(
+                new MessageBuilder()
+                    .addHeader('Accept', 'application/json')
+                    .addHeader('Content-Type', 'application/json')
+                    .payload('"riff"')
+                    .build()
+            );
             call.end();
         });
 
@@ -319,13 +298,13 @@ describe('grpc', () => {
             };
             call.on('data', onData);
             call.on('end', onEnd);
-            call.write({
-                headers: {
-                    'Content-Type': headerValue('application/octet-stream'),
-                    Accept: headerValue('application/octet-stream')
-                },
-                payload: Buffer.from([0x72, 0x69, 0x66, 0x66])
-            });
+            call.write(
+                new MessageBuilder()
+                    .addHeader('Accept', 'application/octet-stream')
+                    .addHeader('Content-Type', 'application/octet-stream')
+                    .payload(Buffer.from([0x72, 0x69, 0x66, 0x66]))
+                    .build()
+            );
             call.end();
         });
 
@@ -345,13 +324,13 @@ describe('grpc', () => {
             };
             call.on('data', onData);
             call.on('end', onEnd);
-            call.write({
-                headers: {
-                    'Content-Type': headerValue('application/x-www-form-urlencoded'),
-                    Accept: headerValue('application/x-www-form-urlencoded')
-                },
-                payload: Buffer.from('name=project+riff&email=riff%40example.com')
-            });
+            call.write(
+                new MessageBuilder()
+                    .addHeader('Accept', 'application/x-www-form-urlencoded')
+                    .addHeader('Content-Type', 'application/x-www-form-urlencoded')
+                    .payload('name=project+riff&email=riff%40example.com')
+                    .build()
+            );
             call.end();
         });
 
@@ -370,12 +349,12 @@ describe('grpc', () => {
             };
             call.on('data', onData);
             call.on('end', onEnd);
-            call.write({
-                headers: {
-                    'Content-Type': headerValue('application/vnd.projectriff.bogus')
-                },
-                payload: Buffer.from('riff')
-            });
+            call.write(
+                new MessageBuilder()
+                    .addHeader('Content-Type', 'application/vnd.projectriff.bogus')
+                    .payload('riff')
+                    .build()
+            );
             call.end();
         });
 
@@ -394,12 +373,12 @@ describe('grpc', () => {
             };
             call.on('data', onData);
             call.on('end', onEnd);
-            call.write({
-                headers: {
-                    Accept: headerValue('application/vnd.projectriff.bogus')
-                },
-                payload: Buffer.from('riff')
-            });
+            call.write(
+                new MessageBuilder()
+                    .addHeader('Accept', 'application/vnd.projectriff.bogus')
+                    .payload('riff')
+                    .build()
+            );
             call.end();
         });
     });

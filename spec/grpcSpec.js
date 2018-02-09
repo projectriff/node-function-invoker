@@ -1,3 +1,4 @@
+const { FunctionClient } = require('@projectriff/function-proto');
 const grpc = require('grpc');
 const makeServer = require('../lib/grpc');
 
@@ -13,8 +14,7 @@ function makeLocalServer(fn) {
     server.bind(address, grpc.ServerCredentials.createInsecure());
     server.start();
 
-    const client = new makeServer.proto.function.MessageFunction(
-        address, grpc.credentials.createInsecure());
+    const client = new FunctionClient(address, grpc.credentials.createInsecure());
 
     return { client, server };
 }

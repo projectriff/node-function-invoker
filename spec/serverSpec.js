@@ -21,7 +21,7 @@ const request = require('superagent');
 const util = require('util');
 const waitForPort = util.promisify(require('wait-for-port'));
 
-const HOST = '127.0.0.1';
+const HOST = process.env.HOST || '127.0.0.1';
 const GRPC_PORT = 50051;
 const HTTP_PORT = 8080;
 

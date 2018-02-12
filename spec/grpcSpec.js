@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-const { FunctionInvokerClient, MessageBuilder } = require('@projectriff/function-proto');
+const { FunctionInvokerClient, MessageBuilder, MessageHeaders } = require('@projectriff/function-proto');
 const grpc = require('grpc');
 const makeServer = require('../lib/grpc');
 
+const HOST = process.env.HOST || '127.0.0.1';
 let port = 50051;
 let correlationId = 0;
 
@@ -25,7 +26,7 @@ function makeLocalServer(fn) {
     const server = makeServer(fn);
 
     // TODO figure out why resuing the same port fails after three test cases
-    const address = `localhost:${port++}`;
+    const address = `${HOST}:${port++}`;
 
     server.bind(address, grpc.ServerCredentials.createInsecure());
     server.start();
@@ -35,9 +36,10 @@ function makeLocalServer(fn) {
     return { client, server };
 }
 
-function headerValue(value) {
+function parseMessage(message) {
     return {
-        values: [value]
+        headers: MessageHeaders.fromObject(message.headers),
+        payload: message.payload
     };
 }
 
@@ -61,8 +63,8 @@ describe('grpc', () => {
                 expect(fn).toHaveBeenCalledWith('riff');
 
                 expect(onData).toHaveBeenCalledTimes(1);
-                const { headers, payload } = onData.calls.first().args[0];
-                expect(headers['Content-Type']).toEqual(headerValue('text/plain'));
+                const { headers, payload } = parseMessage(onData.calls.first().args[0]);
+                expect(headers.getValues('Content-Type')).toEqual(['text/plain']);
                 expect(payload.toString()).toBe('Hello riff!');
 
                 done();
@@ -84,8 +86,8 @@ describe('grpc', () => {
                 expect(fn).toHaveBeenCalledWith('riff');
 
                 expect(onData).toHaveBeenCalledTimes(1);
-                const { headers, payload } = onData.calls.first().args[0];
-                expect(headers['Content-Type']).toEqual(headerValue('text/plain'));
+                const { headers, payload } = parseMessage(onData.calls.first().args[0]);
+                expect(headers.getValues('Content-Type')).toEqual(['text/plain']);
                 expect(payload.toString()).toBe('Hello riff!');
 
                 done();
@@ -107,8 +109,8 @@ describe('grpc', () => {
                 expect(fn).toHaveBeenCalledWith('riff');
 
                 expect(onData).toHaveBeenCalledTimes(1);
-                const { headers, payload } = onData.calls.first().args[0];
-                expect(headers['Content-Type']).toEqual(headerValue('text/plain'));
+                const { headers, payload } = parseMessage(onData.calls.first().args[0]);
+                expect(headers.getValues('Content-Type')).toEqual(['text/plain']);
                 expect(payload.toString()).toBe('Hello riff!');
 
                 done();
@@ -130,8 +132,8 @@ describe('grpc', () => {
                 expect(fn).toHaveBeenCalledWith('riff');
 
                 expect(onData).toHaveBeenCalledTimes(1);
-                const { headers, payload } = onData.calls.first().args[0];
-                expect(headers.error).toEqual(headerValue('error-server-function-invocation'));
+                const { headers, payload } = parseMessage(onData.calls.first().args[0]);
+                expect(headers.getValues('error')).toEqual(['error-server-function-invocation']);
                 expect(payload.toString()).toMatch('Error: I always throw\n   ');
 
                 done();
@@ -153,8 +155,8 @@ describe('grpc', () => {
                 expect(fn).toHaveBeenCalledWith('riff');
 
                 expect(onData).toHaveBeenCalledTimes(1);
-                const { headers, payload } = onData.calls.first().args[0];
-                expect(headers.error).toEqual(headerValue('error-server-function-invocation'));
+                const { headers, payload } = parseMessage(onData.calls.first().args[0]);
+                expect(headers.getValues('error')).toEqual(['error-server-function-invocation']);
                 expect(payload.toString()).toMatch('Error: I always reject\n    ');
 
                 done();
@@ -176,8 +178,8 @@ describe('grpc', () => {
                 expect(fn).toHaveBeenCalledWith('riff');
 
                 expect(onData).toHaveBeenCalledTimes(1);
-                const { headers, payload } = onData.calls.first().args[0];
-                expect(headers.error).toEqual(headerValue('error-server-function-invocation'));
+                const { headers, payload } = parseMessage(onData.calls.first().args[0]);
+                expect(headers.getValues('error')).toEqual(['error-server-function-invocation']);
                 expect(payload.toString()).toBe('an error, but not an Error');
 
                 done();
@@ -199,8 +201,8 @@ describe('grpc', () => {
                 expect(fn).toHaveBeenCalledWith('riff');
 
                 expect(onData).toHaveBeenCalledTimes(1);
-                const { headers, payload } = onData.calls.first().args[0];
-                expect(headers.correlationId).toEqual(headerValue('12345'));
+                const { headers, payload } = parseMessage(onData.calls.first().args[0]);
+                expect(headers.getValues('correlationId')).toEqual(['12345']);
                 expect(payload.toString()).toEqual('riff');
 
                 done();
@@ -231,8 +233,8 @@ describe('grpc', () => {
                 expect(fn).toHaveBeenCalledWith('riff');
 
                 expect(onData).toHaveBeenCalledTimes(1);
-                const { headers, payload } = onData.calls.first().args[0];
-                expect(headers['Content-Type']).toEqual(headerValue('text/plain'));
+                const { headers, payload } = parseMessage(onData.calls.first().args[0]);
+                expect(headers.getValues('Content-Type')).toEqual(['text/plain']);
                 expect(payload.toString()).toBe('riff');
 
                 done();
@@ -251,8 +253,8 @@ describe('grpc', () => {
                 expect(fn).toHaveBeenCalledWith('riff');
 
                 expect(onData).toHaveBeenCalledTimes(1);
-                const { headers, payload } = onData.calls.first().args[0];
-                expect(headers['Content-Type']).toEqual(headerValue('text/plain'));
+                const { headers, payload } = parseMessage(onData.calls.first().args[0]);
+                expect(headers.getValues('Content-Type')).toEqual(['text/plain']);
                 expect(payload.toString()).toBe('riff');
 
                 done();
@@ -277,8 +279,8 @@ describe('grpc', () => {
                 expect(fn).toHaveBeenCalledWith('riff');
 
                 expect(onData).toHaveBeenCalledTimes(1);
-                const { headers, payload } = onData.calls.first().args[0];
-                expect(headers['Content-Type']).toEqual(headerValue('application/json'));
+                const { headers, payload } = parseMessage(onData.calls.first().args[0]);
+                expect(headers.getValues('Content-Type')).toEqual(['application/json']);
                 expect(payload.toString()).toBe('"riff"');
 
                 done();
@@ -303,8 +305,8 @@ describe('grpc', () => {
                 expect(fn).toHaveBeenCalledWith(Buffer.from([0x72, 0x69, 0x66, 0x66]));
 
                 expect(onData).toHaveBeenCalledTimes(1);
-                const { headers, payload } = onData.calls.first().args[0];
-                expect(headers['Content-Type']).toEqual(headerValue('application/octet-stream'));
+                const { headers, payload } = parseMessage(onData.calls.first().args[0]);
+                expect(headers.getValues('Content-Type')).toEqual(['application/octet-stream']);
                 expect(payload).toEqual(Buffer.from([0x72, 0x69, 0x66, 0x66]));
 
                 done();
@@ -329,8 +331,8 @@ describe('grpc', () => {
                 expect(fn).toHaveBeenCalledWith({ name: 'project riff', email: 'riff@example.com' });
 
                 expect(onData).toHaveBeenCalledTimes(1);
-                const { headers, payload } = onData.calls.first().args[0];
-                expect(headers['Content-Type']).toEqual(headerValue('application/x-www-form-urlencoded'));
+                const { headers, payload } = parseMessage(onData.calls.first().args[0]);
+                expect(headers.getValues('Content-Type')).toEqual(['application/x-www-form-urlencoded']);
                 expect(payload).toEqual(Buffer.from('name=project%20riff&email=riff%40example.com'));
 
                 done();
@@ -354,8 +356,8 @@ describe('grpc', () => {
                 expect(fn).not.toHaveBeenCalled();
 
                 expect(onData).toHaveBeenCalledTimes(1);
-                const { headers, payload } = onData.calls.first().args[0];
-                expect(headers.error).toEqual(headerValue('error-client-content-type-unsupported'));
+                const { headers, payload } = parseMessage(onData.calls.first().args[0]);
+                expect(headers.getValues('error')).toEqual(['error-client-content-type-unsupported']);
                 expect(payload).toEqual(Buffer.from([]));
 
                 done();
@@ -378,8 +380,8 @@ describe('grpc', () => {
                 expect(fn).not.toHaveBeenCalled();
 
                 expect(onData).toHaveBeenCalledTimes(1);
-                const { headers, payload } = onData.calls.first().args[0];
-                expect(headers.error).toEqual(headerValue('error-client-accept-type-unsupported'));
+                const { headers, payload } = parseMessage(onData.calls.first().args[0]);
+                expect(headers.getValues('error')).toEqual(['error-client-accept-type-unsupported']);
                 expect(payload).toEqual(Buffer.from([]));
 
                 done();

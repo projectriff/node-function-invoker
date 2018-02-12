@@ -116,7 +116,6 @@ describe('grpc', () => {
                 expect(onData).toHaveBeenCalledTimes(1);
                 const { headers, payload } = onData.calls.first().args[0];
                 expect(headers.error).toEqual(headerValue('error-server-function-invocation'));
-                // TODO define error payload
                 expect(payload.toString()).toMatch('Error: I always throw\n   ');
 
                 done();
@@ -140,7 +139,6 @@ describe('grpc', () => {
                 expect(onData).toHaveBeenCalledTimes(1);
                 const { headers, payload } = onData.calls.first().args[0];
                 expect(headers.error).toEqual(headerValue('error-server-function-invocation'));
-                // TODO define error payload
                 expect(payload.toString()).toMatch('Error: I always reject\n    ');
 
                 done();
@@ -164,7 +162,6 @@ describe('grpc', () => {
                 expect(onData).toHaveBeenCalledTimes(1);
                 const { headers, payload } = onData.calls.first().args[0];
                 expect(headers.error).toEqual(headerValue('error-server-function-invocation'));
-                // TODO define error payload
                 expect(payload.toString()).toBe('an error, but not an Error');
 
                 done();

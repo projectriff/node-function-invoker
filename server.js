@@ -1,11 +1,30 @@
-const { FUNCTION_URI, HOST, PORT } = process.env;
+/*
+ * Copyright 2017-2018 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+const { FUNCTION_URI, HOST, HTTP_PORT, GRPC_PORT } = process.env;
 
 const fn = require(FUNCTION_URI);
-const app = require('./lib/app')(fn);
 
-let server;
+let httpServer, grpcServer;
 
-(async function startup() {
+console.log(`Node started in ${process.uptime() * 1000}ms`);
+
+// handle startup
+
+async function init() {
     if (typeof fn.$init === 'function') {
         // wait 10s for the sever to start before killing it
         const timeout = setTimeout(() => {
@@ -20,12 +39,55 @@ let server;
         }
         clearTimeout(timeout);
     }
-    server = app.listen(PORT, HOST);
-    console.log(`Running on http://${HOST === '0.0.0.0' ? 'localhost' : HOST}:${PORT}`);
-})().catch(e => {
+}
+
+function loadGRPC() {
+    const grpc = require('grpc');
+    const server = require('./lib/grpc')(fn);
+
+    return () => {
+        server.bind(`${HOST}:${GRPC_PORT}`, grpc.ServerCredentials.createInsecure());
+        server.start();
+        console.log(`gRPC running on ${HOST === '0.0.0.0' ? 'localhost' : HOST}:${GRPC_PORT}`);
+        return server;
+    };
+}
+
+function loadHTTP() {
+    const app = require('./lib/http')(fn);
+
+    return () => {
+        const server = app.listen(HTTP_PORT, HOST);
+        console.log(`HTTP running on http://${HOST === '0.0.0.0' ? 'localhost' : HOST}:${HTTP_PORT}`);
+        return server;
+    };
+}
+
+async function startup() {
+    // start initialization
+    const initPromise = init();
+
+    // load gRPC and HTTP while function is initializing
+    const bindGRPC = time(loadGRPC, ms => { console.log(`gRPC loaded in ${ms}ms`); });
+    const bindHTTP = time(loadHTTP, ms => { console.log(`HTTP loaded in ${ms}ms`); });
+
+    // wait for function to finish initializing
+    await initPromise;
+
+    // bind gRPC and HTTP servers
+    grpcServer = bindGRPC()
+    httpServer = bindHTTP();
+};
+
+startup().then(() => {
+    console.log(`Function invoker started in ${Math.floor(process.uptime() * 1000)}ms`);
+}, e => {
     console.log('Startup error:', e);
     process.exit(-1);
-});
+});;
+
+
+// handle shutdown
 
 function shutdown() {
     console.log(`Server shutdown, ${process.uptime().toFixed(1)}s uptime`);
@@ -36,8 +98,11 @@ function shutdown() {
         process.exit(1);
     }, 10e3);
 
-    // gracefully exit
-    server.close(async () => {
+    // gracefully exit HTTP and gRPC servers
+    Promise.all([
+        new Promise(resolve => grpcServer.tryShutdown(resolve)),
+        new Promise(resolve => httpServer.close(resolve))
+    ]).then(async () => {
         if (typeof fn.$destroy === 'function') {
             try {
                 await fn.$destroy();
@@ -52,3 +117,15 @@ function shutdown() {
 
 process.on('SIGTERM', shutdown);
 process.on('SIGINT', shutdown);
+
+
+// helpers
+
+function time(work, log) {
+    const startTime = Date.now();
+    try {
+        return work();
+    } finally {
+        log(Date.now() - startTime);
+    }
+}

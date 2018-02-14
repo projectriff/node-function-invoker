@@ -18,12 +18,12 @@ const { FUNCTION_URI, HOST, HTTP_PORT, GRPC_PORT } = process.env;
 
 const fn = require(FUNCTION_URI);
 
-let httpServer, grpcServer;
+let httpServer;
+let grpcServer;
 
 console.log(`Node started in ${process.uptime() * 1000}ms`);
 
 // handle startup
-
 async function init() {
     if (typeof fn.$init === 'function') {
         // wait 10s for the sever to start before killing it
@@ -77,14 +77,14 @@ async function startup() {
     // bind gRPC and HTTP servers
     grpcServer = bindGRPC()
     httpServer = bindHTTP();
-};
+}
 
 startup().then(() => {
     console.log(`Function invoker started in ${Math.floor(process.uptime() * 1000)}ms`);
 }, e => {
     console.log('Startup error:', e);
     process.exit(-1);
-});;
+});
 
 
 // handle shutdown

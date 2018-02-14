@@ -25,7 +25,6 @@ const HOST = process.env.HOST || '127.0.0.1';
 const GRPC_PORT = 50051;
 const HTTP_PORT = 8080;
 
-
 const serverPath = path.join(__dirname, '..', 'server.js');
 
 describe('server', () => {
@@ -49,12 +48,12 @@ describe('server', () => {
         const server = createServerProcess('echo');
 
         const exitCode = new Promise(resolve => {
-            server.on('exit', (code, status) => resolve(code));
+            server.on('exit', resolve);
         });
 
         await waitForServer();
 
-        await new Promise(resolve => {
+        await new Promise((resolve, reject) => {
             request.post(`http://${HOST}:${HTTP_PORT}/`)
                 .accept('text/plain')
                 .type('text/plain')
@@ -76,12 +75,12 @@ describe('server', () => {
         const server = createServerProcess('lifecycle');
 
         const exitCode = new Promise(resolve => {
-            server.on('exit', (code, status) => resolve(code));
+            server.on('exit', resolve);
         });
 
         await waitForServer();
 
-        const { file, content } = await new Promise(resolve => {
+        const { file, content } = await new Promise((resolve, reject) => {
             request.post(`http://${HOST}:${HTTP_PORT}/`)
                 .accept('application/json')
                 .type('text/plain')
@@ -112,7 +111,7 @@ describe('server', () => {
         const server = createServerProcess('init-throws');
 
         const exitCode = new Promise(resolve => {
-            server.on('exit', (code, status) => resolve(code));
+            server.on('exit', resolve);
         });
 
         expect(await exitCode).toBe(2);
@@ -122,7 +121,7 @@ describe('server', () => {
         const server = createServerProcess('init-timeout');
 
         const exitCode = new Promise(resolve => {
-            server.on('exit', (code, status) => resolve(code));
+            server.on('exit', resolve);
         });
 
         expect(await exitCode).toBe(1);
@@ -132,7 +131,7 @@ describe('server', () => {
         const server = createServerProcess('destroy-throws');
 
         const exitCode = new Promise(resolve => {
-            server.on('exit', (code, status) => resolve(code));
+            server.on('exit', resolve);
         });
 
         await waitForServer();
@@ -145,7 +144,7 @@ describe('server', () => {
         const server = createServerProcess('destroy-timeout');
 
         const exitCode = new Promise(resolve => {
-            server.on('exit', (code, status) => resolve(code));
+            server.on('exit', resolve);
         });
 
         await waitForServer();

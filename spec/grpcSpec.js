@@ -20,7 +20,6 @@ const makeServer = require('../lib/grpc');
 
 const HOST = process.env.HOST || '127.0.0.1';
 let port = 50051;
-let correlationId = 0;
 
 function makeLocalServer(fn) {
     const server = makeServer(fn);

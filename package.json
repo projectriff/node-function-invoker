@@ -6,7 +6,7 @@
   "description": "node function invoker for riff",
   "private": true,
   "scripts": {
-    "test": "jasmine"
+    "test": "eslint . && jasmine"
   },
   "dependencies": {
     "@projectriff/function-proto": "0.0.4-snapshot-3",
@@ -16,6 +16,8 @@
     "negotiator": "^0.6.1"
   },
   "devDependencies": {
+    "eslint": "^4.17.0",
+    "eslint-plugin-jasmine": "^2.9.2",
     "jasmine": "^2.8.0",
     "superagent": "^3.8.2",
     "supertest": "^3.0.0",

@@ -1,73 +1,70 @@
-= Node Function Invoker image:https://ci.projectriff.io/api/v1/teams/main/pipelines/riff/jobs/build-node-function-invoker-container/badge[NodeJS Invoker, link=https://ci.projectriff.io/teams/main/pipelines/riff/jobs/build-node-function-invoker-container/builds/latest]
+# Node Function Invoker [![CI Status](https://ci.projectriff.io/api/v1/teams/main/pipelines/riff/jobs/build-node-function-invoker-container/badge)](https://ci.projectriff.io/teams/main/pipelines/riff/jobs/build-node-function-invoker-container/builds/latest)
 
-== Purpose
+## Purpose
 The *node function invoker* provides a Docker base layer for a function consisting of a single NodeJS module.
 It accepts gRPC requests, invokes the command for each request in the input stream, and sends the command's output to the stream of gRPC responses.
 
-== Development
-=== Prerequisites
+## Development
+
+### Prerequisites
+
 The following tools are required to build this project:
 
 - `node` 8 (only for tests)
 - Docker
 
-=== Get the source
-[source, bash]
-----
+### Get the source
+
+```sh
 cd $RIFF_HOME
 git clone -o upstream https://github.com/projectriff/node-function-invoker
-----
+```
 
 * To build the Docker base layer:
-+
-[source, bash]
-----
-./build.sh
-----
-This assumes that your docker client is correctly configured to target the daemon where you want the image built.
+  ```sh
+  ./build.sh
+  ```
+
+  This assumes that your docker client is correctly configured to target the daemon where you want the image built.
 
 * To run tests:
-+
-[source, bash]
-----
-npm test
-----
+  ```sh
+  npm test
+  ```
 
-== Functions
+## Functions
 
 At runtime, the node function invoker will `require()` the target function module.
 This module must export the function to invoke.
 
-[source,javascript]
-----
+```js
 // square
 module.exports = x => x ** 2;
-----
+```
 
 The first argument is the triggering message's payload and the returned value is the resulting message's payload.
 
-=== Async
+### Async
 
 Asynchronous work can be completed by defining either an `async function` or by returning a `Promise`.
 
-[source,javascript]
-----
+```js
 // async
 module.exports = async x => x ** 2;
 
 // promise
 module.exports = x => Promise.resolve(x ** 2);
-----
+```
 
-=== Lifecycle
+### Lifecycle
 
 Functions that communicate with external services, like a database, can use the `$init` and `$destroy` lifecycle hooks on the function.
 These methods are invoked once per function invoker instance, whereas the target function may be invoked multiple times within a single function invoker instance.
+
 The `$init` method is guarenteed to finish before the main function is invoked.
 The `$destroy` method is guarenteed to be invoked after all of the main functions are finsished.
 
-[source,javascript]
-----
+```js
 let client;
 
 // function
@@ -86,7 +83,7 @@ module.exports.$init = async () => {
 module.exports.$destroy = async () => {
     await client.quit();
 };
-----
+```
 
 The lifecycle methods are optional, and should only be implemented when needed.
 The hooks may be either traditional or async functions.

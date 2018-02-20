@@ -348,6 +348,58 @@ describe('grpc', () => {
             call.end();
         });
 
+        it('should handle a content-type charset', done => {
+            const call = client.call();
+            const onData = jasmine.createSpy('onData');
+            const onEnd = () => {
+                expect(fn).toHaveBeenCalledTimes(1);
+                expect(fn).toHaveBeenCalledWith('riff');
+
+                expect(onData).toHaveBeenCalledTimes(1);
+                const { headers, payload } = parseMessage(onData.calls.first().args[0]);
+                expect(headers.getValues('Content-Type')).toEqual(['text/plain']);
+                expect(payload.toString()).toBe('riff');
+
+                done();
+            };
+            call.on('data', onData);
+            call.on('end', onEnd);
+            call.write(
+                new MessageBuilder()
+                    .addHeader('Accept', 'text/plain')
+                    .addHeader('Content-Type', 'text/plain; charset=utf-8')
+                    .payload('riff')
+                    .build()
+            );
+            call.end();
+        });
+
+        it('should handle compound accept types', done => {
+            const call = client.call();
+            const onData = jasmine.createSpy('onData');
+            const onEnd = () => {
+                expect(fn).toHaveBeenCalledTimes(1);
+                expect(fn).toHaveBeenCalledWith('riff');
+
+                expect(onData).toHaveBeenCalledTimes(1);
+                const { headers, payload } = parseMessage(onData.calls.first().args[0]);
+                expect(headers.getValues('Content-Type')).toEqual(['text/plain']);
+                expect(payload.toString()).toBe('riff');
+
+                done();
+            };
+            call.on('data', onData);
+            call.on('end', onEnd);
+            call.write(
+                new MessageBuilder()
+                    .addHeader('Accept', 'application/json;q=0.5, text/plain')
+                    .addHeader('Content-Type', 'text/plain')
+                    .payload('riff')
+                    .build()
+            );
+            call.end();
+        });
+
         it('should reject unsupported content types', done => {
             const call = client.call();
             const onData = jasmine.createSpy('onData');

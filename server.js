@@ -14,10 +14,14 @@
  * limitations under the License.
  */
 
-const { FUNCTION_URI, HOST, GRPC_PORT } = process.env;
+const { FUNCTION_URI, HOST, GRPC_PORT, INTERACTION_MODEL } = process.env;
+const INTERACTION_MODEL_STREAMING = 'streaming';
+const INTERACTION_MODEL_REQUEST_REPLY = 'request-reply';
 
 const fn = require(FUNCTION_URI);
 
+// TODO if possible, load from k8s resource config
+const interactionModel = INTERACTION_MODEL === INTERACTION_MODEL_STREAMING ? INTERACTION_MODEL_STREAMING : INTERACTION_MODEL_REQUEST_REPLY;
 let grpcServer;
 
 console.log(`Node started in ${process.uptime() * 1000}ms`);
@@ -42,7 +46,7 @@ async function init() {
 
 function loadGRPC() {
     const grpc = require('grpc');
-    const server = require('./lib/grpc')(fn);
+    const server = require('./lib/grpc')(fn, interactionModel);
 
     return () => {
         server.bind(`${HOST}:${GRPC_PORT}`, grpc.ServerCredentials.createInsecure());
@@ -53,6 +57,8 @@ function loadGRPC() {
 }
 
 async function startup() {
+    console.log(`Server starting in ${interactionModel} interaction model`, INTERACTION_MODEL);
+
     // start initialization
     const initPromise = init();
 

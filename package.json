@@ -6,12 +6,15 @@
   "description": "node function invoker for riff",
   "private": true,
   "scripts": {
-    "test": "eslint . && jasmine"
+    "lint": "eslint .",
+    "test": "npm run lint && npm run unit",
+    "unit": "jasmine"
   },
   "dependencies": {
     "@projectriff/function-proto": "0.0.4",
     "grpc": "^1.8.4",
-    "negotiator": "^0.6.1"
+    "negotiator": "^0.6.1",
+    "promise-streams": "^2.1.1"
   },
   "devDependencies": {
     "eslint": "^4.17.0",

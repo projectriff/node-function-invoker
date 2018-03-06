@@ -1,2 +1,15 @@
 language: node_js
 node_js: 8
+matrix:
+  include:
+    - stage: test
+    - stage: publish
+      sudo: required
+      services:
+      - docker
+      install: true
+      script: ./.travis.docker-push.sh
+stages:
+  - test
+  - name: publish
+    if: branch = master AND type = push

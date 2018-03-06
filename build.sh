@@ -1,3 +1,6 @@
 #!/bin/bash
 
-docker build . -t projectriff/node-function-invoker:0.0.5-snapshot
+version=${1:-`cat package.json | jq -r '.version'`}
+
+docker build . -t "projectriff/node-function-invoker:latest"
+docker tag "projectriff/node-function-invoker:latest" "projectriff/node-function-invoker:${version}"

@@ -1,4 +1,4 @@
-# Node Function Invoker [![CI Status](https://ci.projectriff.io/api/v1/teams/main/pipelines/riff/jobs/build-node-function-invoker-container/badge)](https://ci.projectriff.io/teams/main/pipelines/riff/jobs/build-node-function-invoker-container/builds/latest)
+# Node Function Invoker [![Build Status](https://travis-ci.org/projectriff/node-function-invoker.svg?branch=master)](https://travis-ci.org/projectriff/node-function-invoker)
 
 ## Purpose
 The *node function invoker* provides a Docker base layer for a function consisting of a single NodeJS module.

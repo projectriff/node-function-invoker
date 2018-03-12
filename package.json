@@ -10,8 +10,6 @@
   },
   "dependencies": {
     "@projectriff/function-proto": "0.0.4",
-    "body-parser": "^1.18.2",
-    "express": "^4.15.5",
     "grpc": "^1.8.4",
     "negotiator": "^0.6.1"
   },
@@ -19,8 +17,6 @@
     "eslint": "^4.17.0",
     "eslint-plugin-jasmine": "^2.9.2",
     "jasmine": "^2.8.0",
-    "superagent": "^3.8.2",
-    "supertest": "^3.0.0",
     "wait-for-port": "0.0.2"
   }
 }

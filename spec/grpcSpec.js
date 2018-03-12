@@ -25,7 +25,7 @@ function makeLocalServer(fn) {
     const server = makeServer(fn);
 
     // TODO figure out why resuing the same port fails after three test cases
-    const address = `${HOST}:${port++}`;
+    const address = `${HOST}:${++port}`;
 
     server.bind(address, grpc.ServerCredentials.createInsecure());
     server.start();

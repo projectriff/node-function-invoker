@@ -17,35 +17,49 @@
 const childProcess = require('child_process');
 const fs = require('fs');
 const path = require('path');
-const request = require('superagent');
 const util = require('util');
 const waitForPort = util.promisify(require('wait-for-port'));
+const { FunctionInvokerClient, MessageBuilder, MessageHeaders } = require('@projectriff/function-proto');
+const grpc = require('grpc');
 
 const HOST = process.env.HOST || '127.0.0.1';
 const GRPC_PORT = 50051;
-const HTTP_PORT = 8080;
 
 const serverPath = path.join(__dirname, '..', 'server.js');
 
 describe('server', () => {
-    function createServerProcess(func) {
+    function createServerProcess(func, stdio = 'ignore') {
         return childProcess.execFile('node', [serverPath], {
             env: Object.assign({}, process.env, {
                 HOST,
                 GRPC_PORT,
-                HTTP_PORT,
                 FUNCTION_URI: path.join(__dirname, 'support', `${func}.js`)
-            })
+            }),
+            stdio
         });
     }
 
     async function waitForServer() {
         await waitForPort(HOST, GRPC_PORT);
-        await waitForPort(HOST, HTTP_PORT);
+    }
+
+    function requestReplyCall(request) {
+        return new Promise(resolve => {
+            const client = new FunctionInvokerClient(`${HOST}:${GRPC_PORT}`, grpc.credentials.createInsecure());
+            const call = client.call();
+            call.on('data', message => {
+                resolve({
+                    headers: MessageHeaders.fromObject(message.headers),
+                    payload: message.payload
+                });
+                call.end();
+            });
+            call.write(request instanceof MessageBuilder ? request.build() : request);
+        });
     }
 
     it('runs the echo function', async () => {
-        const server = createServerProcess('echo');
+        const server = createServerProcess('echo', 'inherit');
 
         const exitCode = new Promise(resolve => {
             server.on('exit', resolve);
@@ -53,19 +67,16 @@ describe('server', () => {
 
         await waitForServer();
 
-        await new Promise((resolve, reject) => {
-            request.post(`http://${HOST}:${HTTP_PORT}/`)
-                .accept('text/plain')
-                .type('text/plain')
-                .send('riff')
-                .end((err, res) => {
-                    if (err) return reject(err);
-                    expect(res.status).toBe(200);
-                    expect(res.headers['content-type']).toMatch('plain');
-                    expect(res.text).toBe('riff');
-                    resolve();
-                });
-        });
+        const { payload, headers } = await requestReplyCall(
+            new MessageBuilder()
+                .addHeader('Content-Type', 'text/plain')
+                .addHeader('Accept', 'text/plain')
+                .payload('riff')
+                .build()
+        );
+        expect(headers.getValue('Error')).toBeNull();
+        expect(headers.getValue('Content-Type')).toEqual('text/plain');
+        expect(payload.toString()).toEqual('riff');
 
         server.kill('SIGINT');
         expect(await exitCode).toBe(0);
@@ -80,19 +91,17 @@ describe('server', () => {
 
         await waitForServer();
 
-        const { file, content } = await new Promise((resolve, reject) => {
-            request.post(`http://${HOST}:${HTTP_PORT}/`)
-                .accept('application/json')
-                .type('text/plain')
-                .send('riff')
-                .end(async (err, res) => {
-                    if (err) return reject(err);
-                    expect(res.status).toBe(200);
-                    expect(res.headers['content-type']).toMatch('json');
-                    resolve(res.body);
-                });
-        });
+        const { payload, headers } = await requestReplyCall(
+            new MessageBuilder()
+                .addHeader('Content-Type', 'text/plain')
+                .addHeader('Accept', 'application/json')
+                .payload('riff')
+                .build()
+        );
+        expect(headers.getValue('Error')).toBeNull();
+        expect(headers.getValue('Content-Type')).toEqual('application/json');
 
+        const { file, content } = JSON.parse(payload.toString());
         expect(await util.promisify(fs.readFile)(file, { encoding: 'utf8' })).toBe(content);
 
         server.kill('SIGINT');

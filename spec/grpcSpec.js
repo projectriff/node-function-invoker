@@ -370,6 +370,74 @@ describe('grpc', () => {
             });
             call.end();
         });
+
+        it('can override the default content-type', done => {
+            const fn = jasmine.createSpy('fn', (input, output) => {
+                input.on('data', name => {
+                    output.write({ greeting: `Hello ${name}!` });
+                });
+                input.on('end', () => {
+                    output.end();
+                });
+            }).and.callThrough();
+            fn.$defaultContentType = 'application/json';
+            ({ client, server } = makeLocalServer(fn, 'streaming'));
+
+            const call = client.call();
+            const onData = jasmine.createSpy('onData');
+            const onEnd = () => {
+                expect(fn).toHaveBeenCalledTimes(1);
+
+                expect(onData).toHaveBeenCalledTimes(1);
+                const { headers, payload } = parseMessage(onData.calls.argsFor(0)[0]);
+                expect(headers.getValue('Content-Type')).toEqual('application/json');
+                expect(JSON.parse(payload.toString())).toEqual({ greeting: 'Hello riff!' });
+
+                done();
+            };
+            call.on('data', onData);
+            call.on('end', onEnd);
+            call.write(
+                new MessageBuilder()
+                    .addHeader('Content-Type', 'text/plain')
+                    .payload('riff')
+                    .build()
+            );
+            call.end();
+        });
+
+        it('will error for an unkown default content-type', done => {
+            const fn = jasmine.createSpy('fn', (input, output) => {
+                input.on('data', name => {
+                    output.write({ greeting: `Hello ${name}!` });
+                });
+                input.on('end', () => {
+                    output.end();
+                });
+            }).and.callThrough();
+            fn.$defaultContentType = 'application/vnd.projectriff.bogus';
+            ({ client, server } = makeLocalServer(fn, 'streaming'));
+
+            const call = client.call();
+            const onData = jasmine.createSpy('onData');
+            const onEnd = () => {
+                expect(fn).toHaveBeenCalledTimes(1);
+
+                expect(onData).toHaveBeenCalledTimes(1);
+                const { headers } = parseMessage(onData.calls.argsFor(0)[0]);
+                expect(headers.getValue('Error')).toEqual('error-client-accept-type-unsupported');
+                done();
+            };
+            call.on('data', onData);
+            call.on('end', onEnd);
+            call.write(
+                new MessageBuilder()
+                    .addHeader('Content-Type', 'text/plain')
+                    .payload('riff')
+                    .build()
+            );
+            call.end();
+        });
     });
 
     describe('content negotiation', () => {

@@ -28,13 +28,12 @@ let port = 60061;
 const serverPath = path.join(__dirname, '..', 'server.js');
 
 describe('server', () => {
-    function createServerProcess(functionName, interactionModel, stdio = 'ignore') {
+    function createServerProcess(functionName, stdio = 'ignore') {
         return childProcess.spawn('node', [serverPath], {
             env: Object.assign({}, process.env, {
                 HOST,
                 GRPC_PORT: ++port,
-                FUNCTION_URI: path.join(__dirname, 'support', `${functionName}.js`),
-                INTERACTION_MODEL: interactionModel
+                FUNCTION_URI: path.join(__dirname, 'support', `${functionName}.js`)
             }),
             stdio
         });
@@ -84,7 +83,7 @@ describe('server', () => {
     });
 
     it('runs the echo-streaming function', async () => {
-        const server = createServerProcess('echo-streaming', 'streaming');
+        const server = createServerProcess('echo-streaming');
 
         const exitCode = new Promise(resolve => {
             server.on('exit', resolve);

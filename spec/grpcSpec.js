@@ -21,8 +21,8 @@ const makeServer = require('../lib/grpc');
 const HOST = process.env.HOST || '127.0.0.1';
 let port = 50051;
 
-function makeLocalServer(fn, mode) {
-    const server = makeServer(fn, mode);
+function makeLocalServer(fn) {
+    const server = makeServer(fn);
 
     // TODO figure out why resuing the same port fails after three test cases
     const address = `${HOST}:${++port}`;
@@ -228,7 +228,8 @@ describe('grpc', () => {
                     output.end();
                 });
             }).and.callThrough();
-            ({ client, server } = makeLocalServer(fn, 'streaming'));
+            fn.$interactionModel = 'streaming';
+            ({ client, server } = makeLocalServer(fn));
 
             const call = client.call();
             const onData = jasmine.createSpy('onData');
@@ -270,7 +271,8 @@ describe('grpc', () => {
 
                 output.end();
             }).and.callThrough();
-            ({ client, server } = makeLocalServer(fn, 'streaming'));
+            fn.$interactionModel = 'streaming';
+            ({ client, server } = makeLocalServer(fn));
 
             const call = client.call();
             const onData = jasmine.createSpy('onData');
@@ -302,7 +304,8 @@ describe('grpc', () => {
                     output.end();
                 });
             }).and.callThrough();
-            ({ client, server } = makeLocalServer(fn, 'streaming'));
+            fn.$interactionModel = 'streaming';
+            ({ client, server } = makeLocalServer(fn));
 
             const call = client.call();
             const onData = jasmine.createSpy('onData');
@@ -343,7 +346,8 @@ describe('grpc', () => {
                     output.end();
                 });
             }).and.callThrough();
-            ({ client, server } = makeLocalServer(fn, 'streaming'));
+            fn.$interactionModel = 'streaming';
+            ({ client, server } = makeLocalServer(fn));
 
             const call = client.call();
             const onData = jasmine.createSpy('onData');
@@ -381,7 +385,8 @@ describe('grpc', () => {
                 });
             }).and.callThrough();
             fn.$defaultContentType = 'application/json';
-            ({ client, server } = makeLocalServer(fn, 'streaming'));
+            fn.$interactionModel = 'streaming';
+            ({ client, server } = makeLocalServer(fn));
 
             const call = client.call();
             const onData = jasmine.createSpy('onData');
@@ -416,7 +421,8 @@ describe('grpc', () => {
                 });
             }).and.callThrough();
             fn.$defaultContentType = 'application/vnd.projectriff.bogus';
-            ({ client, server } = makeLocalServer(fn, 'streaming'));
+            fn.$interactionModel = 'streaming';
+            ({ client, server } = makeLocalServer(fn));
 
             const call = client.call();
             const onData = jasmine.createSpy('onData');

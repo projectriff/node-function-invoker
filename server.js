@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 
-const { FUNCTION_URI, HOST, GRPC_PORT, INTERACTION_MODEL } = process.env;
+const { FUNCTION_URI, HOST, GRPC_PORT } = process.env;
+
 const INTERACTION_MODEL_STREAMING = 'streaming';
 const INTERACTION_MODEL_REQUEST_REPLY = 'request-reply';
 
 const fn = require(FUNCTION_URI);
 
-// TODO if possible, load from k8s resource config
-const interactionModel = INTERACTION_MODEL === INTERACTION_MODEL_STREAMING ? INTERACTION_MODEL_STREAMING : INTERACTION_MODEL_REQUEST_REPLY;
 let grpcServer;
 
 console.log(`Node started in ${process.uptime() * 1000}ms`);
@@ -44,9 +43,14 @@ async function init() {
     }
 }
 
-function loadGRPC() {
+function loadGRPC(interactionModel) {
     const grpc = require('grpc');
     const server = require('./lib/grpc')(fn, interactionModel);
+
+    if (!server) {
+        console.log(`gRPC not supported for ${interactionModel} interaction model`);
+        return;
+    }
 
     return () => {
         server.bind(`${HOST}:${GRPC_PORT}`, grpc.ServerCredentials.createInsecure());
@@ -57,19 +61,32 @@ function loadGRPC() {
 }
 
 async function startup() {
-    console.log(`Server starting in ${interactionModel} interaction model`, INTERACTION_MODEL);
-
     // start initialization
     const initPromise = init();
 
+    let interactionModel;
+    switch (fn.$interactionModel) {
+        case undefined:
+        case INTERACTION_MODEL_REQUEST_REPLY:
+            interactionModel = INTERACTION_MODEL_REQUEST_REPLY;
+            break;
+        case INTERACTION_MODEL_STREAMING:
+            interactionModel = INTERACTION_MODEL_STREAMING;
+            break;
+        default:
+            throw new Error(`Unknown interaction model '${fn.$interactionModel}'`);
+    }
+
+    console.log(`Server starting with ${interactionModel} interaction model`);
+
     // load protocols while function is initializing
-    const bindGRPC = time(loadGRPC, ms => { console.log(`gRPC loaded in ${ms}ms`); });
+    const bindGRPC = time(loadGRPC.bind(null, interactionModel), ms => { console.log(`gRPC loaded in ${ms}ms`); });
 
     // wait for function to finish initializing
     await initPromise;
 
     // bind protocol servers
-    grpcServer = bindGRPC();
+    grpcServer = bindGRPC && bindGRPC();
 }
 
 startup().then(() => {
@@ -93,7 +110,7 @@ function shutdown() {
 
     // gracefully exit protocol servers
     Promise.all([
-        new Promise(resolve => grpcServer.tryShutdown(resolve))
+        grpcServer && new Promise(resolve => grpcServer.tryShutdown(resolve))
     ]).then(async () => {
         if (typeof fn.$destroy === 'function') {
             try {

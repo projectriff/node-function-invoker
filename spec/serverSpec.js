@@ -205,4 +205,13 @@ describe('server', () => {
         server.kill('SIGINT');
         expect(await exitCode).toBe(1);
     }, 15e3);
+
+    it('exits for an unknown interaction model', async () => {
+        const server = createServerProcess('bogus-interaction-model');
+
+        const exitCode = new Promise(resolve => {
+            server.on('exit', resolve);
+        });
+        expect(await exitCode).toBe(255);
+    }, 15e3);
 });

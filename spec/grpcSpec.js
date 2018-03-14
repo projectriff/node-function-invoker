@@ -22,7 +22,7 @@ const HOST = process.env.HOST || '127.0.0.1';
 let port = 50051;
 
 function makeLocalServer(fn) {
-    const server = makeServer(fn);
+    const server = makeServer(fn, fn.$interactionModel || 'request-reply');
 
     // TODO figure out why resuing the same port fails after three test cases
     const address = `${HOST}:${++port}`;

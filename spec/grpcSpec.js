@@ -411,7 +411,34 @@ describe('grpc', () => {
             call.end();
         });
 
-        it('will error for an unkown default content-type', done => {
+        it('will error for an unkown input message content-type', done => {
+            const fn = jasmine.createSpy('fn', (input, output) => input.pipe(output)).and.callThrough();
+            fn.$defaultContentType = 'application/vnd.projectriff.bogus';
+            fn.$interactionModel = 'streaming';
+            ({ client, server } = makeLocalServer(fn));
+
+            const call = client.call();
+            const onData = jasmine.createSpy('onData');
+            const onEnd = () => {
+                expect(fn).toHaveBeenCalledTimes(1);
+
+                expect(onData).toHaveBeenCalledTimes(1);
+                const { headers } = parseMessage(onData.calls.argsFor(0)[0]);
+                expect(headers.getValue('Error')).toEqual('error-client-content-type-unsupported');
+                done();
+            };
+            call.on('data', onData);
+            call.on('end', onEnd);
+            call.write(
+                new MessageBuilder()
+                    .addHeader('Content-Type', 'application/vnd.projectriff.bogus')
+                    .payload('')
+                    .build()
+            );
+            call.end();
+        });
+
+        it('will error for an unkown output message content-type', done => {
             const fn = jasmine.createSpy('fn', (input, output) => {
                 input.on('data', name => {
                     output.write({ greeting: `Hello ${name}!` });

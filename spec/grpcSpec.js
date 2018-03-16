@@ -22,7 +22,7 @@ const HOST = process.env.HOST || '127.0.0.1';
 let port = 50051;
 
 function makeLocalServer(fn) {
-    const server = makeServer(fn);
+    const server = makeServer(fn, fn.$interactionModel || 'request-reply');
 
     // TODO figure out why resuing the same port fails after three test cases
     const address = `${HOST}:${++port}`;
@@ -43,16 +43,16 @@ function parseMessage(message) {
 }
 
 describe('grpc', () => {
-    let client, server, fn;
+    let client, server;
 
     afterEach(done => {
         if (!server) return done();
         server.tryShutdown(done);
     });
 
-    describe('function semantics', () => {
+    describe('request-reply semantics', () => {
         it('handles sync functions', done => {
-            fn = jasmine.createSpy('fn', name => `Hello ${name}!`).and.callThrough();
+            const fn = jasmine.createSpy('fn', name => `Hello ${name}!`).and.callThrough();
             ({ client, server } = makeLocalServer(fn));
 
             const call = client.call();
@@ -75,7 +75,7 @@ describe('grpc', () => {
         });
 
         it('handles promised functions', done => {
-            fn = jasmine.createSpy('fn', name => Promise.resolve(`Hello ${name}!`)).and.callThrough();
+            const fn = jasmine.createSpy('fn', name => Promise.resolve(`Hello ${name}!`)).and.callThrough();
             ({ client, server } = makeLocalServer(fn));
 
             const call = client.call();
@@ -98,7 +98,7 @@ describe('grpc', () => {
         });
 
         it('handles async functions', done => {
-            fn = jasmine.createSpy('fn', async name => `Hello ${name}!`).and.callThrough();
+            const fn = jasmine.createSpy('fn', async name => `Hello ${name}!`).and.callThrough();
             ({ client, server } = makeLocalServer(fn));
 
             const call = client.call();
@@ -121,7 +121,7 @@ describe('grpc', () => {
         });
 
         it('handles thrown errors', done => {
-            fn = jasmine.createSpy('fn', () => { throw new Error('I always throw'); }).and.callThrough();
+            const fn = jasmine.createSpy('fn', () => { throw new Error('I always throw'); }).and.callThrough();
             ({ client, server } = makeLocalServer(fn));
 
             const call = client.call();
@@ -144,7 +144,7 @@ describe('grpc', () => {
         });
 
         it('handles rejected promises', done => {
-            fn = jasmine.createSpy('fn', () => Promise.reject(new Error('I always reject'))).and.callThrough();
+            const fn = jasmine.createSpy('fn', () => Promise.reject(new Error('I always reject'))).and.callThrough();
             ({ client, server } = makeLocalServer(fn));
 
             const call = client.call();
@@ -167,7 +167,7 @@ describe('grpc', () => {
         });
 
         it('handles thrown non-errors', done => {
-            fn = jasmine.createSpy('fn', () => { throw 'an error, but not an Error'; }).and.callThrough();
+            const fn = jasmine.createSpy('fn', () => { throw 'an error, but not an Error'; }).and.callThrough();
             ({ client, server } = makeLocalServer(fn));
 
             const call = client.call();
@@ -190,7 +190,7 @@ describe('grpc', () => {
         });
 
         it('correlates responses', done => {
-            fn = jasmine.createSpy('fn', echo => echo).and.callThrough();
+            const fn = jasmine.createSpy('fn', echo => echo).and.callThrough();
             ({ client, server } = makeLocalServer(fn));
 
             const call = client.call();
@@ -218,7 +218,264 @@ describe('grpc', () => {
         });
     });
 
+    describe('streaming semantics', () => {
+        it('recieves messages', done => {
+            const data = [1, 2, 3];
+            const fnOnData = jasmine.createSpy('fnOnData');
+            const fn = jasmine.createSpy('fn', (input, output) => {
+                input.on('data', fnOnData);
+                input.on('end', () => {
+                    output.end();
+                });
+            }).and.callThrough();
+            fn.$interactionModel = 'streaming';
+            ({ client, server } = makeLocalServer(fn));
+
+            const call = client.call();
+            const onData = jasmine.createSpy('onData');
+            const onEnd = () => {
+                expect(fn).toHaveBeenCalledTimes(1);
+                expect(onData).toHaveBeenCalledTimes(0);
+                expect(fnOnData).toHaveBeenCalledTimes(3);
+
+                data.forEach((d, i) => {
+                    expect(fnOnData.calls.argsFor(i)[0]).toBe(`riff ${d}`);
+                });
+
+                done();
+            };
+            call.on('data', onData);
+            call.on('end', onEnd);
+            data.forEach(d => {
+                call.write(
+                    new MessageBuilder()
+                        .addHeader('Content-Type', 'text/plain')
+                        .payload(`riff ${d}`)
+                        .build()
+                );
+            });
+            call.end();
+        });
+
+        it('produces messages', done => {
+            const data = [1, 2, 3];
+            const fnOnData = jasmine.createSpy('fnOnData');
+            const fnOnEnd = jasmine.createSpy('fnOnEnd');
+            const fn = jasmine.createSpy('fn', (input, output) => {
+                input.on('data', fnOnData);
+                input.on('end', fnOnEnd)
+
+                data.forEach(d => {
+                    output.write(`riff ${d}`);
+                });
+
+                output.end();
+            }).and.callThrough();
+            fn.$interactionModel = 'streaming';
+            ({ client, server } = makeLocalServer(fn));
+
+            const call = client.call();
+            const onData = jasmine.createSpy('onData');
+            const onEnd = () => {
+                expect(fn).toHaveBeenCalledTimes(1);
+                expect(onData).toHaveBeenCalledTimes(3);
+                expect(fnOnData).toHaveBeenCalledTimes(0);
+                expect(fnOnEnd).toHaveBeenCalledTimes(1);
+
+                data.forEach((d, i) => {
+                    const { headers, payload } = parseMessage(onData.calls.argsFor(i)[0]);
+                    expect(headers.getValues('Content-Type')).toEqual(['text/plain']);
+                    expect(payload.toString()).toBe(`riff ${d}`);
+                });
+
+                done();
+            };
+            call.on('data', onData);
+            call.on('end', onEnd);
+        });
+
+        it('maps messages', done => {
+            const data = [1, 2, 3];
+            const fn = jasmine.createSpy('fn', (input, output) => {
+                input.on('data', data => {
+                    output.write(data.toUpperCase());
+                });
+                input.on('end', () => {
+                    output.end();
+                });
+            }).and.callThrough();
+            fn.$interactionModel = 'streaming';
+            ({ client, server } = makeLocalServer(fn));
+
+            const call = client.call();
+            const onData = jasmine.createSpy('onData');
+            const onEnd = () => {
+                expect(fn).toHaveBeenCalledTimes(1);
+
+                expect(onData).toHaveBeenCalledTimes(3);
+                data.forEach((d, i) => {
+                    const { headers, payload } = parseMessage(onData.calls.argsFor(i)[0]);
+                    expect(headers.getValue('Content-Type')).toEqual('text/plain');
+                    expect(payload.toString()).toEqual(`RIFF ${d}`);
+                });
+
+                done();
+            };
+            call.on('data', onData);
+            call.on('end', onEnd);
+            data.forEach(d => {
+                call.write(
+                    new MessageBuilder()
+                        .addHeader('Content-Type', 'text/plain')
+                        .payload(`riff ${d}`)
+                        .build()
+                );
+            });
+            call.end();
+        });
+
+        it('reduces messages', done => {
+            const data = [1, 2, 3];
+            const fn = jasmine.createSpy('fn', (input, output) => {
+                let sum = 0;
+                input.on('data', data => {
+                    sum += data;
+                });
+                input.on('end', () => {
+                    output.write(sum);
+                    output.end();
+                });
+            }).and.callThrough();
+            fn.$interactionModel = 'streaming';
+            ({ client, server } = makeLocalServer(fn));
+
+            const call = client.call();
+            const onData = jasmine.createSpy('onData');
+            const onEnd = () => {
+                expect(fn).toHaveBeenCalledTimes(1);
+                expect(onData).toHaveBeenCalledTimes(1);
+
+                const { headers, payload } = parseMessage(onData.calls.argsFor(0)[0]);
+                expect(headers.getValues('Content-Type')).toEqual(['text/plain']);
+                expect(payload.toString()).toBe('6');
+
+                done();
+            };
+            call.on('data', onData);
+            call.on('end', onEnd);
+
+            data.forEach(d => {
+                call.write(
+                    new MessageBuilder()
+                        .addHeader('Content-Type', 'application/json')
+                        .payload('' + d)
+                        .build()
+                );
+            });
+            call.end();
+        });
+
+        it('can override the default content-type', done => {
+            const fn = jasmine.createSpy('fn', (input, output) => {
+                input.on('data', name => {
+                    output.write({ greeting: `Hello ${name}!` });
+                });
+                input.on('end', () => {
+                    output.end();
+                });
+            }).and.callThrough();
+            fn.$defaultContentType = 'application/json';
+            fn.$interactionModel = 'streaming';
+            ({ client, server } = makeLocalServer(fn));
+
+            const call = client.call();
+            const onData = jasmine.createSpy('onData');
+            const onEnd = () => {
+                expect(fn).toHaveBeenCalledTimes(1);
+
+                expect(onData).toHaveBeenCalledTimes(1);
+                const { headers, payload } = parseMessage(onData.calls.argsFor(0)[0]);
+                expect(headers.getValue('Content-Type')).toEqual('application/json');
+                expect(JSON.parse(payload.toString())).toEqual({ greeting: 'Hello riff!' });
+
+                done();
+            };
+            call.on('data', onData);
+            call.on('end', onEnd);
+            call.write(
+                new MessageBuilder()
+                    .addHeader('Content-Type', 'text/plain')
+                    .payload('riff')
+                    .build()
+            );
+            call.end();
+        });
+
+        it('will error for an unkown input message content-type', done => {
+            const fn = jasmine.createSpy('fn', (input, output) => input.pipe(output)).and.callThrough();
+            fn.$defaultContentType = 'application/vnd.projectriff.bogus';
+            fn.$interactionModel = 'streaming';
+            ({ client, server } = makeLocalServer(fn));
+
+            const call = client.call();
+            const onData = jasmine.createSpy('onData');
+            const onEnd = () => {
+                expect(fn).toHaveBeenCalledTimes(1);
+
+                expect(onData).toHaveBeenCalledTimes(1);
+                const { headers } = parseMessage(onData.calls.argsFor(0)[0]);
+                expect(headers.getValue('Error')).toEqual('error-client-content-type-unsupported');
+                done();
+            };
+            call.on('data', onData);
+            call.on('end', onEnd);
+            call.write(
+                new MessageBuilder()
+                    .addHeader('Content-Type', 'application/vnd.projectriff.bogus')
+                    .payload('')
+                    .build()
+            );
+            call.end();
+        });
+
+        it('will error for an unkown output message content-type', done => {
+            const fn = jasmine.createSpy('fn', (input, output) => {
+                input.on('data', name => {
+                    output.write({ greeting: `Hello ${name}!` });
+                });
+                input.on('end', () => {
+                    output.end();
+                });
+            }).and.callThrough();
+            fn.$defaultContentType = 'application/vnd.projectriff.bogus';
+            fn.$interactionModel = 'streaming';
+            ({ client, server } = makeLocalServer(fn));
+
+            const call = client.call();
+            const onData = jasmine.createSpy('onData');
+            const onEnd = () => {
+                expect(fn).toHaveBeenCalledTimes(1);
+
+                expect(onData).toHaveBeenCalledTimes(1);
+                const { headers } = parseMessage(onData.calls.argsFor(0)[0]);
+                expect(headers.getValue('Error')).toEqual('error-client-accept-type-unsupported');
+                done();
+            };
+            call.on('data', onData);
+            call.on('end', onEnd);
+            call.write(
+                new MessageBuilder()
+                    .addHeader('Content-Type', 'text/plain')
+                    .payload('riff')
+                    .build()
+            );
+            call.end();
+        });
+    });
+
     describe('content negotiation', () => {
+        let fn;
+
         beforeEach(() => {
             fn = jasmine.createSpy('fn', echo => echo).and.callThrough();
             ({ client, server } = makeLocalServer(fn));

@@ -23,29 +23,29 @@ const { FunctionInvokerClient, MessageBuilder, MessageHeaders } = require('@proj
 const grpc = require('grpc');
 
 const HOST = process.env.HOST || '127.0.0.1';
-const GRPC_PORT = 50051;
+let port = 60061;
 
 const serverPath = path.join(__dirname, '..', 'server.js');
 
 describe('server', () => {
-    function createServerProcess(func, stdio = 'ignore') {
-        return childProcess.execFile('node', [serverPath], {
+    function createServerProcess(functionName, stdio = 'ignore') {
+        return childProcess.spawn('node', [serverPath], {
             env: Object.assign({}, process.env, {
                 HOST,
-                GRPC_PORT,
-                FUNCTION_URI: path.join(__dirname, 'support', `${func}.js`)
+                GRPC_PORT: ++port,
+                FUNCTION_URI: path.join(__dirname, 'support', `${functionName}.js`)
             }),
             stdio
         });
     }
 
     async function waitForServer() {
-        await waitForPort(HOST, GRPC_PORT);
+        await waitForPort(HOST, port);
     }
 
     function requestReplyCall(request) {
         return new Promise(resolve => {
-            const client = new FunctionInvokerClient(`${HOST}:${GRPC_PORT}`, grpc.credentials.createInsecure());
+            const client = new FunctionInvokerClient(`${HOST}:${port}`, grpc.credentials.createInsecure());
             const call = client.call();
             call.on('data', message => {
                 resolve({
@@ -59,7 +59,7 @@ describe('server', () => {
     }
 
     it('runs the echo function', async () => {
-        const server = createServerProcess('echo', 'inherit');
+        const server = createServerProcess('echo-request-reply');
 
         const exitCode = new Promise(resolve => {
             server.on('exit', resolve);
@@ -77,6 +77,50 @@ describe('server', () => {
         expect(headers.getValue('Error')).toBeNull();
         expect(headers.getValue('Content-Type')).toEqual('text/plain');
         expect(payload.toString()).toEqual('riff');
+
+        server.kill('SIGINT');
+        expect(await exitCode).toBe(0);
+    });
+
+    it('runs the echo-streaming function', async () => {
+        const server = createServerProcess('echo-streaming');
+
+        const exitCode = new Promise(resolve => {
+            server.on('exit', resolve);
+        });
+
+        await waitForServer();
+
+        // listening for GRPC
+        await new Promise(resolve => {
+            const client = new FunctionInvokerClient(`${HOST}:${port}`, grpc.credentials.createInsecure());
+            const data = [1, 2, 3];
+
+            const call = client.call();
+            const onData = jasmine.createSpy('onData');
+            const onEnd = () => {
+                expect(onData).toHaveBeenCalledTimes(3);
+                data.forEach((d, i) => {
+                    const message = onData.calls.argsFor(i)[0];
+                    const headers = MessageHeaders.fromObject(message.headers);
+                    expect(headers.getValue('Content-Type')).toEqual('text/plain');
+                    expect(message.payload.toString()).toEqual(`riff ${d}`);
+                });
+
+                resolve();
+            };
+            call.on('data', onData);
+            call.on('end', onEnd);
+            data.forEach(d => {
+                call.write(
+                    new MessageBuilder()
+                        .addHeader('Content-Type', 'text/plain')
+                        .payload(`riff ${d}`)
+                        .build()
+                );
+            });
+            call.end();
+        });
 
         server.kill('SIGINT');
         expect(await exitCode).toBe(0);
@@ -160,5 +204,14 @@ describe('server', () => {
 
         server.kill('SIGINT');
         expect(await exitCode).toBe(1);
+    }, 15e3);
+
+    it('exits for an unknown interaction model', async () => {
+        const server = createServerProcess('bogus-interaction-model');
+
+        const exitCode = new Promise(resolve => {
+            server.on('exit', resolve);
+        });
+        expect(await exitCode).toBe(255);
     }, 15e3);
 });

@@ -32,6 +32,11 @@ git clone -o upstream https://github.com/projectriff/node-function-invoker
   npm test
   ```
 
+* To install as a riff invoker:
+```sh
+kubectl apply -f node-invoker.yaml
+```
+
 ## Functions
 
 At runtime, the node function invoker will `require()` the target function module.

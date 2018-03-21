@@ -56,6 +56,55 @@ module.exports = async x => x ** 2;
 module.exports = x => Promise.resolve(x ** 2);
 ```
 
+### Streams (experimental)
+
+Streaming functions can be created by setting the `$interactionModel` property on the function to `node-streams`.
+The function will then be invoked with two arguments, an `input` [Readable Stream](https://nodejs.org/dist/latest-v8.x/docs/api/stream.html#stream_class_stream_readable) and an `output` [Writeable Stream](https://nodejs.org/dist/latest-v8.x/docs/api/stream.html#stream_class_stream_writable).
+Both streams are object streams. Any value returned by the function is ignored, new messages must be written to the output stream.
+
+```js
+// echo.js
+module.exports = (input, output) => {
+    input.pipe(output);
+};
+module.exports.$interactionModel = 'node-streams';
+```
+
+Any npm package that works with Node Streams can be used.
+
+```js
+// upperCase.js
+const miss = require('mississippi');
+
+const upperCaser = miss.through.obj((chunk, enc, cb) => {
+    cb(null, chunk.toUpperCase());
+});
+
+module.exports = (input, output) => {
+    input.pipe(upperCaser).pipe(output);
+};
+module.exports.$interactionModel = 'node-streams';
+```
+
+The `Content-Type` for output messages can be set with the `$defaultContentType` property. By default, `text/plain` is used. For request-reply function, the `Accept` header is used, however, there is no Accept header in a stream.
+
+```js
+// greeter.js
+const miss = require('mississippi');
+
+const greeter = miss.through.obj((chunk, enc, cb) => {
+    cb(null, {
+        greeting: `Hello ${chunk}!`
+    });
+});
+
+module.exports = (input, output) => {
+    input.pipe(greeter).pipe(output);
+};
+module.exports.$interactionModel = 'node-streams';
+module.exports.$defaultContentType = 'application/json';
+```
+
 ### Lifecycle
 
 Functions that communicate with external services, like a database, can use the `$init` and `$destroy` lifecycle hooks on the function.

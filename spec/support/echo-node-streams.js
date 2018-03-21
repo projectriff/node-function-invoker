@@ -1,4 +1,4 @@
 module.exports = (input, output) => {
     input.pipe(output);
 };
-module.exports.$interactionModel = 'streaming';
+module.exports.$interactionModel = 'node-streams';

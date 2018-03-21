@@ -16,8 +16,7 @@
 
 const { FUNCTION_URI, HOST, GRPC_PORT } = process.env;
 
-const INTERACTION_MODEL_STREAMING = 'streaming';
-const INTERACTION_MODEL_REQUEST_REPLY = 'request-reply';
+const interactionModelTypes = require('./lib/interaction-models');
 
 const fn = require(FUNCTION_URI);
 
@@ -67,11 +66,11 @@ async function startup() {
     let interactionModel;
     switch (fn.$interactionModel) {
         case undefined:
-        case INTERACTION_MODEL_REQUEST_REPLY:
-            interactionModel = INTERACTION_MODEL_REQUEST_REPLY;
+        case interactionModelTypes.REQUEST_REPLY:
+            interactionModel = interactionModelTypes.REQUEST_REPLY;
             break;
-        case INTERACTION_MODEL_STREAMING:
-            interactionModel = INTERACTION_MODEL_STREAMING;
+        case interactionModelTypes.NODE_STREAMS:
+            interactionModel = interactionModelTypes.NODE_STREAMS;
             break;
         default:
             throw new Error(`Unknown interaction model '${fn.$interactionModel}'`);

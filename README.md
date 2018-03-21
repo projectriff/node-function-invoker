@@ -56,7 +56,7 @@ module.exports = async x => x ** 2;
 module.exports = x => Promise.resolve(x ** 2);
 ```
 
-### Streams
+### Streams (experimental)
 
 Streaming functions can be created by setting the `$interactionModel` property on the function to `node-streams`.
 The function will then be invoked with two arguments, an `input` [Readable Stream](https://nodejs.org/dist/latest-v8.x/docs/api/stream.html#stream_class_stream_readable) and an `output` [Writeable Stream](https://nodejs.org/dist/latest-v8.x/docs/api/stream.html#stream_class_stream_writable).

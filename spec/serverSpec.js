@@ -82,8 +82,8 @@ describe('server', () => {
         expect(await exitCode).toBe(0);
     });
 
-    it('runs the echo-streaming function', async () => {
-        const server = createServerProcess('echo-streaming');
+    it('runs the echo-node-streams function', async () => {
+        const server = createServerProcess('echo-node-streams');
 
         const exitCode = new Promise(resolve => {
             server.on('exit', resolve);

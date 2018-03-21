@@ -218,7 +218,7 @@ describe('grpc', () => {
         });
     });
 
-    describe('streaming semantics', () => {
+    describe('node-streams semantics', () => {
         it('recieves messages', done => {
             const data = [1, 2, 3];
             const fnOnData = jasmine.createSpy('fnOnData');
@@ -228,7 +228,7 @@ describe('grpc', () => {
                     output.end();
                 });
             }).and.callThrough();
-            fn.$interactionModel = 'streaming';
+            fn.$interactionModel = 'node-streams';
             ({ client, server } = makeLocalServer(fn));
 
             const call = client.call();
@@ -271,7 +271,7 @@ describe('grpc', () => {
 
                 output.end();
             }).and.callThrough();
-            fn.$interactionModel = 'streaming';
+            fn.$interactionModel = 'node-streams';
             ({ client, server } = makeLocalServer(fn));
 
             const call = client.call();
@@ -304,7 +304,7 @@ describe('grpc', () => {
                     output.end();
                 });
             }).and.callThrough();
-            fn.$interactionModel = 'streaming';
+            fn.$interactionModel = 'node-streams';
             ({ client, server } = makeLocalServer(fn));
 
             const call = client.call();
@@ -346,7 +346,7 @@ describe('grpc', () => {
                     output.end();
                 });
             }).and.callThrough();
-            fn.$interactionModel = 'streaming';
+            fn.$interactionModel = 'node-streams';
             ({ client, server } = makeLocalServer(fn));
 
             const call = client.call();
@@ -385,7 +385,7 @@ describe('grpc', () => {
                 });
             }).and.callThrough();
             fn.$defaultContentType = 'application/json';
-            fn.$interactionModel = 'streaming';
+            fn.$interactionModel = 'node-streams';
             ({ client, server } = makeLocalServer(fn));
 
             const call = client.call();
@@ -414,7 +414,7 @@ describe('grpc', () => {
         it('will error for an unkown input message content-type', done => {
             const fn = jasmine.createSpy('fn', (input, output) => input.pipe(output)).and.callThrough();
             fn.$defaultContentType = 'application/vnd.projectriff.bogus';
-            fn.$interactionModel = 'streaming';
+            fn.$interactionModel = 'node-streams';
             ({ client, server } = makeLocalServer(fn));
 
             const call = client.call();
@@ -448,7 +448,7 @@ describe('grpc', () => {
                 });
             }).and.callThrough();
             fn.$defaultContentType = 'application/vnd.projectriff.bogus';
-            fn.$interactionModel = 'streaming';
+            fn.$interactionModel = 'node-streams';
             ({ client, server } = makeLocalServer(fn));
 
             const call = client.call();

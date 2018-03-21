@@ -76,12 +76,12 @@ Any npm package that works with Node Streams can be used.
 // upperCase.js
 const miss = require('mississippi');
 
-const uppercaser = miss.through.obj((chunk, enc, cb) => {
+const upperCaser = miss.through.obj((chunk, enc, cb) => {
     cb(null, chunk.toUpperCase());
 });
 
 module.exports = (input, output) => {
-    input.pipe(uppercaser).pipe(output);
+    input.pipe(upperCaser).pipe(output);
 };
 module.exports.$interactionModel = 'node-streams';
 ```
@@ -89,18 +89,18 @@ module.exports.$interactionModel = 'node-streams';
 The `Content-Type` for output messages can be set with the `$defaultContentType` property. By default, `text/plain` is used. For request-reply function, the `Accept` header is used, however, there is no Accept header in a stream.
 
 ```js
-// upperCase.js
+// upperCaseDecorator.js
 const miss = require('mississippi');
 
-const uppercaser = miss.through.obj((chunk, enc, cb) => {
+const upperCaseDecorator = miss.through.obj((chunk, enc, cb) => {
     cb(null, {
-        original: chunk,
-        upperCase: chunk.toUpperCase()
+        ...chunk,
+        upperCase: chunk.original.toUpperCase()
     });
 });
 
 module.exports = (input, output) => {
-    input.pipe(uppercaser).pipe(output);
+    input.pipe(upperCaseDecorator).pipe(output);
 };
 module.exports.$interactionModel = 'node-streams';
 module.exports.$defaultContentType = 'application/json';

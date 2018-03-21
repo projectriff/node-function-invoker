@@ -89,18 +89,17 @@ module.exports.$interactionModel = 'node-streams';
 The `Content-Type` for output messages can be set with the `$defaultContentType` property. By default, `text/plain` is used. For request-reply function, the `Accept` header is used, however, there is no Accept header in a stream.
 
 ```js
-// upperCaseDecorator.js
+// greeter.js
 const miss = require('mississippi');
 
-const upperCaseDecorator = miss.through.obj((chunk, enc, cb) => {
+const greeter = miss.through.obj((chunk, enc, cb) => {
     cb(null, {
-        ...chunk,
-        upperCase: chunk.original.toUpperCase()
+        greeting: `Hello ${chunk}!`
     });
 });
 
 module.exports = (input, output) => {
-    input.pipe(upperCaseDecorator).pipe(output);
+    input.pipe(greeter).pipe(output);
 };
 module.exports.$interactionModel = 'node-streams';
 module.exports.$defaultContentType = 'application/json';

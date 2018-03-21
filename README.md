@@ -60,7 +60,7 @@ module.exports = x => Promise.resolve(x ** 2);
 
 Streaming functions can be created by setting the `$interactionModel` property on the function to `node-streams`.
 The function will then be invoked with two arguments, an `input` [Readable Stream](https://nodejs.org/dist/latest-v8.x/docs/api/stream.html#stream_class_stream_readable) and an `output` [Writeable Stream](https://nodejs.org/dist/latest-v8.x/docs/api/stream.html#stream_class_stream_writable).
-Both streams are object streams. Any value returned direction by the function is ignored.
+Both streams are object streams. Any value returned by the function is ignored, new messages must be written to the output stream.
 
 ```js
 // echo.js

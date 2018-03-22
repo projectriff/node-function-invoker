@@ -32,7 +32,7 @@ spec:
 
     For example, from a directory  named 'square' containing a function 'square.js', you can simply type :
 
-        riff {{.Command}} -f square
+        riff {{.Command}} -f .
 
       or
 

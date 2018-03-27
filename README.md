@@ -31,6 +31,7 @@ See [riff invokers apply](https://github.com/projectriff/riff/blob/master/riff-c
 The following tools are required to build this project:
 
 - `node` 8 (only for tests)
+- [jq](https://stedolan.github.io/jq/download/)
 - Docker
 
 ### Get the source

@@ -3,6 +3,10 @@ node_js: 8
 matrix:
   include:
   - stage: test
+    before_install:
+    - npm install -g greenkeeper-lockfile@1
+    before_script: greenkeeper-lockfile-update
+    after_script: greenkeeper-lockfile-upload
   - stage: publish
     sudo: required
     services:

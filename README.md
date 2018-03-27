@@ -1,5 +1,7 @@
 # Node Function Invoker [![Build Status](https://travis-ci.org/projectriff/node-function-invoker.svg?branch=master)](https://travis-ci.org/projectriff/node-function-invoker)
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/projectriff/node-function-invoker.svg)](https://greenkeeper.io/)
+
 ## Purpose
 The *node function invoker* provides a Docker base layer for a function consisting of a single NodeJS module.
 It accepts gRPC requests, invokes the command for each request in the input stream, and sends the command's output to the stream of gRPC responses.

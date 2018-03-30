@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-const { FunctionInvokerClient, MessageBuilder, MessageHeaders } = require('@projectriff/function-proto');
+const { FunctionInvokerClient } = require('@projectriff/function-proto');
+const { Message, AbstractMessage } = require('@projectriff/message');
 const grpc = require('grpc');
 const makeServer = require('../lib/grpc');
 
@@ -22,7 +23,7 @@ const HOST = process.env.HOST || '127.0.0.1';
 let port = 50051;
 
 function makeLocalServer(fn) {
-    const server = makeServer(fn, fn.$interactionModel || 'request-reply');
+    const server = makeServer(fn, fn.$interactionModel || 'request-reply', fn.$argumentType || 'payload');
 
     // TODO figure out why resuing the same port fails after three test cases
     const address = `${HOST}:${++port}`;
@@ -36,16 +37,21 @@ function makeLocalServer(fn) {
 }
 
 function parseMessage(message) {
-    return {
-        headers: MessageHeaders.fromObject(message.headers),
-        payload: message.payload
-    };
+    expect(message instanceof AbstractMessage).toBe(false);
+    return Message.fromRiffMessage(message);
 }
 
 describe('grpc', () => {
-    let client, server;
+    let client, server, uninstall;
 
+    beforeEach(() => {
+        uninstall = Message.install();
+    });
     afterEach(done => {
+        if (uninstall) {
+            uninstall();
+            uninstall = null;
+        }
         if (!server) return done();
         server.tryShutdown(done);
     });
@@ -70,7 +76,7 @@ describe('grpc', () => {
             };
             call.on('data', onData);
             call.on('end', onEnd);
-            call.write(new MessageBuilder().payload('riff').build());
+            call.write(Message.builder().payload('riff').build().toRiffMessage());
             call.end();
         });
 
@@ -93,7 +99,7 @@ describe('grpc', () => {
             };
             call.on('data', onData);
             call.on('end', onEnd);
-            call.write(new MessageBuilder().payload('riff').build());
+            call.write(Message.builder().payload('riff').build().toRiffMessage());
             call.end();
         });
 
@@ -116,7 +122,7 @@ describe('grpc', () => {
             };
             call.on('data', onData);
             call.on('end', onEnd);
-            call.write(new MessageBuilder().payload('riff').build());
+            call.write(Message.builder().payload('riff').build().toRiffMessage());
             call.end();
         });
 
@@ -139,7 +145,7 @@ describe('grpc', () => {
             };
             call.on('data', onData);
             call.on('end', onEnd);
-            call.write(new MessageBuilder().payload('riff').build());
+            call.write(Message.builder().payload('riff').build().toRiffMessage());
             call.end();
         });
 
@@ -162,7 +168,7 @@ describe('grpc', () => {
             };
             call.on('data', onData);
             call.on('end', onEnd);
-            call.write(new MessageBuilder().payload('riff').build());
+            call.write(Message.builder().payload('riff').build().toRiffMessage());
             call.end();
         });
 
@@ -185,7 +191,7 @@ describe('grpc', () => {
             };
             call.on('data', onData);
             call.on('end', onEnd);
-            call.write(new MessageBuilder().payload('riff').build());
+            call.write(Message.builder().payload('riff').build().toRiffMessage());
             call.end();
         });
 
@@ -209,17 +215,163 @@ describe('grpc', () => {
             call.on('data', onData);
             call.on('end', onEnd);
             call.write(
-                new MessageBuilder()
+                Message.builder()
                     .addHeader('correlationId', '12345')
                     .payload('riff')
                     .build()
+                    .toRiffMessage()
             );
             call.end();
         });
+
+        it('can operate on payloads', done => {
+            const fn = jasmine.createSpy('fn', name => `Hello ${name}!`).and.callThrough();
+            fn.$argumentType = 'payload';
+            ({ client, server } = makeLocalServer(fn));
+
+            const call = client.call();
+            const onData = jasmine.createSpy('onData');
+            const onEnd = () => {
+                expect(fn).toHaveBeenCalledTimes(1);
+                expect(fn).toHaveBeenCalledWith('riff');
+
+                expect(onData).toHaveBeenCalledTimes(1);
+                const { headers, payload } = parseMessage(onData.calls.first().args[0]);
+                expect(headers.getValues('Content-Type')).toEqual(['text/plain']);
+                expect(payload.toString()).toBe('Hello riff!');
+
+                done();
+            };
+            call.on('data', onData);
+            call.on('end', onEnd);
+            call.write(Message.builder().addHeader('Content-Type', 'text/plain').payload('riff').build().toRiffMessage());
+            call.end();
+        });
+
+        it('can operate on messages', done => {
+            const fn = jasmine.createSpy('fn', ({ headers, payload }) => `Hello ${payload}! Via ${headers.getValue('content-type')}`).and.callThrough();
+            fn.$argumentType = 'message';
+            ({ client, server } = makeLocalServer(fn));
+
+            const call = client.call();
+            const onData = jasmine.createSpy('onData');
+            const onEnd = () => {
+                expect(fn).toHaveBeenCalledTimes(1);
+                const message = fn.calls.first().args[0];
+                expect(message.payload).toBe('riff');
+                expect(message.headers.getValue('Content-Type')).toBe('text/plain');
+
+                expect(onData).toHaveBeenCalledTimes(1);
+                const { headers, payload } = parseMessage(onData.calls.first().args[0]);
+                expect(headers.getValues('Content-Type')).toEqual(['text/plain']);
+                expect(payload.toString()).toBe('Hello riff! Via text/plain');
+
+                done();
+            };
+            call.on('data', onData);
+            call.on('end', onEnd);
+            call.write(Message.builder().addHeader('Content-Type', 'text/plain').payload('riff').build().toRiffMessage());
+            call.end();
+        });
+
+        it('can operate on headers', done => {
+            const fn = jasmine.createSpy('fn', headers => `Via ${headers.getValue('content-type')}`).and.callThrough();
+            fn.$argumentType = 'headers';
+            ({ client, server } = makeLocalServer(fn));
+
+            const call = client.call();
+            const onData = jasmine.createSpy('onData');
+            const onEnd = () => {
+                expect(fn).toHaveBeenCalledTimes(1);
+                const arg = fn.calls.first().args[0];
+                expect(arg.getValues('content-type')).toEqual(['text/plain']);
+
+                expect(onData).toHaveBeenCalledTimes(1);
+                const { headers, payload } = parseMessage(onData.calls.first().args[0]);
+                expect(headers.getValues('Content-Type')).toEqual(['text/plain']);
+                expect(payload.toString()).toBe('Via text/plain');
+
+                done();
+            };
+            call.on('data', onData);
+            call.on('end', onEnd);
+            call.write(Message.builder().addHeader('Content-Type', 'text/plain').payload('riff').build().toRiffMessage());
+            call.end();
+        });
+
+        it('can produce messages', done => {
+            const fn = jasmine.createSpy('fn', name => {
+                return Message.builder()
+                    .addHeader('X-Test', 'true')
+                    .payload(`Hello ${name}!`)
+                    .build();
+            }).and.callThrough();
+            ({ client, server } = makeLocalServer(fn));
+
+            const call = client.call();
+            const onData = jasmine.createSpy('onData');
+            const onEnd = () => {
+                expect(fn).toHaveBeenCalledTimes(1);
+                expect(fn).toHaveBeenCalledWith('riff');
+
+                expect(onData).toHaveBeenCalledTimes(1);
+                const { headers, payload } = parseMessage(onData.calls.first().args[0]);
+                expect(headers.getValues('Content-Type')).toEqual(['text/plain']);
+                expect(headers.getValues('X-Test')).toEqual(['true']);
+                expect(payload.toString()).toBe('Hello riff!');
+
+                done();
+            };
+            call.on('data', onData);
+            call.on('end', onEnd);
+            call.write(Message.builder().addHeader('Content-Type', 'text/plain').payload('riff').build().toRiffMessage());
+            call.end();
+        });
+
+        it('can produce custom messages', done => {
+            class AltMessage extends AbstractMessage {
+                constructor(name) {
+                    super();
+                    this.name = name;
+                }
+                toRiffMessage() {
+                    return {
+                        headers: {
+                            'x-test': { values: ['true'] },
+                            'content-type': { values: ['text/plain'] }
+                        },
+                        payload: `Hello ${this.name}!`
+                    }
+                }
+            }
+
+            const fn = jasmine.createSpy('fn', name => { return new AltMessage(name); }).and.callThrough();
+            ({ client, server } = makeLocalServer(fn));
+
+            const call = client.call();
+            const onData = jasmine.createSpy('onData');
+            const onEnd = () => {
+                expect(fn).toHaveBeenCalledTimes(1);
+                expect(fn).toHaveBeenCalledWith('riff');
+
+                expect(onData).toHaveBeenCalledTimes(1);
+                const { headers, payload } = parseMessage(onData.calls.first().args[0]);
+                expect(headers.getValues('Content-Type')).toEqual(['text/plain']);
+                expect(headers.getValues('X-Test')).toEqual(['true']);
+                expect(payload.toString()).toBe('Hello riff!');
+
+                done();
+            };
+            call.on('data', onData);
+            call.on('end', onEnd);
+            call.write(Message.builder().addHeader('Content-Type', 'text/plain').payload('riff').build().toRiffMessage());
+            call.end();
+        });
+
     });
 
     describe('node-streams semantics', () => {
-        it('recieves messages', done => {
+        it('recieves events', done => {
             const data = [1, 2, 3];
             const fnOnData = jasmine.createSpy('fnOnData');
             const fn = jasmine.createSpy('fn', (input, output) => {
@@ -248,16 +400,17 @@ describe('grpc', () => {
             call.on('end', onEnd);
             data.forEach(d => {
                 call.write(
-                    new MessageBuilder()
+                    Message.builder()
                         .addHeader('Content-Type', 'text/plain')
                         .payload(`riff ${d}`)
                         .build()
+                        .toRiffMessage()
                 );
             });
             call.end();
         });
 
-        it('produces messages', done => {
+        it('produces events', done => {
             const data = [1, 2, 3];
             const fnOnData = jasmine.createSpy('fnOnData');
             const fnOnEnd = jasmine.createSpy('fnOnEnd');
@@ -294,7 +447,7 @@ describe('grpc', () => {
             call.on('end', onEnd);
         });
 
-        it('maps messages', done => {
+        it('maps events', done => {
             const data = [1, 2, 3];
             const fn = jasmine.createSpy('fn', (input, output) => {
                 input.on('data', data => {
@@ -325,16 +478,17 @@ describe('grpc', () => {
             call.on('end', onEnd);
             data.forEach(d => {
                 call.write(
-                    new MessageBuilder()
+                    Message.builder()
                         .addHeader('Content-Type', 'text/plain')
                         .payload(`riff ${d}`)
                         .build()
+                        .toRiffMessage()
                 );
             });
             call.end();
         });
 
-        it('reduces messages', done => {
+        it('reduces events', done => {
             const data = [1, 2, 3];
             const fn = jasmine.createSpy('fn', (input, output) => {
                 let sum = 0;
@@ -366,10 +520,11 @@ describe('grpc', () => {
 
             data.forEach(d => {
                 call.write(
-                    new MessageBuilder()
+                    Message.builder()
                         .addHeader('Content-Type', 'application/json')
                         .payload('' + d)
                         .build()
+                        .toRiffMessage()
                 );
             });
             call.end();
@@ -403,10 +558,11 @@ describe('grpc', () => {
             call.on('data', onData);
             call.on('end', onEnd);
             call.write(
-                new MessageBuilder()
+                Message.builder()
                     .addHeader('Content-Type', 'text/plain')
                     .payload('riff')
                     .build()
+                    .toRiffMessage()
             );
             call.end();
         });
@@ -430,10 +586,11 @@ describe('grpc', () => {
             call.on('data', onData);
             call.on('end', onEnd);
             call.write(
-                new MessageBuilder()
+                Message.builder()
                     .addHeader('Content-Type', 'application/vnd.projectriff.bogus')
                     .payload('')
                     .build()
+                    .toRiffMessage()
             );
             call.end();
         });
@@ -464,12 +621,236 @@ describe('grpc', () => {
             call.on('data', onData);
             call.on('end', onEnd);
             call.write(
-                new MessageBuilder()
+                Message.builder()
                     .addHeader('Content-Type', 'text/plain')
                     .payload('riff')
                     .build()
+                    .toRiffMessage()
             );
             call.end();
+        });
+
+        it('can work with payloads', done => {
+            const data = [1, 2, 3];
+            const fnOnData = jasmine.createSpy('fnOnData');
+            const fn = jasmine.createSpy('fn', (input, output) => {
+                input.on('data', fnOnData);
+                input.on('end', () => {
+                    output.end();
+                });
+            }).and.callThrough();
+            fn.$argumentType = 'payload';
+            fn.$interactionModel = 'node-streams';
+            ({ client, server } = makeLocalServer(fn));
+
+            const call = client.call();
+            const onData = jasmine.createSpy('onData');
+            const onEnd = () => {
+                expect(fn).toHaveBeenCalledTimes(1);
+                expect(onData).toHaveBeenCalledTimes(0);
+                expect(fnOnData).toHaveBeenCalledTimes(3);
+
+                data.forEach((d, i) => {
+                    expect(fnOnData.calls.argsFor(i)[0]).toBe(`riff ${d}`);
+                });
+
+                done();
+            };
+            call.on('data', onData);
+            call.on('end', onEnd);
+            data.forEach(d => {
+                call.write(
+                    Message.builder()
+                        .addHeader('Content-Type', 'text/plain')
+                        .payload(`riff ${d}`)
+                        .build()
+                        .toRiffMessage()
+                );
+            });
+            call.end();
+        });
+
+        it('can work with messages', done => {
+            const data = [1, 2, 3];
+            const fnOnData = jasmine.createSpy('fnOnData');
+            const fn = jasmine.createSpy('fn', (input, output) => {
+                input.on('data', fnOnData);
+                input.on('end', () => {
+                    output.end();
+                });
+            }).and.callThrough();
+            fn.$argumentType = 'message';
+            fn.$interactionModel = 'node-streams';
+            ({ client, server } = makeLocalServer(fn));
+
+            const call = client.call();
+            const onData = jasmine.createSpy('onData');
+            const onEnd = () => {
+                expect(fn).toHaveBeenCalledTimes(1);
+                expect(onData).toHaveBeenCalledTimes(0);
+                expect(fnOnData).toHaveBeenCalledTimes(3);
+
+                data.forEach((d, i) => {
+                    const message = fnOnData.calls.argsFor(i)[0];
+                    expect(message.headers.getValues('Content-Type')).toEqual(['text/plain']);
+                    expect(message.payload).toBe(`riff ${d}`);
+                });
+
+                done();
+            };
+            call.on('data', onData);
+            call.on('end', onEnd);
+            data.forEach(d => {
+                call.write(
+                    Message.builder()
+                        .addHeader('Content-Type', 'text/plain')
+                        .payload(`riff ${d}`)
+                        .build()
+                        .toRiffMessage()
+                );
+            });
+            call.end();
+        });
+
+        it('can work with headers', done => {
+            const data = [1, 2, 3];
+            const fnOnData = jasmine.createSpy('fnOnData');
+            const fn = jasmine.createSpy('fn', (input, output) => {
+                input.on('data', fnOnData);
+                input.on('end', () => {
+                    output.end();
+                });
+            }).and.callThrough();
+            fn.$argumentType = 'headers';
+            fn.$interactionModel = 'node-streams';
+            ({ client, server } = makeLocalServer(fn));
+
+            const call = client.call();
+            const onData = jasmine.createSpy('onData');
+            const onEnd = () => {
+                expect(fn).toHaveBeenCalledTimes(1);
+                expect(onData).toHaveBeenCalledTimes(0);
+                expect(fnOnData).toHaveBeenCalledTimes(3);
+
+                data.forEach((d, i) => {
+                    const headers = fnOnData.calls.argsFor(i)[0];
+                    expect(headers.getValues('Content-Type')).toEqual(['text/plain']);
+                    expect(headers.getValues('X-Test')).toEqual([`${d}`]);
+                });
+
+                done();
+            };
+            call.on('data', onData);
+            call.on('end', onEnd);
+            data.forEach(d => {
+                call.write(
+                    Message.builder()
+                        .addHeader('Content-Type', 'text/plain')
+                        .addHeader('X-Test', d)
+                        .payload(`riff ${d}`)
+                        .build()
+                        .toRiffMessage()
+                );
+            });
+            call.end();
+        });
+
+        it('can produce messages', done => {
+            const data = [1, 2, 3];
+            const fnOnData = jasmine.createSpy('fnOnData');
+            const fnOnEnd = jasmine.createSpy('fnOnEnd');
+            const fn = jasmine.createSpy('fn', (input, output) => {
+                input.on('data', fnOnData);
+                input.on('end', fnOnEnd)
+
+                data.forEach(d => {
+                    output.write(
+                        Message.builder()
+                            .addHeader('X-Test', d)
+                            .payload(`riff ${d}`)
+                            .build()
+                    );
+                });
+
+                output.end();
+            }).and.callThrough();
+            fn.$interactionModel = 'node-streams';
+            ({ client, server } = makeLocalServer(fn));
+
+            const call = client.call();
+            const onData = jasmine.createSpy('onData');
+            const onEnd = () => {
+                expect(fn).toHaveBeenCalledTimes(1);
+                expect(onData).toHaveBeenCalledTimes(3);
+                expect(fnOnData).toHaveBeenCalledTimes(0);
+                expect(fnOnEnd).toHaveBeenCalledTimes(1);
+
+                data.forEach((d, i) => {
+                    const { headers, payload } = parseMessage(onData.calls.argsFor(i)[0]);
+                    expect(headers.getValues('Content-Type')).toEqual(['text/plain']);
+                    expect(headers.getValues('X-Test')).toEqual([`${d}`]);
+                    expect(payload.toString()).toBe(`riff ${d}`);
+                });
+
+                done();
+            };
+            call.on('data', onData);
+            call.on('end', onEnd);
+        });
+
+        it('can produce custom messages', done => {
+            class AltMessage extends AbstractMessage {
+                constructor(name) {
+                    super();
+                    this.name = name;
+                }
+                toRiffMessage() {
+                    return {
+                        headers: {
+                            'X-Test': {
+                                values: [`${this.name}`]
+                            }
+                        },
+                        payload: `riff ${this.name}`
+                    }
+                }
+            }
+
+            const data = [1, 2, 3];
+            const fnOnData = jasmine.createSpy('fnOnData');
+            const fnOnEnd = jasmine.createSpy('fnOnEnd');
+            const fn = jasmine.createSpy('fn', (input, output) => {
+                input.on('data', fnOnData);
+                input.on('end', fnOnEnd)
+
+                data.forEach(d => {
+                    output.write(new AltMessage(d));
+                });
+
+                output.end();
+            }).and.callThrough();
+            fn.$interactionModel = 'node-streams';
+            ({ client, server } = makeLocalServer(fn));
+
+            const call = client.call();
+            const onData = jasmine.createSpy('onData');
+            const onEnd = () => {
+                expect(fn).toHaveBeenCalledTimes(1);
+                expect(onData).toHaveBeenCalledTimes(3);
+                expect(fnOnData).toHaveBeenCalledTimes(0);
+                expect(fnOnEnd).toHaveBeenCalledTimes(1);
+
+                data.forEach((d, i) => {
+                    const { headers, payload } = parseMessage(onData.calls.argsFor(i)[0]);
+                    expect(headers.getValues('Content-Type')).toEqual(['text/plain']);
+                    expect(headers.getValues('X-Test')).toEqual([`${d}`]);
+                    expect(payload.toString()).toBe(`riff ${d}`);
+                });
+
+                done();
+            };
+            call.on('data', onData);
+            call.on('end', onEnd);
         });
     });
 
@@ -497,7 +878,7 @@ describe('grpc', () => {
             };
             call.on('data', onData);
             call.on('end', onEnd);
-            call.write(new MessageBuilder().payload('riff').build());
+            call.write(Message.builder().payload('riff').build().toRiffMessage());
             call.end();
         });
 
@@ -518,11 +899,12 @@ describe('grpc', () => {
             call.on('data', onData);
             call.on('end', onEnd);
             call.write(
-                new MessageBuilder()
+                Message.builder()
                     .addHeader('Accept', 'text/plain')
                     .addHeader('Content-Type', 'text/plain')
                     .payload('riff')
                     .build()
+                    .toRiffMessage()
             );
             call.end();
         });
@@ -544,11 +926,12 @@ describe('grpc', () => {
             call.on('data', onData);
             call.on('end', onEnd);
             call.write(
-                new MessageBuilder()
+                Message.builder()
                     .addHeader('Accept', 'application/json')
                     .addHeader('Content-Type', 'application/json')
                     .payload('"riff"')
                     .build()
+                    .toRiffMessage()
             );
             call.end();
         });
@@ -570,11 +953,12 @@ describe('grpc', () => {
             call.on('data', onData);
             call.on('end', onEnd);
             call.write(
-                new MessageBuilder()
+                Message.builder()
                     .addHeader('Accept', 'application/octet-stream')
                     .addHeader('Content-Type', 'application/octet-stream')
                     .payload(Buffer.from([0x72, 0x69, 0x66, 0x66]))
                     .build()
+                    .toRiffMessage()
             );
             call.end();
         });
@@ -596,11 +980,12 @@ describe('grpc', () => {
             call.on('data', onData);
             call.on('end', onEnd);
             call.write(
-                new MessageBuilder()
+                Message.builder()
                     .addHeader('Accept', 'application/x-www-form-urlencoded')
                     .addHeader('Content-Type', 'application/x-www-form-urlencoded')
                     .payload('name=project+riff&email=riff%40example.com')
                     .build()
+                    .toRiffMessage()
             );
             call.end();
         });
@@ -622,11 +1007,12 @@ describe('grpc', () => {
             call.on('data', onData);
             call.on('end', onEnd);
             call.write(
-                new MessageBuilder()
+                Message.builder()
                     .addHeader('Accept', 'text/plain')
                     .addHeader('Content-Type', 'text/plain; charset=utf-8')
                     .payload('riff')
                     .build()
+                    .toRiffMessage()
             );
             call.end();
         });
@@ -648,11 +1034,12 @@ describe('grpc', () => {
             call.on('data', onData);
             call.on('end', onEnd);
             call.write(
-                new MessageBuilder()
+                Message.builder()
                     .addHeader('Accept', 'application/json;q=0.5, text/plain')
                     .addHeader('Content-Type', 'text/plain')
                     .payload('riff')
                     .build()
+                    .toRiffMessage()
             );
             call.end();
         });
@@ -673,10 +1060,11 @@ describe('grpc', () => {
             call.on('data', onData);
             call.on('end', onEnd);
             call.write(
-                new MessageBuilder()
+                Message.builder()
                     .addHeader('Content-Type', 'application/vnd.projectriff.bogus')
                     .payload('riff')
                     .build()
+                    .toRiffMessage()
             );
             call.end();
         });
@@ -697,10 +1085,11 @@ describe('grpc', () => {
             call.on('data', onData);
             call.on('end', onEnd);
             call.write(
-                new MessageBuilder()
+                Message.builder()
                     .addHeader('Accept', 'application/vnd.projectriff.bogus')
                     .payload('riff')
                     .build()
+                    .toRiffMessage()
             );
             call.end();
         });

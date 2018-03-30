@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@projectriff/function-proto": "0.0.4",
+    "@projectriff/message": "1.0.0-beta.3",
     "grpc": "^1.8.4",
     "negotiator": "^0.6.1",
     "through2": "^2.0.3"

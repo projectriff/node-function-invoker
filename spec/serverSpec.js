@@ -19,7 +19,8 @@ const fs = require('fs');
 const path = require('path');
 const util = require('util');
 const waitForPort = util.promisify(require('wait-for-port'));
-const { FunctionInvokerClient, MessageBuilder, MessageHeaders } = require('@projectriff/function-proto');
+const { FunctionInvokerClient } = require('@projectriff/function-proto');
+const { Message } = require('@projectriff/message');
 const grpc = require('grpc');
 
 const HOST = process.env.HOST || '127.0.0.1';
@@ -48,17 +49,14 @@ describe('server', () => {
             const client = new FunctionInvokerClient(`${HOST}:${port}`, grpc.credentials.createInsecure());
             const call = client.call();
             call.on('data', message => {
-                resolve({
-                    headers: MessageHeaders.fromObject(message.headers),
-                    payload: message.payload
-                });
+                resolve(Message.fromRiffMessage(message));
                 call.end();
             });
-            call.write(request instanceof MessageBuilder ? request.build() : request);
+            call.write(request.toRiffMessage());
         });
     }
 
-    it('runs the echo function', async () => {
+    it('runs the echo-request-reply function', async () => {
         const server = createServerProcess('echo-request-reply');
 
         const exitCode = new Promise(resolve => {
@@ -68,7 +66,7 @@ describe('server', () => {
         await waitForServer();
 
         const { payload, headers } = await requestReplyCall(
-            new MessageBuilder()
+            Message.builder()
                 .addHeader('Content-Type', 'text/plain')
                 .addHeader('Accept', 'text/plain')
                 .payload('riff')
@@ -101,10 +99,9 @@ describe('server', () => {
             const onEnd = () => {
                 expect(onData).toHaveBeenCalledTimes(3);
                 data.forEach((d, i) => {
-                    const message = onData.calls.argsFor(i)[0];
-                    const headers = MessageHeaders.fromObject(message.headers);
+                    const { headers, payload } = Message.fromRiffMessage(onData.calls.argsFor(i)[0]);
                     expect(headers.getValue('Content-Type')).toEqual('text/plain');
-                    expect(message.payload.toString()).toEqual(`riff ${d}`);
+                    expect(payload.toString()).toEqual(`riff ${d}`);
                 });
 
                 resolve();
@@ -113,14 +110,137 @@ describe('server', () => {
             call.on('end', onEnd);
             data.forEach(d => {
                 call.write(
-                    new MessageBuilder()
+                    Message.builder()
                         .addHeader('Content-Type', 'text/plain')
                         .payload(`riff ${d}`)
                         .build()
+                        .toRiffMessage()
                 );
             });
             call.end();
         });
+
+        server.kill('SIGINT');
+        expect(await exitCode).toBe(0);
+    });
+
+    it('runs the uppercase-payload function', async () => {
+        const server = createServerProcess('uppercase-payload');
+
+        const exitCode = new Promise(resolve => {
+            server.on('exit', resolve);
+        });
+
+        await waitForServer();
+
+        const { payload, headers } = await requestReplyCall(
+            Message.builder()
+                .addHeader('Content-Type', 'text/plain')
+                .addHeader('Accept', 'text/plain')
+                .payload('riff')
+                .build()
+        );
+        expect(headers.getValue('Error')).toBeNull();
+        expect(headers.getValue('Content-Type')).toEqual('text/plain');
+        expect(payload.toString()).toEqual('RIFF');
+
+        server.kill('SIGINT');
+        expect(await exitCode).toBe(0);
+    });
+
+    it('runs the uppercase-headers function', async () => {
+        const server = createServerProcess('uppercase-headers');
+
+        const exitCode = new Promise(resolve => {
+            server.on('exit', resolve);
+        });
+
+        await waitForServer();
+
+        const { payload, headers } = await requestReplyCall(
+            Message.builder()
+                .addHeader('Content-Type', 'text/plain')
+                .addHeader('Accept', 'text/plain')
+                .payload('riff')
+                .build()
+        );
+        expect(headers.getValue('Error')).toBeNull();
+        expect(headers.getValue('Content-Type')).toEqual('text/plain');
+        expect(payload.toString()).toEqual('TEXT/PLAIN');
+
+        server.kill('SIGINT');
+        expect(await exitCode).toBe(0);
+    });
+
+    it('runs the uppercase-message function', async () => {
+        const server = createServerProcess('uppercase-message');
+
+        const exitCode = new Promise(resolve => {
+            server.on('exit', resolve);
+        });
+
+        await waitForServer();
+
+        const { payload, headers } = await requestReplyCall(
+            Message.builder()
+                .addHeader('Content-Type', 'text/plain')
+                .addHeader('Accept', 'text/plain')
+                .payload('riff')
+                .build()
+        );
+        expect(headers.getValue('Error')).toBeNull();
+        expect(headers.getValue('Content-Type')).toEqual('text/plain');
+        expect(payload.toString()).toEqual('RIFF');
+
+        server.kill('SIGINT');
+        expect(await exitCode).toBe(0);
+    });
+
+    it('runs the uppercase-produces-message function', async () => {
+        const server = createServerProcess('uppercase-produces-message');
+
+        const exitCode = new Promise(resolve => {
+            server.on('exit', resolve);
+        });
+
+        await waitForServer();
+
+        const { payload, headers } = await requestReplyCall(
+            Message.builder()
+                .addHeader('Content-Type', 'text/plain')
+                .addHeader('Accept', 'text/plain')
+                .payload('riff')
+                .build()
+        );
+        expect(headers.getValue('Error')).toBeNull();
+        expect(headers.getValue('Content-Type')).toEqual('text/plain');
+        expect(headers.getValue('X-Test')).toEqual('uppercase-produces-message');
+        expect(payload.toString()).toEqual('RIFF');
+
+        server.kill('SIGINT');
+        expect(await exitCode).toBe(0);
+    });
+
+    it('runs the uppercase-custom-message function', async () => {
+        const server = createServerProcess('uppercase-custom-message');
+
+        const exitCode = new Promise(resolve => {
+            server.on('exit', resolve);
+        });
+
+        await waitForServer();
+
+        const { payload, headers } = await requestReplyCall(
+            Message.builder()
+                .addHeader('Content-Type', 'text/plain')
+                .addHeader('Accept', 'text/plain')
+                .payload('riff')
+                .build()
+        );
+        expect(headers.getValue('Error')).toBeNull();
+        expect(headers.getValue('Content-Type')).toEqual('text/plain');
+        expect(headers.getValue('X-Test')).toEqual('uppercase-custom-message');
+        expect(payload.toString()).toEqual('RIFF');
 
         server.kill('SIGINT');
         expect(await exitCode).toBe(0);
@@ -136,7 +256,7 @@ describe('server', () => {
         await waitForServer();
 
         const { payload, headers } = await requestReplyCall(
-            new MessageBuilder()
+            Message.builder()
                 .addHeader('Content-Type', 'text/plain')
                 .addHeader('Accept', 'application/json')
                 .payload('riff')

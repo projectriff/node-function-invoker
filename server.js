@@ -16,7 +16,14 @@
 
 const { FUNCTION_URI, HOST, GRPC_PORT } = process.env;
 
+
 const interactionModelTypes = require('./lib/interaction-models');
+const argumentTypes = require('./lib/argument-types');
+
+const { Message } = require('@projectriff/message');
+// register Message as default AbstractMessage type
+// must be run before the function is required
+Message.install();
 
 const fn = require(FUNCTION_URI);
 
@@ -26,6 +33,7 @@ console.log(`Node started in ${process.uptime() * 1000}ms`);
 
 // handle startup
 async function init() {
+
     if (typeof fn.$init === 'function') {
         // wait 10s for the sever to start before killing it
         const timeout = setTimeout(() => {
@@ -42,12 +50,12 @@ async function init() {
     }
 }
 
-function loadGRPC(interactionModel) {
+function loadGRPC(interactionModel, argumentType) {
     const grpc = require('grpc');
-    const server = require('./lib/grpc')(fn, interactionModel);
+    const server = require('./lib/grpc')(fn, interactionModel, argumentType);
 
     if (!server) {
-        console.log(`gRPC not supported for ${interactionModel} interaction model`);
+        console.log(`gRPC not supported for ${interactionModel} interaction model and ${argumentType} argument type`);
         return;
     }
 
@@ -76,10 +84,26 @@ async function startup() {
             throw new Error(`Unknown interaction model '${fn.$interactionModel}'`);
     }
 
-    console.log(`Server starting with ${interactionModel} interaction model`);
+    let argumentType;
+    switch (fn.$argumentType) {
+        case argumentTypes.MESSAGE:
+            argumentType = argumentTypes.MESSAGE;
+            break;
+        case argumentTypes.HEADERS:
+            argumentType = argumentTypes.HEADERS;
+            break;
+        case undefined:
+        case argumentTypes.PAYLOAD:
+            argumentType = argumentTypes.PAYLOAD;
+            break
+        default:
+            throw new Error(`Unknown argument type '${fn.$argumentType}'`);
+    }
+
+    console.log(`Server starting with ${interactionModel} interaction model and ${argumentType} argument type`);
 
     // load protocols while function is initializing
-    const bindGRPC = time(loadGRPC.bind(null, interactionModel), ms => { console.log(`gRPC loaded in ${ms}ms`); });
+    const bindGRPC = time(loadGRPC.bind(null, interactionModel, argumentType), ms => { console.log(`gRPC loaded in ${ms}ms`); });
 
     // wait for function to finish initializing
     await initPromise;

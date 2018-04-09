@@ -24,7 +24,8 @@ const { Message } = require('@projectriff/message');
 const grpc = require('grpc');
 
 const HOST = process.env.HOST || '127.0.0.1';
-let port = 60061;
+const HTTP_PORT = 8080;
+let grpcPort = 60061;
 
 const serverPath = path.join(__dirname, '..', 'server.js');
 
@@ -33,7 +34,8 @@ describe('server', () => {
         return childProcess.spawn('node', [serverPath], {
             env: Object.assign({}, process.env, {
                 HOST,
-                GRPC_PORT: ++port,
+                GRPC_PORT: ++grpcPort,
+                HTTP_PORT,
                 FUNCTION_URI: path.join(__dirname, 'support', `${functionName}.js`)
             }),
             stdio
@@ -41,12 +43,13 @@ describe('server', () => {
     }
 
     async function waitForServer() {
-        await waitForPort(HOST, port);
+        await waitForPort(HOST, grpcPort);
+        await waitForPort(HOST, HTTP_PORT);
     }
 
     function requestReplyCall(request) {
         return new Promise(resolve => {
-            const client = new FunctionInvokerClient(`${HOST}:${port}`, grpc.credentials.createInsecure());
+            const client = new FunctionInvokerClient(`${HOST}:${grpcPort}`, grpc.credentials.createInsecure());
             const call = client.call();
             call.on('data', message => {
                 resolve(Message.fromRiffMessage(message));
@@ -91,7 +94,7 @@ describe('server', () => {
 
         // listening for GRPC
         await new Promise(resolve => {
-            const client = new FunctionInvokerClient(`${HOST}:${port}`, grpc.credentials.createInsecure());
+            const client = new FunctionInvokerClient(`${HOST}:${grpcPort}`, grpc.credentials.createInsecure());
             const data = [1, 2, 3];
 
             const call = client.call();

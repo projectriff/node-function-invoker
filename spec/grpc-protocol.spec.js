@@ -17,13 +17,17 @@
 const { FunctionInvokerClient } = require('@projectriff/function-proto');
 const { Message, AbstractMessage } = require('@projectriff/message');
 const grpc = require('grpc');
-const makeServer = require('../lib/grpc');
+const makeServer = require('../lib/protocols/grpc');
+const argumentTransformers = require('../lib/argument-transformers');
+const interactionModels = require('../lib/interaction-models');
 
 const HOST = process.env.HOST || '127.0.0.1';
 let port = 50051;
 
 function makeLocalServer(fn) {
-    const server = makeServer(fn, fn.$interactionModel || 'request-reply', fn.$argumentType || 'payload');
+    const argumentTransformer = argumentTransformers[fn.$argumentType || 'payload'];
+    const interactionModel = interactionModels[fn.$interactionModel || 'request-reply'];
+    const server = makeServer(fn, interactionModel, argumentTransformer);
 
     // TODO figure out why resuing the same port fails after three test cases
     const address = `${HOST}:${++port}`;

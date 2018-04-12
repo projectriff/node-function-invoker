@@ -1,0 +1,15 @@
+{
+  "name": "@projectriff/mean-sample",
+  "version": "1.0.0",
+  "description": "Streaming mean sample function for the riff node-function-invoker",
+  "main": "mean.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Scott Andrews",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "mississippi": "^3.0.0",
+    "simple-statistics": "^5.3.1"
+  }
+}

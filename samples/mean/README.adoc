@@ -1,0 +1,54 @@
+= mean
+
+[horizontal]
+*Invoker*:: Node
+*Function*:: link:package.json[package.json]
+*Input*:: numbers
+*Output*:: mean
+
+=== prerequisites
+
+1. riff is deployed
+2. the `riff` CLI is on your PATH
+3. the node invoker is installed
+
+   riff invokers apply -f https://github.com/projectriff/node-function-invoker/raw/master/node-invoker.yaml
+
+
+4. the `topics` helper script is on your PATH
+5. the working directory is `samples/mean`
+
+=== create the function and its input topic
+
+```
+riff create node --input numbers --output mean --artifact package.json
+```
+
+=== tail the output topic and publish messages
+
+In a terminal window:
+```
+topics tail -n mean
+```
+
+In a different terminal window, in quick succession:
+```
+riff publish --input numbers --data 100
+riff publish --input numbers --data 200
+riff publish --input numbers --data 0
+riff publish --input numbers --data 300
+```
+
+You'll see output similar to the following:
+```
+ Content-Type["text/plain"] 100
+ Content-Type["text/plain"] 150
+ Content-Type["text/plain"] 100
+ Content-Type["text/plain"] 150
+```
+
+=== delete the function and its topics
+
+```
+riff delete --all
+```

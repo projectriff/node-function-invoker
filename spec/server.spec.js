@@ -127,6 +127,30 @@ describe('server', () => {
         expect(await exitCode).toBe(0);
     });
 
+    it('runs the echo-esmodule-transpile function', async () => {
+        const server = createServerProcess('echo-esmodule-transpile');
+
+        const exitCode = new Promise(resolve => {
+            server.on('exit', resolve);
+        });
+
+        await waitForServer();
+
+        const { payload, headers } = await requestReplyCall(
+            Message.builder()
+                .addHeader('Content-Type', 'text/plain')
+                .addHeader('Accept', 'text/plain')
+                .payload('riff')
+                .build()
+        );
+        expect(headers.getValue('Error')).toBeNull();
+        expect(headers.getValue('Content-Type')).toEqual('text/plain');
+        expect(payload.toString()).toEqual('riff');
+
+        server.kill('SIGINT');
+        expect(await exitCode).toBe(0);
+    });
+
     it('runs the uppercase-payload function', async () => {
         const server = createServerProcess('uppercase-payload');
 

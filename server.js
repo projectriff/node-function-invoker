@@ -24,7 +24,13 @@ const { Message } = require('@projectriff/message');
 // must be run before the function is required
 Message.install();
 
-const fn = require(FUNCTION_URI);
+const fn = (fn => {
+    if (fn.__esModule && typeof fn.default === 'function') {
+        // transpiled ES Module interop
+        return fn.default;
+    }
+    return fn;
+})(require(FUNCTION_URI));
 
 let grpcServer, httpServer;
 

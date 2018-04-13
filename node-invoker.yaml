@@ -18,7 +18,7 @@ spec:
       {{ if .FileExists "package.json" -}}
       ENV FUNCTION_URI /functions/
       COPY . ${FUNCTION_URI}
-      RUN (cd ${FUNCTION_URI} && npm install --production)
+      RUN (cd ${FUNCTION_URI} && npm install --production  --unsafe-perm)
       {{- else -}}
       ENV FUNCTION_URI /functions/{{.Artifact}}
       ADD {{.ArtifactBase}} ${FUNCTION_URI}

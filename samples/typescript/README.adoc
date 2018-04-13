@@ -1,0 +1,41 @@
+= typescript
+
+[horizontal]
+*Invoker*:: Node
+*Function*:: link:lib/greeter.ts[greeter.ts]
+*Input*:: greeter
+
+=== prerequisites
+
+1. riff is deployed
+2. the `riff` CLI is on your PATH
+3. the node invoker is installed
+
+   riff invokers apply -f https://github.com/projectriff/node-function-invoker/raw/master/node-invoker.yaml
+
+4. the working directory is `samples/typescript`
+
+=== how it works
+
+When a node function contains a package.json file, the package dependencies are installed while
+building the function into a Docker container. This function installs typescript as a dependency
+and then uses a post install script to run the typescript compiler. Once the typescript is
+transpiled, the function behavaes as a standard JS function.
+
+=== create the function and its input topic
+
+```
+riff create node -i greeter
+```
+
+=== publish a message and wait for a reply
+
+```
+riff publish -i greeter -d "riff user" -r
+```
+
+=== delete the function and its input topic
+
+```
+riff delete --all
+```

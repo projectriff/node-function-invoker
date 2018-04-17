@@ -4,7 +4,7 @@ kind: Invoker
 metadata:
   name: node
 spec:
-  version: 0.0.8-snapshot
+  version: 0.0.8
   matchers:
   - package.json
   - "*.js"

@@ -22,6 +22,7 @@ const waitForPort = util.promisify(require('wait-for-port'));
 const { FunctionInvokerClient } = require('@projectriff/function-proto');
 const { Message } = require('@projectriff/message');
 const grpc = require('grpc');
+const request = require('superagent');
 
 const HOST = process.env.HOST || '127.0.0.1';
 const HTTP_PORT = 8080;
@@ -30,21 +31,29 @@ let grpcPort = 60061;
 const serverPath = path.join(__dirname, '..', 'server.js');
 
 describe('server', () => {
-    function createServerProcess(functionName, stdio = 'ignore') {
+    function createServerProcess(functionName, opts = {}) {
+        const protocol = opts.protocol || '';
+        const stdio = opts.stdio || 'ignore';
+
         return childProcess.spawn('node', [serverPath], {
             env: Object.assign({}, process.env, {
                 HOST,
                 GRPC_PORT: ++grpcPort,
                 HTTP_PORT,
+                RIFF_FUNCTION_INVOKER_PROTOCOL: protocol,
                 FUNCTION_URI: path.join(__dirname, 'support', `${functionName}.js`)
             }),
             stdio
         });
     }
 
-    async function waitForServer() {
-        await waitForPort(HOST, grpcPort);
-        await waitForPort(HOST, HTTP_PORT);
+    async function waitForServer(protocol = '') {
+        if (protocol !== 'http') {
+            await waitForPort(HOST, grpcPort, { numRetries: 10, retryInterval: 100 });
+        }
+        if (protocol !== 'grpc') {
+            await waitForPort(HOST, HTTP_PORT, { numRetries: 10, retryInterval: 100 });
+        }
     }
 
     function requestReplyCall(request) {
@@ -60,13 +69,14 @@ describe('server', () => {
     }
 
     it('runs the echo-request-reply function', async () => {
-        const server = createServerProcess('echo-request-reply');
+        const protocol = 'grpc';
+        const server = createServerProcess('echo-request-reply', { protocol });
 
         const exitCode = new Promise(resolve => {
             server.on('exit', resolve);
         });
 
-        await waitForServer();
+        await waitForServer(protocol);
 
         const { payload, headers } = await requestReplyCall(
             Message.builder()
@@ -84,13 +94,14 @@ describe('server', () => {
     });
 
     it('runs the echo-node-streams function', async () => {
-        const server = createServerProcess('echo-node-streams');
+        const protocol = 'grpc';
+        const server = createServerProcess('echo-node-streams', { protocol });
 
         const exitCode = new Promise(resolve => {
             server.on('exit', resolve);
         });
 
-        await waitForServer();
+        await waitForServer(protocol);
 
         // listening for GRPC
         await new Promise(resolve => {
@@ -128,13 +139,14 @@ describe('server', () => {
     });
 
     it('runs the echo-esmodule-transpile function', async () => {
-        const server = createServerProcess('echo-esmodule-transpile');
+        const protocol = 'grpc';
+        const server = createServerProcess('echo-esmodule-transpile', { protocol });
 
         const exitCode = new Promise(resolve => {
             server.on('exit', resolve);
         });
 
-        await waitForServer();
+        await waitForServer(protocol);
 
         const { payload, headers } = await requestReplyCall(
             Message.builder()
@@ -152,13 +164,14 @@ describe('server', () => {
     });
 
     it('runs the uppercase-payload function', async () => {
-        const server = createServerProcess('uppercase-payload');
+        const protocol = 'grpc';
+        const server = createServerProcess('uppercase-payload', { protocol });
 
         const exitCode = new Promise(resolve => {
             server.on('exit', resolve);
         });
 
-        await waitForServer();
+        await waitForServer(protocol);
 
         const { payload, headers } = await requestReplyCall(
             Message.builder()
@@ -176,13 +189,14 @@ describe('server', () => {
     });
 
     it('runs the uppercase-headers function', async () => {
-        const server = createServerProcess('uppercase-headers');
+        const protocol = 'grpc';
+        const server = createServerProcess('uppercase-headers', { protocol });
 
         const exitCode = new Promise(resolve => {
             server.on('exit', resolve);
         });
 
-        await waitForServer();
+        await waitForServer(protocol);
 
         const { payload, headers } = await requestReplyCall(
             Message.builder()
@@ -200,13 +214,14 @@ describe('server', () => {
     });
 
     it('runs the uppercase-message function', async () => {
-        const server = createServerProcess('uppercase-message');
+        const protocol = 'grpc';
+        const server = createServerProcess('uppercase-message', { protocol });
 
         const exitCode = new Promise(resolve => {
             server.on('exit', resolve);
         });
 
-        await waitForServer();
+        await waitForServer(protocol);
 
         const { payload, headers } = await requestReplyCall(
             Message.builder()
@@ -224,13 +239,14 @@ describe('server', () => {
     });
 
     it('runs the uppercase-produces-message function', async () => {
-        const server = createServerProcess('uppercase-produces-message');
+        const protocol = 'grpc';
+        const server = createServerProcess('uppercase-produces-message', { protocol });
 
         const exitCode = new Promise(resolve => {
             server.on('exit', resolve);
         });
 
-        await waitForServer();
+        await waitForServer(protocol);
 
         const { payload, headers } = await requestReplyCall(
             Message.builder()
@@ -249,13 +265,14 @@ describe('server', () => {
     });
 
     it('runs the uppercase-custom-message function', async () => {
-        const server = createServerProcess('uppercase-custom-message');
+        const protocol = 'grpc';
+        const server = createServerProcess('uppercase-custom-message', { protocol });
 
         const exitCode = new Promise(resolve => {
             server.on('exit', resolve);
         });
 
-        await waitForServer();
+        await waitForServer(protocol);
 
         const { payload, headers } = await requestReplyCall(
             Message.builder()
@@ -274,13 +291,14 @@ describe('server', () => {
     });
 
     it('runs the lifecycle function', async () => {
-        const server = createServerProcess('lifecycle');
+        const protocol = 'grpc';
+        const server = createServerProcess('lifecycle', { protocol });
 
         const exitCode = new Promise(resolve => {
             server.on('exit', resolve);
         });
 
-        await waitForServer();
+        await waitForServer(protocol);
 
         const { payload, headers } = await requestReplyCall(
             Message.builder()
@@ -360,5 +378,119 @@ describe('server', () => {
             server.on('exit', resolve);
         });
         expect(await exitCode).toBe(255);
+    }, 15e3);
+
+    it('exits for an unknown protocol', async () => {
+        const server = createServerProcess('echo-request-reply', { protocol: 'bogus' });
+
+        const exitCode = new Promise(resolve => {
+            server.on('exit', resolve);
+        });
+        expect(await exitCode).toBe(255);
+    }, 15e3);
+
+    it('http server does not start for grpc protocol', async () => {
+        const server = createServerProcess('echo-request-reply', { protocol: 'grpc' });
+
+        const exitCode = new Promise(resolve => {
+            server.on('exit', resolve);
+        });
+
+        await waitForServer().then(
+            () => fail('Expected to fail'),
+            e => expect(e.message).toBe('out of retries')
+        );
+
+        // grpc request
+        const { payload, headers } = await requestReplyCall(
+            Message.builder()
+                .addHeader('Content-Type', 'text/plain')
+                .addHeader('Accept', 'text/plain')
+                .payload('riff')
+                .build()
+        );
+        expect(headers.getValue('Error')).toBeNull();
+        expect(headers.getValue('Content-Type')).toEqual('text/plain');
+        expect(payload.toString()).toEqual('riff');
+
+        server.kill('SIGINT');
+        expect(await exitCode).toBe(0);
+    }, 15e3);
+
+    it('grpc server does not start for http protocol', async () => {
+        const server = createServerProcess('echo-request-reply', { protocol: 'http' });
+
+        const exitCode = new Promise(resolve => {
+            server.on('exit', resolve);
+        });
+
+        await waitForServer().then(
+            () => fail('Expected to fail'),
+            e => expect(e.message).toBe('out of retries')
+        );
+
+        // http request
+        await new Promise(resolve => {
+            request
+                .post(`http://localhost:${HTTP_PORT}/`)
+                .set('Content-Type', 'text/plain')
+                .send('riff')
+                .end(function(err, res) {
+                    if (err) throw err;
+
+                    expect(res.status).toBe(200);
+                    expect(res.headers['content-type']).toMatch('text/plain');
+                    expect(res.headers['error']).toBeUndefined();
+                    expect(res.text).toBe('riff');
+
+                    resolve();
+                });
+        });
+
+        server.kill('SIGINT');
+        expect(await exitCode).toBe(0);
+    }, 15e3);
+
+    it('http and grpc server starts when no protocol defined', async () => {
+        const server = createServerProcess('echo-request-reply');
+
+        const exitCode = new Promise(resolve => {
+            server.on('exit', resolve);
+        });
+
+        await waitForServer();
+
+        // grpc request
+        const { payload, headers } = await requestReplyCall(
+            Message.builder()
+                .addHeader('Content-Type', 'text/plain')
+                .addHeader('Accept', 'text/plain')
+                .payload('riff')
+                .build()
+        );
+        expect(headers.getValue('Error')).toBeNull();
+        expect(headers.getValue('Content-Type')).toEqual('text/plain');
+        expect(payload.toString()).toEqual('riff');
+
+        // http request
+        await new Promise(resolve => {
+            request
+                .post(`http://localhost:${HTTP_PORT}/`)
+                .set('Content-Type', 'text/plain')
+                .send('riff')
+                .end(function(err, res) {
+                    if (err) throw err;
+
+                    expect(res.status).toBe(200);
+                    expect(res.headers['content-type']).toMatch('text/plain');
+                    expect(res.headers['error']).toBeUndefined();
+                    expect(res.text).toBe('riff');
+
+                    resolve();
+                });
+        });
+
+        server.kill('SIGINT');
+        expect(await exitCode).toBe(0);
     }, 15e3);
 });

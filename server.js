@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-const { FUNCTION_URI, HOST, GRPC_PORT, HTTP_PORT } = process.env;
+const { FUNCTION_URI, HOST, RIFF_FUNCTION_INVOKER_PROTOCOL, GRPC_PORT, HTTP_PORT } = process.env;
 
 const interactionModels = require('./lib/interaction-models');
 const argumentTransformers = require('./lib/argument-transformers');
@@ -80,9 +80,11 @@ async function startup() {
     // start initialization
     const initPromise = init();
 
+    const $interactionModel = fn.$interactionModel || 'request-reply';
+    const $argumentType = fn.$argumentType || 'payload';
+
     let interactionModel;
-    switch (fn.$interactionModel) {
-        case undefined:
+    switch ($interactionModel) {
         case 'request-reply':
             interactionModel = interactionModels['request-reply'];
             break;
@@ -90,30 +92,39 @@ async function startup() {
             interactionModel = interactionModels['node-streams'];
             break;
         default:
-            throw new Error(`Unknown interaction model '${fn.$interactionModel}'`);
+            throw new Error(`Unknown interaction model '${$interactionModel}'`);
     }
 
     let argumentTransformer;
-    switch (fn.$argumentType) {
+    switch ($argumentType) {
         case 'message':
             argumentTransformer = argumentTransformers.message;
             break;
         case 'headers':
             argumentTransformer = argumentTransformers.headers;
             break;
-        case undefined:
         case 'payload':
             argumentTransformer = argumentTransformers.payload;
             break
         default:
-            throw new Error(`Unknown argument type '${fn.$argumentType}'`);
+            throw new Error(`Unknown argument type '${$argumentType}'`);
     }
 
-    console.log(`Server starting with ${fn.$interactionModel} interaction model and ${fn.$argumentType} argument type`);
+    const protocol = RIFF_FUNCTION_INVOKER_PROTOCOL || '';
+    switch (protocol) {
+        case '':
+        case 'http':
+        case 'grpc':
+            break;
+        default:
+            throw new Error(`Unknown protocol '${protocol}'`);
+    }
+
+    console.log(`Server starting with ${$interactionModel} interaction model and ${$argumentType} argument type`);
 
     // load protocols while function is initializing
-    const bindGRPC = time(loadGRPC.bind(null, interactionModel, argumentTransformer), ms => { console.log(`gRPC loaded in ${ms}ms`); });
-    const bindHTTP = time(loadHTTP.bind(null, interactionModel, argumentTransformer), ms => { console.log(`HTTP loaded in ${ms}ms`); });
+    const bindGRPC = (protocol === '' || protocol === 'grpc') && time(loadGRPC.bind(null, interactionModel, argumentTransformer), ms => { console.log(`gRPC loaded in ${ms}ms`); });
+    const bindHTTP = (protocol === '' || protocol === 'http') && time(loadHTTP.bind(null, interactionModel, argumentTransformer), ms => { console.log(`HTTP loaded in ${ms}ms`); });
 
     // wait for function to finish initializing
     await initPromise;

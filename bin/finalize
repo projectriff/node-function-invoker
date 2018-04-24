@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+build_dir=$1
+cache_dir=$2
+deps_dir=$3
+index=$4
+
+rm -rf $build_dir
+mkdir $build_dir
+
+mv $deps_dir/$index/function $build_dir
+mv $deps_dir/$index/invoker $build_dir
+
+mkdir $build_dir/.profile.d
+script=$build_dir/.profile.d/node-function-invoker.sh
+touch $script
+chmod +x $script
+echo 'dir=$( cd "$( dirname "${BASH_SOURCE[0]}" )/../.." && pwd )' >> $script
+echo 'source $dir/deps/0/profile.d/node-function-invoker.sh' >> $script

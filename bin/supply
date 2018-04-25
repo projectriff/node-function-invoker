@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+build_dir=$1
+cache_dir=$2
+deps_dir=$3
+index=$4
+
+mkdir $deps_dir/$index/bin
+export PATH=$PATH:$deps_dir/$index/bin
+
+# install node via n
+curl -L https://git.io/n-install | N_PREFIX=$deps_dir/$index/node bash -s -- -y stable
+pushd $deps_dir/$index/bin
+    ln -s ../node/bin/node
+    ln -s ../node/bin/npm
+popd
+
+# configure node
+mkdir $deps_dir/$index/profile.d
+pushd $deps_dir/$index/profile.d
+    script=node-function-invoker.sh
+    touch $script
+    chmod +x $script
+    echo 'dir=$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )' >> $script
+    echo 'export NODE_ENV=production' >> $script
+    echo 'export PATH=$PATH:$dir/bin' >> $script
+popd
+
+# install invoker
+mkdir $deps_dir/$index/invoker
+pushd $deps_dir/$index/invoker
+    cp -R $( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/.. .
+    npm install --production --unsafe-perm
+popd
+
+# install function
+mkdir $deps_dir/$index/function
+pushd $deps_dir/$index/function
+    cp -R $build_dir .
+    npm install --production --unsafe-perm
+popd

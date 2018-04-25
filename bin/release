@@ -10,4 +10,4 @@ invoker_dir=$build_dir/invoker
 
 echo "---"
 echo "default_process_types:"
-echo "  web: FUNCTION_URI=$function_dir node $invoker_dir/server.js"
+echo "  web: node invoker/server.js"

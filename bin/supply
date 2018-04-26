@@ -13,7 +13,16 @@ mkdir $deps_dir/$index/bin
 export PATH=$PATH:$deps_dir/$index/bin
 
 # install node via n
-curl -L https://git.io/n-install | N_PREFIX=$deps_dir/$index/node bash -s -- -y lts
+node_version=lts
+export N_PREFIX=$cache_dir/n
+if [ -d "$N_PREFIX" ]; then
+    PATH=$PATH:$N_PREFIX/bin n-update -y
+else
+    curl -L https://git.io/n-install | bash -s -- -y -
+fi
+PATH=$PATH:$N_PREFIX/bin n $node_version
+cp -a "$N_PREFIX/n/versions/node/`$N_PREFIX/bin/n --$node_version`" "$deps_dir/$index/node"
+export npm_config_cache=$cache_dir/npm
 pushd $deps_dir/$index/bin
     ln -s ../node/bin/node
     ln -s ../node/bin/npm

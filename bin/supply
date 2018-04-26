@@ -20,7 +20,7 @@ export N_PREFIX=$cache_dir/n
 if [ -d "$N_PREFIX" ]; then
     PATH=$PATH:$N_PREFIX/bin n-update -y
 else
-    curl -L https://git.io/n-install | bash -s -- -y -
+    curl -s -L https://git.io/n-install | bash -s -- -q -y -
 fi
 PATH=$PATH:$N_PREFIX/bin n $node_version
 cp -a $N_PREFIX/n/versions/node/`$N_PREFIX/bin/n --$node_version` $deps_dir/$index/node
@@ -33,13 +33,13 @@ ln -s ../node/bin/npm
 mkdir $deps_dir/$index/invoker
 cd $deps_dir/$index/invoker
 cp -a $buildpack_dir .
-npm install --production --unsafe-perm
+npm install --production --no-save --unsafe-perm
 
 # install function
 mkdir $deps_dir/$index/function
 cd $deps_dir/$index/function
 cp -a $build_dir/. .
-npm install --production --unsafe-perm
+npm install --production --no-save --unsafe-perm
 
 # configure invoker
 mkdir $deps_dir/$index/profile.d

@@ -15,15 +15,15 @@ mkdir $deps_dir/$index/bin
 export PATH=$PATH:$deps_dir/$index/bin
 
 # install node via n
-node_version=lts
+NODE_VERSION=${NODE_VERSION:-lts}
 export N_PREFIX=$cache_dir/n
 if [ -d "$N_PREFIX" ]; then
     PATH=$PATH:$N_PREFIX/bin n-update -y
 else
     curl -s -L https://git.io/n-install | bash -s -- -q -y -
 fi
-PATH=$PATH:$N_PREFIX/bin n $node_version
-cp -a $N_PREFIX/n/versions/node/`$N_PREFIX/bin/n --$node_version` $deps_dir/$index/node
+PATH=$PATH:$N_PREFIX/bin n $NODE_VERSION
+cp -a "$N_PREFIX/n/versions/node/`$N_PREFIX/bin/node --version | cut -c2-`" $deps_dir/$index/node
 export npm_config_cache=$cache_dir/npm
 cd $deps_dir/$index/bin
 ln -s ../node/bin/node

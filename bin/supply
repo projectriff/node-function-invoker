@@ -9,6 +9,8 @@ cache_dir=$2
 deps_dir=$3
 index=$4
 
+buildpack_dir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/..
+
 mkdir $deps_dir/$index/bin
 export PATH=$PATH:$deps_dir/$index/bin
 
@@ -21,38 +23,33 @@ else
     curl -L https://git.io/n-install | bash -s -- -y -
 fi
 PATH=$PATH:$N_PREFIX/bin n $node_version
-cp -a "$N_PREFIX/n/versions/node/`$N_PREFIX/bin/n --$node_version`" "$deps_dir/$index/node"
+cp -a $N_PREFIX/n/versions/node/`$N_PREFIX/bin/n --$node_version` $deps_dir/$index/node
 export npm_config_cache=$cache_dir/npm
-pushd $deps_dir/$index/bin
-    ln -s ../node/bin/node
-    ln -s ../node/bin/npm
-popd
+cd $deps_dir/$index/bin
+ln -s ../node/bin/node
+ln -s ../node/bin/npm
 
 # install invoker
 mkdir $deps_dir/$index/invoker
-pushd $deps_dir/$index/invoker
-    cp -a $( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/.. .
-    npm install --production --unsafe-perm
-popd
+cd $deps_dir/$index/invoker
+cp -a $buildpack_dir .
+npm install --production --unsafe-perm
 
 # install function
 mkdir $deps_dir/$index/function
-pushd $deps_dir/$index/function
-    cp -a $build_dir/. .
-    npm install --production --unsafe-perm
-popd
+cd $deps_dir/$index/function
+cp -a $build_dir/. .
+npm install --production --unsafe-perm
 
 # configure invoker
 mkdir $deps_dir/$index/profile.d
-pushd $deps_dir/$index/profile.d
-    script=node-function-invoker.sh
-    touch $script
-    chmod +x $script
-    echo 'dir=$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )' >> $script
-    echo 'export NODE_ENV=production' >> $script
-    echo 'export HOST=0.0.0.0' >> $script
-    echo 'export HTTP_PORT=8080' >> $script
-    echo 'export GRPC_PORT=10382' >> $script
-    echo 'export FUNCTION_URI=../function' >> $script
-    echo 'export PATH=$PATH:$dir/bin' >> $script
-popd
+cd $deps_dir/$index/profile.d
+script=node-function-invoker.sh
+touch $script
+chmod +x $script
+echo 'dir=$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )' >> $script
+echo 'export NODE_ENV=${NODE_ENV:-production}' >> $script
+echo 'export HOST=${HOST:-0.0.0.0}' >> $script
+echo 'export HTTP_PORT=${HTTP_PORT:-8080}' >> $script
+echo 'export GRPC_PORT=${GRPC_PORT:-10382}' >> $script
+echo 'export PATH=$PATH:$dir/bin' >> $script

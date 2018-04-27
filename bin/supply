@@ -39,7 +39,9 @@ npm install --production --no-save --unsafe-perm
 mkdir $deps_dir/$index/function
 cd $deps_dir/$index/function
 cp -a $build_dir/. .
-npm install --production --no-save --unsafe-perm
+if [ -e "package.json" ]; then
+    npm install --production --no-save --unsafe-perm
+fi
 
 # configure invoker
 mkdir $deps_dir/$index/profile.d

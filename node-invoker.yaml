@@ -20,8 +20,8 @@ spec:
       COPY . ${FUNCTION_URI}
       RUN (cd ${FUNCTION_URI} && npm install --production  --unsafe-perm)
       {{- else -}}
-      ENV FUNCTION_URI /functions/{{.Artifact}}
-      ADD {{.ArtifactBase}} ${FUNCTION_URI}
+      ENV FUNCTION_URI /functions/{{.ArtifactBase}}
+      ADD {{.Artifact}} ${FUNCTION_URI}
       {{- end }}
   - path: .dockerignore
     template: |

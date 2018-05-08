@@ -10,7 +10,7 @@ invoker_dir=$build_dir/invoker
 
 echo "---"
 echo "default_process_types:"
-if [ -e "function/package.json" ]; then
+if [ -e "$function_dir/package.json" ]; then
     echo "  web: FUNCTION_URI=../function node invoker/server.js"
 else
     echo "  web: FUNCTION_URI=../function/$ARTIFACT node invoker/server.js"

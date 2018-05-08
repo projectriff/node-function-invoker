@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+build_dir=$1
+cache_dir=$2
+deps_dir=$3
+index=$4
+
+buildpack_dir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/..
+
+mkdir $deps_dir/$index/bin
+export PATH=$PATH:$deps_dir/$index/bin
+
+# install node via n
+NODE_VERSION=${NODE_VERSION:-lts}
+export N_PREFIX=$cache_dir/n
+if [ -d "$N_PREFIX" ]; then
+    PATH=$PATH:$N_PREFIX/bin n-update -y
+else
+    curl -s -L https://git.io/n-install | bash -s -- -q -y -
+fi
+PATH=$PATH:$N_PREFIX/bin n $NODE_VERSION
+cp -a "$N_PREFIX/n/versions/node/`$N_PREFIX/bin/node --version | cut -c2-`" $deps_dir/$index/node
+export npm_config_cache=$cache_dir/npm
+cd $deps_dir/$index/bin
+ln -s ../node/bin/node
+ln -s ../node/bin/npm
+
+# install invoker
+mkdir $deps_dir/$index/invoker
+cd $deps_dir/$index/invoker
+cp -a $buildpack_dir .
+npm install --production --no-save --unsafe-perm
+
+# install function
+mkdir $deps_dir/$index/function
+cd $deps_dir/$index/function
+cp -a $build_dir/. .
+if [ -e "package.json" ]; then
+    npm install --production --no-save --unsafe-perm
+fi
+
+# configure invoker
+mkdir $deps_dir/$index/profile.d
+cd $deps_dir/$index/profile.d
+script=node-function-invoker.sh
+touch $script
+chmod +x $script
+echo 'dir=$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )' >> $script
+echo 'export NODE_ENV=${NODE_ENV:-production}' >> $script
+echo 'export HOST=${HOST:-0.0.0.0}' >> $script
+echo 'export HTTP_PORT=${HTTP_PORT:-8080}' >> $script
+echo 'export GRPC_PORT=${GRPC_PORT:-10382}' >> $script
+echo 'export PATH=$PATH:$dir/bin' >> $script

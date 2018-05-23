@@ -24,12 +24,22 @@
 riff create node --input numbers --output mean --artifact package.json
 ```
 
+==== make sure that the function is not configured for windowing
+
+Recent builds of the riff CLI configure functions with a windowing size of 1. Check `mean-function.yaml` and comment out the windowing size if necessary.
+
+```yaml
+  # windowing:
+    # size: 1
+```
+
 === tail the output topic and publish messages
 
 In a terminal window:
 ```
 topics tail -n mean
 ```
+The `topics` script can be found in the root of the [projectriff/riff](https://github.com/projectriff/riff) repo.
 
 In a different terminal window, in quick succession:
 ```
@@ -39,7 +49,7 @@ riff publish --input numbers --data 0
 riff publish --input numbers --data 300
 ```
 
-You'll see output similar to the following:
+If your function is not scaled to zero between events, and assuming no windowing of the input stream, your output should match the following:
 ```
  Content-Type["text/plain"] 100
  Content-Type["text/plain"] 150

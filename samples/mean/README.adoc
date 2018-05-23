@@ -24,13 +24,19 @@
 riff create node --input numbers --output mean --artifact package.json
 ```
 
-==== make sure that the function is not configured for windowing
+=== make sure that the function is not configured for windowing
 
 Recent builds of the riff CLI configure functions with a windowing size of 1. Check `mean-function.yaml` and comment out the windowing size if necessary.
 
 ```yaml
   # windowing:
     # size: 1
+```
+
+If you made a change to the yaml, reapply the config. 
+
+```sh
+riff apply
 ```
 
 === tail the output topic and publish messages

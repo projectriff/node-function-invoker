@@ -45,7 +45,7 @@ In a terminal window:
 ```
 topics tail -n mean
 ```
-The `topics` script can be found in the root of the [projectriff/riff](https://github.com/projectriff/riff) repo.
+The `topics` script can be found in the root of the https://github.com/projectriff/riff[riff] repo.
 
 In a different terminal window, in quick succession:
 ```

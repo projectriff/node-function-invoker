@@ -1,4 +1,4 @@
-FROM node:8.11.1-alpine
+FROM node:10.7.0-alpine
 WORKDIR /usr/app
 COPY . .
 ENV HOST 0.0.0.0

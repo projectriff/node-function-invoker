@@ -4,11 +4,15 @@ before_install: npm install -g greenkeeper-lockfile@1
 before_script: greenkeeper-lockfile-update
 after_script: greenkeeper-lockfile-upload
 deploy:
-  provider: npm
+- provider: npm
   email: "nobody@projectriff.io"
   api_key: "$NPM_TOKEN"
   on:
     tags: true
+- provider: script
+  script: .travis/publish-gcs.sh
+  on:
+    branch: master
 notifications:
   slack:
     secure: K5w3cEFE7TaXwNbJ0ne1RLFfRfa0r09m9obCzTm+1eGoxtTG4UPR7PTKs3USSbtWutFA3xlonehtF3Htux/M7qkMzTJlZlvPbLFQlegmjO2a6i8uT+aBblG+WhqGhg7XQPOCPIrOjRxg/9OD6Jbh3dQbh1p9EV18BNkskm9Rth72y+zo6E8NtIM4i/jqrk8/wnWm6TlTGAi3A/hqygDGM9z/96CMIUzWlniI2mWEl+aAuCA8/Qd+cfvxj5fH+/0Ewi+LesV4fOXUSW73gEbD0HXYhfj62fNRju+5Adq6Oh4NMKGBIJU9kPIQBSIDq9TExXM8X0MmQ0bfYzLnNGPv6j4pPBbCpMaaabIef+K7nJ7F9L8I4jPvfn/XZLDlFdTocEvDBVg51JA6BqXdRhkOQP32UIm3ZmCnus02vvApqXo7AAIvIFWiKZkS+qRo1ZdxP7/nNdfkgSowLYhfGqmIxDDwzrSWyCDZVROkORMt+PCkCzlL0jpp2WywlC20vvS7OILxn2YTA1JJuRbTAVE00qpFCczcGWWLx9t2jSMmbIRSXMOhkmD8heVOo2zc6/sB5zZYkFJiIeLKg9aFIqW875dFBYt1Z3FRnZRLVSaFVw486yLeztdAIl1WeBDIacx5FYKCvWhLSmDWG9rUPyZdqEEhPrE0MuUWpwG7pC/DhEE=

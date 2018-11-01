@@ -14,23 +14,13 @@
  * limitations under the License.
  */
 
-const fs = require('fs');
-const path = require('path');
-const yaml = require('js-yaml');
-
 describe('version', () => {
 
     const { version } = require('../package.json');
 
-    it('matches the package lock version', async () => {
-        const packageLock = require('../package-lock.json');
+    it('matches the shrinkwrap version', async () => {
+        const packageLock = require('../npm-shrinkwrap.json');
         expect(packageLock.version).toBe(version);
-    });
-
-    it('matches the invoker.yaml version', async () => {
-        const filepath = path.resolve(__dirname, '..', 'node-invoker.yaml');
-        const invokerResource = yaml.safeLoad(fs.readFileSync(filepath, 'utf8'));
-        expect(invokerResource.spec.version).toBe(version);
     });
 
     if (process.env.TRAVIS_TAG) {

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-const { FUNCTION_URI, HOST, RIFF_FUNCTION_INVOKER_PROTOCOL, GRPC_PORT, HTTP_PORT } = process.env;
+const { FUNCTION_URI, HOST, RIFF_FUNCTION_INVOKER_PROTOCOL, HTTP_PORT } = process.env;
 
 const interactionModels = require('./lib/interaction-models');
 const argumentTransformers = require('./lib/argument-transformers');
@@ -32,7 +32,7 @@ const fn = (fn => {
     return fn;
 })(require(FUNCTION_URI));
 
-let grpcServer, httpServer;
+let httpServer;
 
 console.log(`Node started in ${process.uptime() * 1000}ms`);
 
@@ -52,18 +52,6 @@ async function init() {
         }
         clearTimeout(timeout);
     }
-}
-
-function loadGRPC(interactionModel, argumentTransformer) {
-    const grpc = require('grpc');
-    const server = require('./lib/protocols/grpc')(fn, interactionModel, argumentTransformer);
-
-    return () => {
-        server.bind(`${HOST}:${GRPC_PORT}`, grpc.ServerCredentials.createInsecure());
-        server.start();
-        console.log(`gRPC running on ${HOST === '0.0.0.0' ? 'localhost' : HOST}:${GRPC_PORT}`);
-        return server;
-    };
 }
 
 function loadHTTP(interactionModel, argumentTransformer) {
@@ -114,7 +102,6 @@ async function startup() {
     switch (protocol) {
         case '':
         case 'http':
-        case 'grpc':
             break;
         default:
             throw new Error(`Unknown protocol '${protocol}'`);
@@ -123,14 +110,12 @@ async function startup() {
     console.log(`Server starting with ${$interactionModel} interaction model and ${$argumentType} argument type`);
 
     // load protocols while function is initializing
-    const bindGRPC = (protocol === '' || protocol === 'grpc') && time(loadGRPC.bind(null, interactionModel, argumentTransformer), ms => { console.log(`gRPC loaded in ${ms}ms`); });
     const bindHTTP = (protocol === '' || protocol === 'http') && time(loadHTTP.bind(null, interactionModel, argumentTransformer), ms => { console.log(`HTTP loaded in ${ms}ms`); });
 
     // wait for function to finish initializing
     await initPromise;
 
     // bind protocol servers
-    grpcServer = bindGRPC && bindGRPC();
     httpServer = bindHTTP && bindHTTP();
 }
 
@@ -155,7 +140,6 @@ async function shutdown() {
 
     // gracefully exit protocol servers
     await Promise.all([
-        grpcServer && new Promise(resolve => grpcServer.tryShutdown(resolve)),
         httpServer && new Promise(resolve => httpServer.close(resolve))
     ]);
 

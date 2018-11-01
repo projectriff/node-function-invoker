@@ -10,7 +10,7 @@ spec:
   - "*.js"
   functionTemplate:
     spec:
-      protocol: grpc
+      protocol: http
   files:
   - path: Dockerfile
     template: |

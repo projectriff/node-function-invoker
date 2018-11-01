@@ -19,14 +19,11 @@ const fs = require('fs');
 const path = require('path');
 const util = require('util');
 const waitForPort = util.promisify(require('wait-for-port'));
-const { FunctionInvokerClient } = require('@projectriff/function-proto');
-const { Message } = require('@projectriff/message');
-const grpc = require('grpc');
+const { Message, Headers } = require('@projectriff/message');
 const request = require('superagent');
 
 const HOST = process.env.HOST || '127.0.0.1';
 const HTTP_PORT = 8080;
-let grpcPort = 60061;
 
 const serverPath = path.join(__dirname, '..', 'server.js');
 
@@ -38,7 +35,6 @@ describe('server', () => {
         return childProcess.spawn('node', [serverPath], {
             env: Object.assign({}, process.env, {
                 HOST,
-                GRPC_PORT: ++grpcPort,
                 HTTP_PORT,
                 RIFF_FUNCTION_INVOKER_PROTOCOL: protocol,
                 FUNCTION_URI: path.join(__dirname, 'support', `${functionName}.js`)
@@ -48,28 +44,40 @@ describe('server', () => {
     }
 
     async function waitForServer(protocol = '') {
-        if (protocol !== 'http') {
-            await waitForPort(HOST, grpcPort, { numRetries: 10, retryInterval: 100 });
-        }
-        if (protocol !== 'grpc') {
+        if (!protocol || protocol === 'http') {
             await waitForPort(HOST, HTTP_PORT, { numRetries: 10, retryInterval: 100 });
         }
     }
 
-    function requestReplyCall(request) {
-        return new Promise(resolve => {
-            const client = new FunctionInvokerClient(`${HOST}:${grpcPort}`, grpc.credentials.createInsecure());
-            const call = client.call();
-            call.on('data', message => {
-                resolve(Message.fromRiffMessage(message));
-                call.end();
+    function requestReplyCall(input) {
+        return new Promise((resolve, reject) => {
+            let req = request
+                .post(`http://${HOST}:${HTTP_PORT}/`)
+                .send(input.payload);
+
+            // copy headers
+            let headers = input.headers.toRiffHeaders();
+            for (let name in headers) {
+                for (let value of headers[name].values) {
+                    req = req.set(name, value)
+                }
+            }
+
+            req.end((err, res) => {
+                if (err) {
+                    return reject(err);
+                }
+                let headers = new Headers();
+                for (let name in res.headers) {
+                    headers = headers.addHeader(name, res.headers[name])
+                }
+                resolve(new Message(headers, res.text || res.body))
             });
-            call.write(request.toRiffMessage());
         });
     }
 
     it('runs the echo-request-reply function', async () => {
-        const protocol = 'grpc';
+        const protocol = 'http';
         const server = createServerProcess('echo-request-reply', { protocol });
 
         const exitCode = new Promise(resolve => {
@@ -86,7 +94,7 @@ describe('server', () => {
                 .build()
         );
         expect(headers.getValue('Error')).toBeNull();
-        expect(headers.getValue('Content-Type')).toEqual('text/plain');
+        expect(headers.getValue('Content-Type')).toMatch('text/plain');
         expect(payload.toString()).toEqual('riff');
 
         server.kill('SIGINT');
@@ -94,7 +102,8 @@ describe('server', () => {
     });
 
     it('runs the echo-node-streams function', async () => {
-        const protocol = 'grpc';
+        // NOTE http does not support multiple messages over the same connection
+        const protocol = 'http';
         const server = createServerProcess('echo-node-streams', { protocol });
 
         const exitCode = new Promise(resolve => {
@@ -103,43 +112,23 @@ describe('server', () => {
 
         await waitForServer(protocol);
 
-        // listening for GRPC
-        await new Promise(resolve => {
-            const client = new FunctionInvokerClient(`${HOST}:${grpcPort}`, grpc.credentials.createInsecure());
-            const data = [1, 2, 3];
-
-            const call = client.call();
-            const onData = jasmine.createSpy('onData');
-            const onEnd = () => {
-                expect(onData).toHaveBeenCalledTimes(3);
-                data.forEach((d, i) => {
-                    const { headers, payload } = Message.fromRiffMessage(onData.calls.argsFor(i)[0]);
-                    expect(headers.getValue('Content-Type')).toEqual('text/plain');
-                    expect(payload.toString()).toEqual(`riff ${d}`);
-                });
-
-                resolve();
-            };
-            call.on('data', onData);
-            call.on('end', onEnd);
-            data.forEach(d => {
-                call.write(
-                    Message.builder()
-                        .addHeader('Content-Type', 'text/plain')
-                        .payload(`riff ${d}`)
-                        .build()
-                        .toRiffMessage()
-                );
-            });
-            call.end();
-        });
+        const { payload, headers } = await requestReplyCall(
+            Message.builder()
+                .addHeader('Content-Type', 'text/plain')
+                .addHeader('Accept', 'text/plain')
+                .payload('riff')
+                .build()
+        );
+        expect(headers.getValue('Error')).toBeNull();
+        expect(headers.getValue('Content-Type')).toMatch('text/plain');
+        expect(payload.toString()).toEqual('riff');
 
         server.kill('SIGINT');
         expect(await exitCode).toBe(0);
     });
 
     it('runs the echo-esmodule-transpile function', async () => {
-        const protocol = 'grpc';
+        const protocol = 'http';
         const server = createServerProcess('echo-esmodule-transpile', { protocol });
 
         const exitCode = new Promise(resolve => {
@@ -156,7 +145,7 @@ describe('server', () => {
                 .build()
         );
         expect(headers.getValue('Error')).toBeNull();
-        expect(headers.getValue('Content-Type')).toEqual('text/plain');
+        expect(headers.getValue('Content-Type')).toMatch('text/plain');
         expect(payload.toString()).toEqual('riff');
 
         server.kill('SIGINT');
@@ -164,7 +153,7 @@ describe('server', () => {
     });
 
     it('runs the uppercase-payload function', async () => {
-        const protocol = 'grpc';
+        const protocol = 'http';
         const server = createServerProcess('uppercase-payload', { protocol });
 
         const exitCode = new Promise(resolve => {
@@ -181,7 +170,7 @@ describe('server', () => {
                 .build()
         );
         expect(headers.getValue('Error')).toBeNull();
-        expect(headers.getValue('Content-Type')).toEqual('text/plain');
+        expect(headers.getValue('Content-Type')).toMatch('text/plain');
         expect(payload.toString()).toEqual('RIFF');
 
         server.kill('SIGINT');
@@ -189,7 +178,7 @@ describe('server', () => {
     });
 
     it('runs the uppercase-headers function', async () => {
-        const protocol = 'grpc';
+        const protocol = 'http';
         const server = createServerProcess('uppercase-headers', { protocol });
 
         const exitCode = new Promise(resolve => {
@@ -206,7 +195,7 @@ describe('server', () => {
                 .build()
         );
         expect(headers.getValue('Error')).toBeNull();
-        expect(headers.getValue('Content-Type')).toEqual('text/plain');
+        expect(headers.getValue('Content-Type')).toMatch('text/plain');
         expect(payload.toString()).toEqual('TEXT/PLAIN');
 
         server.kill('SIGINT');
@@ -214,7 +203,7 @@ describe('server', () => {
     });
 
     it('runs the uppercase-message function', async () => {
-        const protocol = 'grpc';
+        const protocol = 'http';
         const server = createServerProcess('uppercase-message', { protocol });
 
         const exitCode = new Promise(resolve => {
@@ -231,7 +220,7 @@ describe('server', () => {
                 .build()
         );
         expect(headers.getValue('Error')).toBeNull();
-        expect(headers.getValue('Content-Type')).toEqual('text/plain');
+        expect(headers.getValue('Content-Type')).toMatch('text/plain');
         expect(payload.toString()).toEqual('RIFF');
 
         server.kill('SIGINT');
@@ -239,7 +228,7 @@ describe('server', () => {
     });
 
     it('runs the uppercase-produces-message function', async () => {
-        const protocol = 'grpc';
+        const protocol = 'http';
         const server = createServerProcess('uppercase-produces-message', { protocol });
 
         const exitCode = new Promise(resolve => {
@@ -256,7 +245,7 @@ describe('server', () => {
                 .build()
         );
         expect(headers.getValue('Error')).toBeNull();
-        expect(headers.getValue('Content-Type')).toEqual('text/plain');
+        expect(headers.getValue('Content-Type')).toMatch('text/plain');
         expect(headers.getValue('X-Test')).toEqual('uppercase-produces-message');
         expect(payload.toString()).toEqual('RIFF');
 
@@ -265,7 +254,7 @@ describe('server', () => {
     });
 
     it('runs the uppercase-custom-message function', async () => {
-        const protocol = 'grpc';
+        const protocol = 'http';
         const server = createServerProcess('uppercase-custom-message', { protocol });
 
         const exitCode = new Promise(resolve => {
@@ -282,7 +271,7 @@ describe('server', () => {
                 .build()
         );
         expect(headers.getValue('Error')).toBeNull();
-        expect(headers.getValue('Content-Type')).toEqual('text/plain');
+        expect(headers.getValue('Content-Type')).toMatch('text/plain');
         expect(headers.getValue('X-Test')).toEqual('uppercase-custom-message');
         expect(payload.toString()).toEqual('RIFF');
 
@@ -291,7 +280,7 @@ describe('server', () => {
     });
 
     it('runs the lifecycle function', async () => {
-        const protocol = 'grpc';
+        const protocol = 'http';
         const server = createServerProcess('lifecycle', { protocol });
 
         const exitCode = new Promise(resolve => {
@@ -308,7 +297,7 @@ describe('server', () => {
                 .build()
         );
         expect(headers.getValue('Error')).toBeNull();
-        expect(headers.getValue('Content-Type')).toEqual('application/json');
+        expect(headers.getValue('Content-Type')).toMatch('application/json');
 
         const { file, content } = JSON.parse(payload.toString());
         expect(await util.promisify(fs.readFile)(file, { encoding: 'utf8' })).toBe(content);
@@ -380,6 +369,68 @@ describe('server', () => {
         expect(await exitCode).toBe(255);
     }, 15e3);
 
+    it('http server starts when no protocol defined', async () => {
+        const server = createServerProcess('echo-request-reply');
+
+        const exitCode = new Promise(resolve => {
+            server.on('exit', resolve);
+        });
+
+        await waitForServer();
+
+        // http request
+        await new Promise(resolve => {
+            request
+                .post(`http://localhost:${HTTP_PORT}/`)
+                .set('Content-Type', 'text/plain')
+                .send('riff')
+                .end(function(err, res) {
+                    if (err) throw err;
+
+                    expect(res.status).toBe(200);
+                    expect(res.headers['content-type']).toMatch('text/plain');
+                    expect(res.headers['error']).toBeUndefined();
+                    expect(res.text).toBe('riff');
+
+                    resolve();
+                });
+        });
+
+        server.kill('SIGINT');
+        expect(await exitCode).toBe(0);
+    }, 15e3);
+
+    it('http server starts when http protocol defined', async () => {
+        const protocol = 'http'
+        const server = createServerProcess('echo-request-reply', { protocol });
+
+        const exitCode = new Promise(resolve => {
+            server.on('exit', resolve);
+        });
+
+        await waitForServer(protocol);
+
+        await new Promise(resolve => {
+            request
+                .post(`http://localhost:${HTTP_PORT}/`)
+                .set('Content-Type', 'text/plain')
+                .send('riff')
+                .end(function(err, res) {
+                    if (err) throw err;
+
+                    expect(res.status).toBe(200);
+                    expect(res.headers['content-type']).toMatch('text/plain');
+                    expect(res.headers['error']).toBeUndefined();
+                    expect(res.text).toBe('riff');
+
+                    resolve();
+                });
+        });
+
+        server.kill('SIGINT');
+        expect(await exitCode).toBe(0);
+    }, 15e3);
+
     it('exits for an unknown protocol', async () => {
         const server = createServerProcess('echo-request-reply', { protocol: 'bogus' });
 
@@ -389,108 +440,4 @@ describe('server', () => {
         expect(await exitCode).toBe(255);
     }, 15e3);
 
-    it('http server does not start for grpc protocol', async () => {
-        const server = createServerProcess('echo-request-reply', { protocol: 'grpc' });
-
-        const exitCode = new Promise(resolve => {
-            server.on('exit', resolve);
-        });
-
-        await waitForServer().then(
-            () => fail('Expected to fail'),
-            e => expect(e.message).toBe('out of retries')
-        );
-
-        // grpc request
-        const { payload, headers } = await requestReplyCall(
-            Message.builder()
-                .addHeader('Content-Type', 'text/plain')
-                .addHeader('Accept', 'text/plain')
-                .payload('riff')
-                .build()
-        );
-        expect(headers.getValue('Error')).toBeNull();
-        expect(headers.getValue('Content-Type')).toEqual('text/plain');
-        expect(payload.toString()).toEqual('riff');
-
-        server.kill('SIGINT');
-        expect(await exitCode).toBe(0);
-    }, 15e3);
-
-    it('grpc server does not start for http protocol', async () => {
-        const server = createServerProcess('echo-request-reply', { protocol: 'http' });
-
-        const exitCode = new Promise(resolve => {
-            server.on('exit', resolve);
-        });
-
-        await waitForServer().then(
-            () => fail('Expected to fail'),
-            e => expect(e.message).toBe('out of retries')
-        );
-
-        // http request
-        await new Promise(resolve => {
-            request
-                .post(`http://localhost:${HTTP_PORT}/`)
-                .set('Content-Type', 'text/plain')
-                .send('riff')
-                .end(function(err, res) {
-                    if (err) throw err;
-
-                    expect(res.status).toBe(200);
-                    expect(res.headers['content-type']).toMatch('text/plain');
-                    expect(res.headers['error']).toBeUndefined();
-                    expect(res.text).toBe('riff');
-
-                    resolve();
-                });
-        });
-
-        server.kill('SIGINT');
-        expect(await exitCode).toBe(0);
-    }, 15e3);
-
-    it('http and grpc server starts when no protocol defined', async () => {
-        const server = createServerProcess('echo-request-reply');
-
-        const exitCode = new Promise(resolve => {
-            server.on('exit', resolve);
-        });
-
-        await waitForServer();
-
-        // grpc request
-        const { payload, headers } = await requestReplyCall(
-            Message.builder()
-                .addHeader('Content-Type', 'text/plain')
-                .addHeader('Accept', 'text/plain')
-                .payload('riff')
-                .build()
-        );
-        expect(headers.getValue('Error')).toBeNull();
-        expect(headers.getValue('Content-Type')).toEqual('text/plain');
-        expect(payload.toString()).toEqual('riff');
-
-        // http request
-        await new Promise(resolve => {
-            request
-                .post(`http://localhost:${HTTP_PORT}/`)
-                .set('Content-Type', 'text/plain')
-                .send('riff')
-                .end(function(err, res) {
-                    if (err) throw err;
-
-                    expect(res.status).toBe(200);
-                    expect(res.headers['content-type']).toMatch('text/plain');
-                    expect(res.headers['error']).toBeUndefined();
-                    expect(res.text).toBe('riff');
-
-                    resolve();
-                });
-        });
-
-        server.kill('SIGINT');
-        expect(await exitCode).toBe(0);
-    }, 15e3);
 });

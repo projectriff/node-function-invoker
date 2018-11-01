@@ -2,7 +2,7 @@
 
 ## Purpose
 The *node function invoker* provides a Docker base layer for a function consisting of a single NodeJS module.
-It accepts gRPC requests, invokes the command for each request in the input stream, and sends the command's output to the stream of gRPC responses.
+It accepts HTTP requests, invokes the function for each request in the input stream, and sends the function's output to the HTTP response.
 
 ## Development
 
@@ -10,7 +10,7 @@ It accepts gRPC requests, invokes the command for each request in the input stre
 
 The following tools are required to build this project:
 
-- `node` 8 (only for tests)
+- `node` 10 (only for tests)
 - [jq](https://stedolan.github.io/jq/download/)
 - Docker
 

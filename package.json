@@ -4,7 +4,6 @@
   "author": "Eric Bottard",
   "license": "Apache-2.0",
   "description": "node function invoker for riff",
-  "private": true,
   "scripts": {
     "lint": "eslint .",
     "test": "npm run lint && npm run unit",

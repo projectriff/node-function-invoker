@@ -11,6 +11,6 @@
   "author": "Scott Andrews",
   "license": "Apache-2.0",
   "dependencies": {
-    "typescript": "^2.8.1"
+    "typescript": "^3.4.5"
   }
 }

@@ -12,7 +12,7 @@
   "dependencies": {
     "@projectriff/message": "1.0.0",
     "express": "^4.16.3",
-    "mississippi": "^3.0.0",
+    "mississippi": "^4.0.0",
     "negotiator": "^0.6.1"
   },
   "devDependencies": {
@@ -20,7 +20,7 @@
     "eslint-plugin-jasmine": "^2.9.2",
     "jasmine": "^3.1.0",
     "js-yaml": "^3.11.0",
-    "supertest": "^3.0.0",
+    "supertest": "^4.0.2",
     "wait-for-port": "0.0.2"
   }
 }

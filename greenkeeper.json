@@ -4,6 +4,12 @@
       "packages": [
         "package.json"
       ]
+    },
+    "samples": {
+      "packages": [
+        "samples/mean/package.json",
+        "samples/typescript/package.json"
+      ]
     }
   }
 }

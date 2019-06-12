@@ -15,7 +15,7 @@
  */
 
 const { FUNCTION_URI, RIFF_FUNCTION_INVOKER_PROTOCOL } = process.env;
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.HTTP_PORT || process.env.PORT || '8080';
 const HOST = process.env.HOST || '0.0.0.0';
 
 const interactionModels = require('./lib/interaction-models');

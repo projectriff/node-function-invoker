@@ -11,16 +11,15 @@
   },
   "dependencies": {
     "@projectriff/message": "1.0.0",
-    "express": "^4.17.1",
-    "mississippi": "^4.0.0",
-    "negotiator": "^0.6.2"
+    "express": "4.17.1",
+    "mississippi": "4.0.0",
+    "negotiator": "0.6.2"
   },
   "devDependencies": {
-    "eslint": "^5.16.0",
-    "eslint-plugin-jasmine": "^2.9.2",
-    "jasmine": "^3.4.0",
-    "js-yaml": "^3.11.0",
-    "supertest": "^4.0.2",
+    "eslint": "5.16.0",
+    "eslint-plugin-jasmine": "2.10.1",
+    "jasmine": "3.4.0",
+    "supertest": "4.0.2",
     "wait-for-port": "0.0.2"
   }
 }

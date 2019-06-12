@@ -23,7 +23,7 @@ const { Message, Headers } = require('@projectriff/message');
 const request = require('superagent');
 
 const HOST = process.env.HOST || '127.0.0.1';
-const HTTP_PORT = 8080;
+const PORT = process.PORT || '8080';
 
 const serverPath = path.join(__dirname, '..', 'server.js');
 
@@ -34,8 +34,6 @@ describe('server', () => {
 
         return childProcess.spawn('node', [serverPath], {
             env: Object.assign({}, process.env, {
-                HOST,
-                HTTP_PORT,
                 RIFF_FUNCTION_INVOKER_PROTOCOL: protocol,
                 FUNCTION_URI: path.join(__dirname, 'support', `${functionName}.js`)
             }),
@@ -45,14 +43,14 @@ describe('server', () => {
 
     async function waitForServer(protocol = '') {
         if (!protocol || protocol === 'http') {
-            await waitForPort(HOST, HTTP_PORT, { numRetries: 10, retryInterval: 100 });
+            await waitForPort(HOST, PORT, { numRetries: 10, retryInterval: 100 });
         }
     }
 
     function requestReplyCall(input) {
         return new Promise((resolve, reject) => {
             let req = request
-                .post(`http://${HOST}:${HTTP_PORT}/`)
+                .post(`http://${HOST}:${PORT}/`)
                 .send(input.payload);
 
             // copy headers
@@ -381,7 +379,7 @@ describe('server', () => {
         // http request
         await new Promise(resolve => {
             request
-                .post(`http://localhost:${HTTP_PORT}/`)
+                .post(`http://localhost:${PORT}/`)
                 .set('Content-Type', 'text/plain')
                 .send('riff')
                 .end(function(err, res) {
@@ -412,7 +410,7 @@ describe('server', () => {
 
         await new Promise(resolve => {
             request
-                .post(`http://localhost:${HTTP_PORT}/`)
+                .post(`http://localhost:${PORT}/`)
                 .set('Content-Type', 'text/plain')
                 .send('riff')
                 .end(function(err, res) {

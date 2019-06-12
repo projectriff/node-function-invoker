@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-const { FUNCTION_URI, HOST, RIFF_FUNCTION_INVOKER_PROTOCOL, HTTP_PORT } = process.env;
+const { FUNCTION_URI, RIFF_FUNCTION_INVOKER_PROTOCOL } = process.env;
+const PORT = process.env.HTTP_PORT || process.env.PORT || '8080';
+const HOST = process.env.HOST || '0.0.0.0';
 
 const interactionModels = require('./lib/interaction-models');
 const argumentTransformers = require('./lib/argument-transformers');
@@ -58,8 +60,8 @@ function loadHTTP(interactionModel, argumentTransformer) {
     const app = require('./lib/protocols/http')(fn, interactionModel, argumentTransformer);
 
     return () => {
-        const server = app.listen(HTTP_PORT, HOST);
-        console.log(`HTTP running on ${HOST === '0.0.0.0' ? 'localhost' : HOST}:${HTTP_PORT}`);
+        const server = app.listen(PORT, HOST);
+        console.log(`HTTP running on ${HOST === '0.0.0.0' ? 'localhost' : HOST}:${PORT}`);
         return server;
     };
 }

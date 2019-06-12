@@ -23,7 +23,7 @@ const { Message, Headers } = require('@projectriff/message');
 const request = require('superagent');
 
 const HOST = process.env.HOST || '127.0.0.1';
-const PORT = 8080;
+const PORT = process.PORT || '8080';
 
 const serverPath = path.join(__dirname, '..', 'server.js');
 

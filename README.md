@@ -57,51 +57,34 @@ module.exports = x => Promise.resolve(x ** 2);
 
 ### Streams (experimental)
 
-Streaming functions can be created by setting the `$interactionModel` property on the function to `node-streams`.
-The function will then be invoked with two arguments, an `input` [Readable Stream](https://nodejs.org/dist/latest-v8.x/docs/api/stream.html#stream_class_stream_readable) and an `output` [Writeable Stream](https://nodejs.org/dist/latest-v8.x/docs/api/stream.html#stream_class_stream_writable).
-Both streams are object streams. Any value returned by the function is ignored, new messages must be written to the output stream.
+#### Proto generation
 
-```js
-// echo.js
-module.exports = (input, output) => {
-  input.pipe(output);
-};
-module.exports.$interactionModel = "node-streams";
+```shell
+ $ npm i # to install the dependencies if not done already
+ $ npm generate-proto
 ```
 
-Any npm package that works with Node Streams can be used.
+#### Full streaming setup
 
-```js
-// upperCase.js
-const miss = require("mississippi");
+1. Set up Kafka onto your K8s cluster (apply `kafka-broker.yaml` defined in https://github.com/projectriff/streaming-processor).
+1. Set up Liiklus (apply `liiklus.yaml` defined in https://github.com/projectriff/streaming-processor).
+1. Set up the Kafka Gateway by following these [instructions](https://github.com/projectriff/kafka-gateway).
 
-const upperCaser = miss.through.obj((chunk, enc, cb) => {
-  cb(null, chunk.toUpperCase());
-});
+##### Local execution
 
-module.exports = (input, output) => {
-  input.pipe(upperCaser).pipe(output);
-};
-module.exports.$interactionModel = "node-streams";
-```
+###### End-to-end run
 
-The `Content-Type` for output messages can be set with the `$defaultContentType` property. By default, `text/plain` is used. For request-reply function, the `Accept` header is used, however, there is no Accept header in a stream.
+1. Run the Liiklus producer and the consumer with this [project](https://github.com/projectriff-samples/liiklus-client).
+1. Run this invoker: `FUNCTION_URI="${PWD}/samples/repeater" npm run start-streaming`
+1. Run the [processor](https://github.com/projectriff/streaming-processor) with the appropriate parameters.
+1. Start sending data via the Liiklus producer.
 
-```js
-// greeter.js
-const miss = require("mississippi");
+###### Invoker debug run
 
-const greeter = miss.through.obj((chunk, enc, cb) => {
-  cb(null, {
-    greeting: `Hello ${chunk}!`
-  });
-});
+Execute the following:
 
-module.exports = (input, output) => {
-  input.pipe(greeter).pipe(output);
-};
-module.exports.$interactionModel = "node-streams";
-module.exports.$defaultContentType = "application/json";
+```shell
+ $ FUNCTION_URI="${PWD}/samples/repeater" NODE_DEBUG='riff' npm run start-streaming
 ```
 
 ### Messages vs Payloads

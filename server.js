@@ -18,22 +18,15 @@ const { FUNCTION_URI, RIFF_FUNCTION_INVOKER_PROTOCOL } = process.env;
 const PORT = process.env.HTTP_PORT || process.env.PORT || '8080';
 const HOST = process.env.HOST || '0.0.0.0';
 
-const interactionModels = require('./lib/interaction-models');
-const argumentTransformers = require('./lib/argument-transformers');
+const loadFunction = require('./lib/function-loader');
+const argumentTransformers = require('./lib/interaction-models/request-reply/argument-transformers');
 
 const { Message } = require('@projectriff/message');
 // register Message as default AbstractMessage type
 // must be run before the function is required
 Message.install();
 
-const fn = (fn => {
-    if (fn.__esModule && typeof fn.default === 'function') {
-        // transpiled ES Module interop
-        return fn.default;
-    }
-    return fn;
-})(require(FUNCTION_URI));
-
+const fn = loadFunction(FUNCTION_URI);
 let httpServer;
 
 console.log(`Node started in ${process.uptime() * 1000}ms`);
@@ -56,8 +49,8 @@ async function init() {
     }
 }
 
-function loadHTTP(interactionModel, argumentTransformer) {
-    const app = require('./lib/protocols/http')(fn, interactionModel, argumentTransformer);
+function loadHTTP(argumentTransformer) {
+    const app = require('./lib/interaction-models/request-reply/http')(fn, argumentTransformer);
 
     return () => {
         const server = app.listen(PORT, HOST);
@@ -70,21 +63,7 @@ async function startup() {
     // start initialization
     const initPromise = init();
 
-    const $interactionModel = fn.$interactionModel || 'request-reply';
     const $argumentType = fn.$argumentType || 'payload';
-
-    let interactionModel;
-    switch ($interactionModel) {
-        case 'request-reply':
-            interactionModel = interactionModels['request-reply'];
-            break;
-        case 'node-streams':
-            interactionModel = interactionModels['node-streams'];
-            break;
-        default:
-            throw new Error(`Unknown interaction model '${$interactionModel}'`);
-    }
-
     let argumentTransformer;
     switch ($argumentType) {
         case 'message':
@@ -95,7 +74,7 @@ async function startup() {
             break;
         case 'payload':
             argumentTransformer = argumentTransformers.payload;
-            break
+            break;
         default:
             throw new Error(`Unknown argument type '${$argumentType}'`);
     }
@@ -109,10 +88,10 @@ async function startup() {
             throw new Error(`Unknown protocol '${protocol}'`);
     }
 
-    console.log(`Server starting with ${$interactionModel} interaction model and ${$argumentType} argument type`);
+    console.log(`Server starting with request-reply interaction model and ${$argumentType} argument type`);
 
     // load protocols while function is initializing
-    const bindHTTP = (protocol === '' || protocol === 'http') && time(loadHTTP.bind(null, interactionModel, argumentTransformer), ms => { console.log(`HTTP loaded in ${ms}ms`); });
+    const bindHTTP = (protocol === '' || protocol === 'http') && time(loadHTTP.bind(null, argumentTransformer), ms => { console.log(`HTTP loaded in ${ms}ms`); });
 
     // wait for function to finish initializing
     await initPromise;

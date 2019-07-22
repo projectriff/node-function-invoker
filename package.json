@@ -6,12 +6,18 @@
   "description": "node function invoker for riff",
   "scripts": {
     "lint": "eslint .",
+    "eslint": "eslint",
     "test": "npm run lint && npm run unit",
-    "unit": "jasmine"
+    "unit": "jasmine",
+    "start-streaming": "node streaming-server.js",
+    "generate-proto": "grpc_tools_node_protoc --js_out=import_style=commonjs,binary:./codegen --grpc_out=./codegen --plugin=protoc-gen-grpc=\"$(which grpc_tools_node_protoc_plugin)\" ./proto/riff-rpc.proto"
   },
   "dependencies": {
     "@projectriff/message": "1.0.0",
+    "body-parser": "^1.19.0",
     "express": "4.17.1",
+    "google-protobuf": "3.8.0",
+    "grpc": "^1.22.0",
     "mississippi": "4.0.0",
     "negotiator": "0.6.2"
   },

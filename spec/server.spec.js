@@ -99,32 +99,6 @@ describe('server', () => {
         expect(await exitCode).toBe(0);
     });
 
-    it('runs the echo-node-streams function', async () => {
-        // NOTE http does not support multiple messages over the same connection
-        const protocol = 'http';
-        const server = createServerProcess('echo-node-streams', { protocol });
-
-        const exitCode = new Promise(resolve => {
-            server.on('exit', resolve);
-        });
-
-        await waitForServer(protocol);
-
-        const { payload, headers } = await requestReplyCall(
-            Message.builder()
-                .addHeader('Content-Type', 'text/plain')
-                .addHeader('Accept', 'text/plain')
-                .payload('riff')
-                .build()
-        );
-        expect(headers.getValue('Error')).toBeNull();
-        expect(headers.getValue('Content-Type')).toMatch('text/plain');
-        expect(payload.toString()).toEqual('riff');
-
-        server.kill('SIGINT');
-        expect(await exitCode).toBe(0);
-    });
-
     it('runs the echo-esmodule-transpile function', async () => {
         const protocol = 'http';
         const server = createServerProcess('echo-esmodule-transpile', { protocol });
@@ -356,15 +330,6 @@ describe('server', () => {
 
         server.kill('SIGINT');
         expect(await exitCode).toBe(1);
-    }, 15e3);
-
-    it('exits for an unknown interaction model', async () => {
-        const server = createServerProcess('bogus-interaction-model');
-
-        const exitCode = new Promise(resolve => {
-            server.on('exit', resolve);
-        });
-        expect(await exitCode).toBe(255);
     }, 15e3);
 
     it('http server starts when no protocol defined', async () => {

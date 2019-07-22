@@ -2,7 +2,7 @@ const { AbstractMessage } = require('@projectriff/message');
 
 class AltMessage extends AbstractMessage {
     constructor(payload) {
-        super()
+        super();
         this.payload = payload;
     }
     toRiffMessage() {

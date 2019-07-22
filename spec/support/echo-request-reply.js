@@ -1,1 +1,4 @@
-module.exports = message => message;
+module.exports = message => {
+    console.log(message);
+    return message;
+};

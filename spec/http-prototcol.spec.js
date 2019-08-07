@@ -740,6 +740,27 @@ describe('http', () => {
                 });
         });
 
+        it('should handle structured cloudevents', done => {
+            request(app)
+                .post('/')
+                .set('Accept', 'application/cloudevents+json')
+                .set('Content-Type', 'application/cloudevents+json')
+                .send('"riff"')
+                .expect(200)
+                .end(function (err, res) {
+                    if (err) throw err;
+
+                    expect(fn).toHaveBeenCalledTimes(1);
+                    expect(fn).toHaveBeenCalledWith('riff');
+
+                    expect(res.headers['content-type']).toEqual('application/cloudevents+json');
+                    expect(res.headers['error']).toBeUndefined();
+                    expect(res.text).toEqual('"riff"');
+
+                    done();
+                });
+        });
+
         it('should handle binary data', done => {
             request(app)
                 .post('/')

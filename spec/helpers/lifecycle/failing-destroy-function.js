@@ -1,6 +1,7 @@
-module.exports = (inputStream, outputStream) => {
-    inputStream.pipe(outputStream);
+module.exports = (inputStreams, outputStreams) => {
+    inputStreams["0"].pipe(outputStreams["0"]);
 };
+module.exports.$arity = 2;
 
 module.exports.$destroy = async () => {
     return new Promise(() => {

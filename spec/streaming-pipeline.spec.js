@@ -27,9 +27,10 @@ describe('streaming pipeline =>', () => {
     });
 
     describe('with a reliable function =>', () => {
-        const userFunction = (inputStream, outputStream) => {
-            inputStream.pipe(newMappingTransform((arg) => arg + 42)).pipe(outputStream);
+        const userFunction = (inputStreams, outputStreams) => {
+            inputStreams["0"].pipe(newMappingTransform((arg) => arg + 42)).pipe(outputStreams["0"]);
         };
+        userFunction.$arity = 2;
 
         beforeEach(() => {
             streamingPipeline = new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
@@ -81,11 +82,12 @@ describe('streaming pipeline =>', () => {
             // see https://nodejs.org/api/stream.html#stream_readable_pipe_destination_options
             it('will end input streams when the piped source ends', (done) => {
                 let inputEnded = false;
-                const userFunction = (inputStream) => {
-                    inputStream.on('end', () => {
+                const userFunction = (inputStreams) => {
+                    inputStreams["0"].on('end', () => {
                         inputEnded = true;
                     })
                 };
+                userFunction.$arity = 1;
                 streamingPipeline = new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
                 streamingPipeline.on('finish', () => {
                     expect(inputEnded).toBeTruthy('input stream should have been ended');
@@ -105,10 +107,14 @@ describe('streaming pipeline =>', () => {
             });
 
             it('the other output stream can still emit to the destination stream', (done) => {
-                const userFunction = (inputStream, outputStream1, outputStream2) => {
+                const userFunction = (inputStreams, outputStreams) => {
+                    const inputStream = inputStreams["0"];
+                    const outputStream1 = outputStreams["0"];
+                    const outputStream2 = outputStreams["1"];
                     outputStream1.end();
                     inputStream.pipe(outputStream2);
                 };
+                userFunction.$arity = 3;
 
                 let receivedOutputSignalCount = 0;
                 destinationStream.on('data', (outputSignal) => {

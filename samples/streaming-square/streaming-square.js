@@ -1,5 +1,7 @@
 module.exports =
-    (numbers /* Readable */, squares /* Writable */) => {
+    (inputs, outputs) => {
+        const numbers = inputs["0"];
+        const squares = outputs["0"];
         numbers.on('data', (number) => {
             squares.write(number * number);
         });
@@ -11,3 +13,4 @@ module.exports =
         });
     };
 module.exports.$interactionModel = 'node-streams';
+module.exports.$arity = 2;

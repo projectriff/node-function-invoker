@@ -36,12 +36,18 @@ module.exports.$interactionModel = 'request-reply';
 
 Streaming functions must comply to the following signature:
 ```js
-module.exports = (inputStream1, inputStream2, /*[...], */inputStreamN, outputStream1, /*[...], */outputStreamM) => {
+module.exports = (inputStreams, outputStreams) => {
+    const firstInputStream = inputStreams["0"];
+    const firstOutputStream = outputStreams["0"];
+    const secondOutputStream = outputStreams["0"];
     // do something
 }
 module.exports.$interactionModel = 'node-streams';
+module.exports.$arity = 3;
 ```
-The interaction mode is **mandatory** in this case.
+The interaction mode and the arity are **required** in this case.
+The arity is the number of input streams plus the number of output streams the function accepts
+(here: 1 input stream + 2 output streams hence an arity of 3).
 
 Input streams are [Readable streams](https://nodejs.org/api/stream.html#stream_readable_streams).
 
@@ -110,7 +116,7 @@ However, it is possible to send HTTP requests and receive HTTP responses if you 
 
 ### End-to-end local run
 
- -  Run Liiklus producers and consumers with this [project](https://github.com/projectriff-samples/liiklus-client).
+ - Run Liiklus producers and consumers with this [project](https://github.com/projectriff-samples/liiklus-client).
  - Run this invoker:
 ```shell script
  $ FUNCTION_URI='./samples/streaming-repeater' yarn start

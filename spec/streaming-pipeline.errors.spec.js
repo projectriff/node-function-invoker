@@ -19,18 +19,95 @@ describe('streaming pipeline =>', () => {
     });
 
     afterEach(() => {
-        fixedSource.destroy();
-        streamingPipeline.destroy();
         destinationStream.destroy();
     });
 
+    describe('with a function of unknown arity =>', () => {
+        const userFunction = (inputStreams, outputStreams) => {
+            inputStreams["0"].pipe(outputStreams["0"]);
+        };
+
+        it('fails to instantiate', () => {
+            try {
+                new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
+                fail('instantiation should fail');
+            } catch (err) {
+                expect(err.type).toEqual('error-function-arity-unknown');
+                expect(err.cause).toEqual('Cannot determine function arity. Aborting now');
+            }
+
+        });
+    });
+
+    describe('with a function of arity with invalid integer value =>', () => {
+        const userFunction = (inputStreams, outputStreams) => {
+            inputStreams["0"].pipe(outputStreams["0"]);
+        };
+        userFunction.$arity = 0;
+
+        it('fails to instantiate', () => {
+            try {
+                new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
+                fail('instantiation should fail');
+            } catch (err) {
+                expect(err.type).toEqual('error-function-arity-invalid');
+                expect(err.cause).toEqual('Function arity must be an integer >= 1, received: 0. Aborting now');
+            }
+
+        });
+    });
+
+    describe('with a function of arity with invalid number value =>', () => {
+        const userFunction = (inputStreams, outputStreams) => {
+            inputStreams["0"].pipe(outputStreams["0"]);
+        };
+        userFunction.$arity = 1.5;
+
+        it('fails to instantiate', () => {
+            try {
+                new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
+                fail('instantiation should fail');
+            } catch (err) {
+                expect(err.type).toEqual('error-function-arity-invalid');
+                expect(err.cause).toEqual('Function arity must be an integer >= 1, received: 1.5. Aborting now');
+            }
+
+        });
+    });
+
+    describe('with a function of arity with invalid value =>', () => {
+        const userFunction = (inputStreams, outputStreams) => {
+            inputStreams["0"].pipe(outputStreams["0"]);
+        };
+        userFunction.$arity = 'hello';
+
+        it('fails to instantiate', () => {
+            try {
+                new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
+                fail('instantiation should fail');
+            } catch (err) {
+                expect(err.type).toEqual('error-function-arity-invalid');
+                expect(err.cause).toEqual('Function arity must be an integer >= 1, received: hello. Aborting now');
+            }
+
+        });
+    });
+
     describe('with a reliable function =>', () => {
-        const userFunction = (inputStream, outputStream) => {
+        const userFunction = (inputStreams, outputStreams) => {
+            const inputStream = inputStreams["0"];
+            const outputStream = outputStreams["0"];
             inputStream.pipe(newMappingTransform((arg) => arg + 42)).pipe(outputStream);
         };
+        userFunction.$arity = 2;
 
         beforeEach(() => {
             streamingPipeline = new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
+        });
+
+        afterEach(() => {
+            fixedSource.destroy();
+            streamingPipeline.destroy();
         });
 
         describe('with badly-typed inputs =>', () => {
@@ -139,16 +216,22 @@ describe('streaming pipeline =>', () => {
     });
 
     describe('with a failing-at-invocation-time function =>', () => {
-        const userFunction = (inputStream, outputStream) => {
-            inputStream.pipe(outputStream);
+        const userFunction = (inputStreams, outputStreams) => {
+            inputStreams["0"].pipe(outputStreams["0"]);
             null.nope();
         };
+        userFunction.$arity = 2;
 
         beforeEach(() => {
             streamingPipeline = new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
             fixedSource = newFixedSource([
                 newStartSignal(newStartFrame(['text/plain']))
             ]);
+        });
+
+        afterEach(() => {
+            fixedSource.destroy();
+            streamingPipeline.destroy();
         });
 
         // TODO: assert pipeline ends
@@ -166,9 +249,10 @@ describe('streaming pipeline =>', () => {
     });
 
     describe('with an input that cannot be unmarshalled =>', () => {
-        const userFunction = (inputStream, outputStream) => {
-            inputStream.pipe(outputStream);
+        const userFunction = (inputStreams, outputStreams) => {
+            inputStreams["0"].pipe(outputStreams["0"]);
         };
+        userFunction.$arity = 2;
 
         beforeEach(() => {
             streamingPipeline = new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
@@ -197,11 +281,14 @@ describe('streaming pipeline =>', () => {
     });
 
     describe('with a function that fails when receiving data =>', () => {
-        const userFunction = (inputStream, outputStream) => {
+        const userFunction = (inputStreams, outputStreams) => {
+            const inputStream = inputStreams["0"];
+            const outputStream = outputStreams["0"];
             inputStream.pipe(new SimpleTransform({objectMode: true}, () => {
                 throw new Error('Function failed')
             })).pipe(outputStream);
         };
+        userFunction.$arity = 2;
 
         beforeEach(() => {
             streamingPipeline = new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
@@ -209,6 +296,11 @@ describe('streaming pipeline =>', () => {
                 newStartSignal(newStartFrame(['text/plain'])),
                 newInputSignal(newInputFrame(0, 'application/json', '42'))
             ]);
+        });
+
+        afterEach(() => {
+            fixedSource.destroy();
+            streamingPipeline.destroy();
         });
 
         it('ends the pipeline', (done) => {
@@ -229,9 +321,10 @@ describe('streaming pipeline =>', () => {
     });
 
     describe('with a function producing outputs that cannot be marshalled =>', () => {
-        const userFunction = (inputStream, outputStream) => {
-            inputStream.pipe(new SimpleTransform({objectMode: true}, (x) => Symbol(x))).pipe(outputStream);
+        const userFunction = (inputStreams, outputStreams) => {
+            inputStreams["0"].pipe(new SimpleTransform({objectMode: true}, (x) => Symbol(x))).pipe(outputStreams["0"]);
         };
+        userFunction.$arity = 2;
 
         beforeEach(() => {
             streamingPipeline = new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
@@ -239,6 +332,11 @@ describe('streaming pipeline =>', () => {
                 newStartSignal(newStartFrame(['text/plain'])),
                 newInputSignal(newInputFrame(0, 'application/json', '42'))
             ]);
+        });
+
+        afterEach(() => {
+            fixedSource.destroy();
+            streamingPipeline.destroy();
         });
 
         it('ends the pipeline', (done) => {

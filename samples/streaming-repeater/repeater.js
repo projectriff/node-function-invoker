@@ -1,9 +1,9 @@
 const _ = require('highland');
 
 module.exports =
-    (numbers /* Readable */, words /* Readable */, repeated_words /* Writable */) => {
-        const numberStream = _(numbers);
-        const wordStream = _(words);
+    (inputs, outputs) => {
+        const numberStream = _(inputs["0"]);
+        const wordStream = _(inputs["1"]);
         numberStream
             .zip(wordStream)
             .flatMap((numberWordPair) => {
@@ -13,6 +13,7 @@ module.exports =
                 }
                 return _(result);
             })
-            .pipe(repeated_words);
+            .pipe(outputs["0"]);
     };
 module.exports.$interactionModel = 'node-streams';
+module.exports.$arity = 3;

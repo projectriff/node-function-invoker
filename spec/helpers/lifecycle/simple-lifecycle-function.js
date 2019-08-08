@@ -2,11 +2,12 @@ const MappingTransform = require('../../../lib/mapping-transform');
 
 let counter = Number.MIN_SAFE_INTEGER;
 
-module.exports = (inputStream, outputStream) => {
-    inputStream.pipe(new MappingTransform((x) => {
+module.exports = (inputStreams, outputStreams) => {
+    inputStreams["0"].pipe(new MappingTransform((x) => {
         return x ** 2;
-    }, {objectMode: true})).pipe(outputStream);
+    }, {objectMode: true})).pipe(outputStreams["0"]);
 };
+module.exports.$arity = 2;
 
 module.exports.$init = () => {
     counter = 0;

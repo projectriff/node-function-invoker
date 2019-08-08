@@ -5,8 +5,15 @@ const {PassThrough} = require('stream');
 describe('function promoter =>', () => {
     const data = [1, 2, 4];
     const userFunction = (x) => x ** 2;
-    const streamingUserFunction = (input, output) => input.pipe(newMappingTransform(userFunction)).pipe(output);
+    const streamingUserFunction = (inputs, outputs) => {
+        const inputStream = inputs["0"];
+        const outputStream = outputs["0"];
+        inputStream
+            .pipe(newMappingTransform(userFunction))
+            .pipe(outputStream);
+    };
     streamingUserFunction.$interactionModel = 'node-streams';
+    streamingUserFunction.$arity = 2;
     let streamingOutput;
     const expectedResults = data.map(userFunction);
     let source;
@@ -32,7 +39,8 @@ describe('function promoter =>', () => {
         });
 
         const result = promoteFunction(userFunction);
-        result(source, streamingOutput);
+        expect(result['$arity']).toEqual(2, 'promoted functions should have an arity of 2');
+        result({"0": source}, {"0": streamingOutput});
     });
 
     it('returns streaming functions as-is', (done) => {
@@ -46,7 +54,7 @@ describe('function promoter =>', () => {
         });
 
         const result = promoteFunction(streamingUserFunction);
-        result(source, streamingOutput);
+        result({"0": source}, {"0": streamingOutput});
     });
 
     it('preserves lifecycle hooks if any are set', () => {

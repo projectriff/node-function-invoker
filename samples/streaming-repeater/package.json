@@ -1,0 +1,12 @@
+{
+  "name": "@projectriff/highland-streaming-sample",
+  "version": "1.0.0",
+  "description": "repeater implementation with Node.js",
+  "main": "repeater.js",
+  "author": "Florent Biville <fbiville@pivotal.io>",
+  "license": "Apache-2.0",
+  "private": false,
+  "dependencies": {
+    "highland": "^2.13.5"
+  }
+}

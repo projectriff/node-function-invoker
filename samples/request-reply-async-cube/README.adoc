@@ -1,0 +1,8 @@
+= async cube
+
+[horizontal]
+*Invoker*:: Node
+*Function*:: link:async-cube.js[async-cube.js]
+*Input*:: numbers
+*Output*:: squared numbers
+

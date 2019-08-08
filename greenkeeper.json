@@ -7,8 +7,9 @@
     },
     "samples": {
       "packages": [
-        "samples/mean/package.json",
-        "samples/typescript/package.json"
+        "samples/request-reply-typescript-greeter/package.json",
+        "samples/streaming-mean/package.json",
+        "samples/streaming-repeater/package.json"
       ]
     }
   }

@@ -2,186 +2,168 @@
 
 ## Purpose
 
-The _node function invoker_ provides a host for functions consisting of a single NodeJS module.
-It accepts HTTP requests, invokes the function for each request, and sends the function's output to the HTTP response.
+The node function invoker provides a host for functions consisting of a single NodeJS module.
+It adheres to [riff streaming protocol](https://github.com/projectriff/streaming-processor) 
+and invokes functions accordingly.
 
-## Development
+## Supported functions
 
-### Prerequisites
+### Non-streaming functions
 
-The following tools are required to build this project:
+Non-streaming functions, more specifically "request-reply" functions, such as:
+```js
+module.exports = (x) => x ** 2;
+```
+will be automatically promoted to streaming functions via the equivalent of the `map` operator.
 
-- `node` 10
-
-### Get the source
-
-```sh
-git clone https://github.com/projectriff/node-function-invoker
-cd node-function-invoker
+Request-reply functions can also be asynchronous:
+```js
+module.exports = async (x) => x ** 2;
 ```
 
-- To install dependencies:
-
-  ```sh
-  npm ci
-  ```
-
-- To run tests:
-  ```sh
-  npm test
-  ```
-
-## Functions
-
-At runtime, the node function invoker will `require()` the target function module.
-This module must export the function to invoke.
-
+or return a Promise:
 ```js
-// square
-module.exports = x => x ** 2;
+module.exports = (x) => Promise.resolve(x ** 2);
 ```
 
-The first argument is the triggering message's payload and the returned value is the resulting message's payload.
-
-### Async
-
-Asynchronous work can be completed by defining either an `async function` or by returning a `Promise`.
-
+Finally, note that the interaction model can be explicitly advertised, albeit this is not necessary:
 ```js
-// async
-module.exports = async x => x ** 2;
-
-// promise
-module.exports = x => Promise.resolve(x ** 2);
+module.exports = (x) => x ** 2;
+module.exports.$interactionModel = 'request-reply';
 ```
 
-### Streams (experimental)
+### Streaming functions
 
-Streaming functions can be created by setting the `$interactionModel` property on the function to `node-streams`.
-The function will then be invoked with two arguments, an `input` [Readable Stream](https://nodejs.org/dist/latest-v8.x/docs/api/stream.html#stream_class_stream_readable) and an `output` [Writeable Stream](https://nodejs.org/dist/latest-v8.x/docs/api/stream.html#stream_class_stream_writable).
-Both streams are object streams. Any value returned by the function is ignored, new messages must be written to the output stream.
-
+Streaming functions must comply to the following signature:
 ```js
-// echo.js
-module.exports = (input, output) => {
-  input.pipe(output);
+module.exports = (inputStreams, outputStreams) => {
+    const firstInputStream = inputStreams["0"];
+    const firstOutputStream = outputStreams["0"];
+    const secondOutputStream = outputStreams["1"];
+    // do something
 };
-module.exports.$interactionModel = "node-streams";
+module.exports.$interactionModel = 'node-streams';
+module.exports.$arity = 3;
 ```
+The interaction mode and the arity are **required** in this case.
 
-Any npm package that works with Node Streams can be used.
+The arity is the number of input streams plus the number of output streams the function accepts
+(here: 1 input stream + 2 output streams hence an arity of 3).
 
-```js
-// upperCase.js
-const miss = require("mississippi");
+Input streams are [Readable streams](https://nodejs.org/api/stream.html#stream_readable_streams).
 
-const upperCaser = miss.through.obj((chunk, enc, cb) => {
-  cb(null, chunk.toUpperCase());
-});
+Output streams are [Writable streams](https://nodejs.org/api/stream.html#stream_class_stream_readable).
 
-module.exports = (input, output) => {
-  input.pipe(upperCaser).pipe(output);
-};
-module.exports.$interactionModel = "node-streams";
-```
+The function **must** end the output streams when it is done emitting data or when an error occurs
+(if the output streams are [`pipe`](https://nodejs.org/api/stream.html#stream_readable_pipe_destination_options)'d from 
+input streams, 
+then this is automatically managed by this invoker).
 
-The `Content-Type` for output messages can be set with the `$defaultContentType` property. By default, `text/plain` is used. For request-reply function, the `Accept` header is used, however, there is no Accept header in a stream.
+## Lifecycle
 
-```js
-// greeter.js
-const miss = require("mississippi");
+Functions that communicate with external services, like a database, can use the `$init` and `$destroy` lifecycle hooks 
+on the function.
+These methods are called once per **function invocation**.
 
-const greeter = miss.through.obj((chunk, enc, cb) => {
-  cb(null, {
-    greeting: `Hello ${chunk}!`
-  });
-});
+The `$init` method is guaranteed to finish before the main function is invoked.
 
-module.exports = (input, output) => {
-  input.pipe(greeter).pipe(output);
-};
-module.exports.$interactionModel = "node-streams";
-module.exports.$defaultContentType = "application/json";
-```
-
-### Messages vs Payloads
-
-By default, functions accept and produce payloads. Functions that need to interact with headers can instead opt to receive and/or produce messages. A message is an object that contains both headers and a payload. Message headers are a map with case-insensitive keys and multiple string values.
-
-Since JavaScript and Node have no built-in type for messages or headers, riff uses the [@projectriff/message](https://github.com/projectriff/node-message/) npm module. To use messages, functions should install the `@projectriff/message` package:
-
-```bash
-npm install --save @projectriff/message
-```
-
-#### Receiving messages
-
-```js
-const { Message } = require('@projectriff/message');
-
-// a function that accepts a message, which is an instance of Message
-module.exports = message => {
-    const authorization = message.headers.getValue('Authorization');
-    ...
-};
-
-// tell the invoker the function wants to receive messages
-module.exports.$argumentType = 'message';
-
-// tell the invoker to produce this particular type of message
-Message.install();
-```
-
-#### Producing messages
-
-```js
-const { Message } = require("@projectriff/message");
-
-const instanceId = Math.round(Math.random() * 10000);
-let invocationCount = 0;
-
-// a function that produces a Message
-module.exports = name => {
-  return Message.builder()
-    .addHeader("X-Riff-Instance", instanceId)
-    .addHeader("X-Riff-Count", invocationCount++)
-    .payload(`Hello ${name}!`)
-    .build();
-};
-
-// even if the function receives payloads, it can still produce a message
-module.exports.$argumentType = "payload";
-```
-
-### Lifecycle
-
-Functions that communicate with external services, like a database, can use the `$init` and `$destroy` lifecycle hooks on the function.
-These methods are invoked once per function invoker instance, whereas the target function may be invoked multiple times within a single function invoker instance.
-
-The `$init` method is guarenteed to finish before the main function is invoked.
-The `$destroy` method is guarenteed to be invoked after all of the main functions are finsished.
+The `$destroy` method is guaranteed to be invoked after all of the main functions are finished.
 
 ```js
 let client;
 
 // function
-module.exports = async ({ key, amount }) => {
-  return await client.incrby(key, amount);
+module.exports = async ({key, amount}) => {
+    return await client.incrby(key, amount);
 };
 
 // setup
 module.exports.$init = async () => {
-  const Redis = require("redis-promise");
-  client = new Redis();
-  await client.connect();
+    const Redis = require('redis-promise');
+    client = new Redis();
+    await client.connect();
 };
 
 // cleanup
 module.exports.$destroy = async () => {
-  await client.quit();
+    await client.quit();
 };
 ```
 
 The lifecycle methods are optional, and should only be implemented when needed.
 The hooks may be either traditional or async functions.
-Lifecycle functions have up to 10 seconds to complete their work, or the function invoker will abort.
+Lifecycle functions have up to **10 seconds** to complete their work, or the function invoker will abort.
+
+## Argument transformers
+
+Sometimes, the content-type information is not enough to extract the payload the user function is supposed to interact 
+with.
+
+Argument transformers are custom functions that take a `Message` (as defined by [`@projectriff/message`](https://github.com/projectriff/node-message))
+and return whatever the function needs. 
+
+The `Message` payload is the result of the first content-type-based  conversion pass. For instance, if the input 
+content-type is `application/json` and its payload is `'{"key": "value"}'` the payload of the `Message` exposed to the 
+transformer will be the corresponding object representation (i.e. `{"key": "value"}`).
+
+Argument transformers are declared this way:
+
+```js
+module.exports.$argumentTransformers = [
+    // transformer for first input
+    (message) => {
+        return message.payload;
+    },
+    // transformer for second input
+    (message) => {
+        return message.headers.getValue('x-some-header');
+    },
+    // ...
+];
+```
+
+If `$argumentTransformers` is not declared, the default transformer assigned to each input extracts the `Message` 
+payload.
+
+## Supported protocols
+
+This invoker supports only streaming, and complies to [riff streaming protocol](https://github.com/projectriff/streaming-processor).
+However, it is possible to send HTTP requests and receive HTTP responses if you combine this invoker with the streaming HTTP adapter available [here](https://github.com/projectriff/streaming-http-adapter).
+
+## Development
+
+### Prereqs
+
+ - [Node](https://nodejs.org/en/download/) version required: 10+.
+ - Make sure to install the [EditorConfig](https://editorconfig.org/) plugin in your editing environment.
+ 
+#### Build
+
+ - Install dependencies by running `npm ci`.
+ - Generate the Protobuf client and server with `npm run generate-proto`
+ - Run the tests with `npm test`
+
+#### Full streaming setup
+
+1. Set up Kafka onto your K8s cluster (`kubectl apply` the file `kafka-broker.yaml` included in the [streaming processor project](https://github.com/projectriff/streaming-processor)).
+1. Set up Liiklus (`kubectl apply` the file `liiklus.yaml` included in the [streaming processor project](https://github.com/projectriff/streaming-processor)).
+1. Set up the Kafka Gateway by following these [instructions](https://github.com/projectriff/kafka-gateway).
+
+### End-to-end local run
+
+ - Run Liiklus producers and consumers with this [project](https://github.com/projectriff-samples/liiklus-client).
+ - Run this invoker:
+```shell script
+ $ FUNCTION_URI='./samples/streaming-repeater' npm start
+```
+ - Run the [processor](https://github.com/projectriff/streaming-processor) with the appropriate parameters.
+ - Start sending data via the Liiklus producers.
+
+### Invoker local debug run
+
+Execute the following and enjoy some logs:
+
+```shell script
+ $ FUNCTION_URI=./samples/streaming-repeater NODE_DEBUG='riff' npm start
+```
+

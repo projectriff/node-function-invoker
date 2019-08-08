@@ -1,0 +1,8 @@
+= square
+
+[horizontal]
+*Invoker*:: Node
+*Function*:: link:square.js[square.js]
+*Input*:: numbers
+*Output*:: squared numbers
+

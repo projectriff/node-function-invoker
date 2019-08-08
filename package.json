@@ -1,25 +1,34 @@
 {
   "name": "@projectriff/node-function-invoker",
-  "version": "0.1.4-snapshot",
-  "author": "Eric Bottard",
+  "version": "0.2.0-snapshot",
+  "description": "riff invoker for Node functions",
+  "main": "lib/invoker.js",
+  "repository": "git@github.com:projectriff/node-function-invoker.git",
+  "author": "Florent Biville <fbiville@pivotal.io>",
   "license": "Apache-2.0",
-  "description": "node function invoker for riff",
+  "private": false,
   "scripts": {
-    "lint": "eslint .",
-    "test": "npm run lint && npm run unit",
-    "unit": "jasmine"
+    "test": "npm run eslint . && npm run jasmine",
+    "eslint": "eslint",
+    "jasmine": "jasmine",
+    "generate-proto": "grpc_tools_node_protoc --js_out=import_style=commonjs,binary:./codegen --grpc_out=./codegen --plugin=protoc-gen-grpc=\"$(which grpc_tools_node_protoc_plugin)\" ./proto/riff-rpc.proto"
   },
   "dependencies": {
-    "@projectriff/message": "1.0.0",
-    "express": "4.17.1",
-    "mississippi": "4.0.0",
-    "negotiator": "0.6.2"
+    "@projectriff/message": "^1.0.0",
+    "google-protobuf": "3.8.0",
+    "grpc": "^1.22.0",
+    "negotiator": "^0.6.2",
+    "querystring": "^0.2.0"
   },
   "devDependencies": {
-    "eslint": "5.16.0",
-    "eslint-plugin-jasmine": "2.10.1",
-    "jasmine": "3.4.0",
-    "supertest": "4.0.2",
-    "wait-for-port": "0.0.2"
-  }
+    "eslint": "^6.1.0",
+    "eslint-plugin-jasmine": "^2.10.1",
+    "jasmine": "^3.4.0"
+  },
+  "files": [
+    "codegen/**/*.js",
+    "lib/**/*.js",
+    "proto/**/*.js",
+    "server.js"
+  ]
 }

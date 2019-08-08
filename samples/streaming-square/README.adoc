@@ -1,0 +1,10 @@
+= streaming square
+
+[horizontal]
+*Invoker*:: Node
+*Function*:: link:streaming-square.js[streaming-square.js]
+*Inputs*::
+ - number input stream
+ - square output stream
+*Output*:: none
+

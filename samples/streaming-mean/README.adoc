@@ -1,0 +1,7 @@
+= mean
+
+[horizontal]
+*Invoker*:: Node
+*Function*:: link:package.json[package.json]
+*Input*:: number input stream, mean output stream
+*Output*:: none

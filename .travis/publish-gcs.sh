@@ -5,7 +5,7 @@ commit=$(git rev-parse HEAD)
 
 gcloud auth activate-service-account --key-file <(echo $GCLOUD_CLIENT_SECRET | base64 --decode)
 
-npm pack
+yarn pack
 
 package=projectriff-node-function-invoker-${version}.tgz
 bucket=gs://projectriff/node-function-invoker/releases

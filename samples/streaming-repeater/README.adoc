@@ -1,0 +1,11 @@
+= repeater
+
+[horizontal]
+*Invoker*:: Node
+*Function*:: link:repeater.js[repeater.js]
+*Inputs*::
+ - number input stream
+ - word input stream
+ - repeated word output stream
+*Output*:: none
+

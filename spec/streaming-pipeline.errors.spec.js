@@ -115,11 +115,12 @@ describe('streaming pipeline =>', () => {
                 fixedSource = newFixedSource(["not a signal"]);
             });
 
-            // TODO: assert pipeline ends
             it('emits an error', (done) => {
                 streamingPipeline.on('error', (err) => {
                     expect(err.type).toEqual('error-streaming-input-type-invalid');
                     expect(err.cause).toEqual('invalid input type [object String]');
+                });
+                streamingPipeline.on('finish', () => {
                     done();
                 });
                 fixedSource.pipe(streamingPipeline);
@@ -131,11 +132,12 @@ describe('streaming pipeline =>', () => {
                 fixedSource = newFixedSource([newInputSignal(null)]);
             });
 
-            // TODO: assert pipeline ends
             it('emits an error', (done) => {
                 streamingPipeline.on('error', (err) => {
                     expect(err.type).toEqual('error-streaming-input-type-unsupported');
                     expect(err.cause).toEqual('input is neither a start nor a data signal');
+                });
+                streamingPipeline.on('finish', () => {
                     done();
                 });
                 fixedSource.pipe(streamingPipeline);
@@ -150,7 +152,6 @@ describe('streaming pipeline =>', () => {
                 ]);
             });
 
-            // TODO: assert pipeline ends
             it('emits an error', (done) => {
                 destinationStream.on('data', () => {
                     done(new Error('should not receive any data'));
@@ -161,6 +162,8 @@ describe('streaming pipeline =>', () => {
                         'start signal has already been received. ' +
                         'Rejecting new start signal with content types [application/x-doom]'
                     );
+                });
+                streamingPipeline.on('finish', () => {
                     done();
                 });
                 fixedSource.pipe(streamingPipeline);
@@ -174,7 +177,6 @@ describe('streaming pipeline =>', () => {
                 ]);
             });
 
-            // TODO: assert pipeline ends
             it('emits an error', (done) => {
                 destinationStream.on('data', () => {
                     done(new Error('should not receive any data'));
@@ -184,6 +186,8 @@ describe('streaming pipeline =>', () => {
                     expect(err.cause).toEqual(
                         'invalid output count 3: function has only 2 parameter(s)'
                     );
+                });
+                streamingPipeline.on('finish', () => {
                     done();
                 });
                 fixedSource.pipe(streamingPipeline);
@@ -197,7 +201,6 @@ describe('streaming pipeline =>', () => {
                 ]);
             });
 
-            // TODO: assert pipeline ends
             it('emits an error', (done) => {
                 destinationStream.on('data', () => {
                     done(new Error('should not receive any data'));
@@ -208,6 +211,8 @@ describe('streaming pipeline =>', () => {
                         'start signal has not been received or processed yet. ' +
                         'Rejecting data signal'
                     );
+                });
+                streamingPipeline.on('finish', () => {
                     done();
                 });
                 fixedSource.pipe(streamingPipeline);
@@ -234,7 +239,6 @@ describe('streaming pipeline =>', () => {
             streamingPipeline.destroy();
         });
 
-        // TODO: assert pipeline ends
         it('ends the pipeline', (done) => {
             destinationStream.on('data', () => {
                 done(new Error('should not receive any data'));
@@ -242,6 +246,8 @@ describe('streaming pipeline =>', () => {
             streamingPipeline.on('error', (err) => {
                 expect(err.type).toEqual('streaming-function-runtime-error');
                 expect(err.cause.message).toEqual(`Cannot read property 'nope' of null`);
+            });
+            streamingPipeline.on('finish', () => {
                 done();
             });
             fixedSource.pipe(streamingPipeline);

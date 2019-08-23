@@ -26,7 +26,7 @@ describe('streaming pipeline =>', () => {
             expect(userFunction.getCounter()).toEqual(0, 'counter should have been reset by $init hook');
         });
 
-        it('invokes the $init hook when the destination stream ends', () => {
+        it('invokes the $destroy hook when the destination stream ends', () => {
             destinationStream.end();
             expect(userFunction.getCounter()).toEqual(Number.MAX_SAFE_INTEGER, 'counter should have been changed by $destroy hook');
         });

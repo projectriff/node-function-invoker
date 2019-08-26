@@ -39,13 +39,14 @@ Streaming functions must comply to the following signature:
 module.exports = (inputStreams, outputStreams) => {
     const firstInputStream = inputStreams["0"];
     const firstOutputStream = outputStreams["0"];
-    const secondOutputStream = outputStreams["0"];
+    const secondOutputStream = outputStreams["1"];
     // do something
 };
 module.exports.$interactionModel = 'node-streams';
 module.exports.$arity = 3;
 ```
 The interaction mode and the arity are **required** in this case.
+
 The arity is the number of input streams plus the number of output streams the function accepts
 (here: 1 input stream + 2 output streams hence an arity of 3).
 
@@ -65,6 +66,7 @@ on the function.
 These methods are called once per **function invocation**.
 
 The `$init` method is guaranteed to finish before the main function is invoked.
+
 The `$destroy` method is guaranteed to be invoked after all of the main functions are finished.
 
 ```js
@@ -114,7 +116,7 @@ module.exports.$argumentTransformers = [
     },
     // transformer for second input
     (message) => {
-        return message.headers.get('x-some-header');
+        return message.headers.getValue('x-some-header');
     },
     // ...
 ];

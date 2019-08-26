@@ -6,11 +6,15 @@ const FixedSource = require('./fixed-source');
 const textEncoder = new TextEncoder('utf-8');
 
 module.exports = {
-    'newInputFrame': (index, contentType, payload) => {
+    'newInputFrame': (index, contentType, payload, headers = []) => {
         const inputFrame = new proto.streaming.InputFrame();
         inputFrame.setArgindex(index);
         inputFrame.setContenttype(contentType);
         inputFrame.setPayload(textEncoder.encode(payload));
+        const headersMap = inputFrame.getHeadersMap();
+        headers.forEach((header) => {
+            headersMap.set(header[0], header[1]);
+        });
         return inputFrame;
     },
     'newStartFrame': (contentTypes) => {

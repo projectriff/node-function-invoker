@@ -18,6 +18,11 @@
     esutils "^2.0.2"
     js-tokens "^4.0.0"
 
+"@projectriff/message@^1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@projectriff/message/-/message-1.0.0.tgz#7e92f9602ae5b30f096a5d5497ff9fdafe68fe54"
+  integrity sha512-FXeWHhz5EeMvK/GKb0u0Uvd/nxR8+5PZIUkb62ZU1ym1XLli6PGp0zfDErpNUMkhAulTwyHZWEJlIjWXU51A4A==
+
 "@types/bytebuffer@*":
   version "5.0.40"
   resolved "https://registry.yarnpkg.com/@types/bytebuffer/-/bytebuffer-5.0.40.tgz#d6faac40dcfb09cd856cdc4c01d3690ba536d3ee"

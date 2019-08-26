@@ -32,7 +32,7 @@ describe('streaming pipeline =>', () => {
                 new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
                 fail('instantiation should fail');
             } catch (err) {
-                expect(err.type).toEqual('error-function-arity-unknown');
+                expect(err.type).toEqual('error-function-arity');
                 expect(err.cause).toEqual('Cannot determine function arity. Aborting now');
             }
 
@@ -50,7 +50,7 @@ describe('streaming pipeline =>', () => {
                 new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
                 fail('instantiation should fail');
             } catch (err) {
-                expect(err.type).toEqual('error-function-arity-invalid');
+                expect(err.type).toEqual('error-function-arity');
                 expect(err.cause).toEqual('Function arity must be an integer >= 1, received: 0. Aborting now');
             }
 
@@ -68,7 +68,7 @@ describe('streaming pipeline =>', () => {
                 new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
                 fail('instantiation should fail');
             } catch (err) {
-                expect(err.type).toEqual('error-function-arity-invalid');
+                expect(err.type).toEqual('error-function-arity');
                 expect(err.cause).toEqual('Function arity must be an integer >= 1, received: 1.5. Aborting now');
             }
 
@@ -86,7 +86,7 @@ describe('streaming pipeline =>', () => {
                 new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
                 fail('instantiation should fail');
             } catch (err) {
-                expect(err.type).toEqual('error-function-arity-invalid');
+                expect(err.type).toEqual('error-function-arity');
                 expect(err.cause).toEqual('Function arity must be an integer >= 1, received: hello. Aborting now');
             }
 
@@ -117,7 +117,7 @@ describe('streaming pipeline =>', () => {
 
             it('emits an error', (done) => {
                 streamingPipeline.on('error', (err) => {
-                    expect(err.type).toEqual('error-streaming-input-type-invalid');
+                    expect(err.type).toEqual('error-streaming-input-invalid');
                     expect(err.cause).toEqual('invalid input type [object String]');
                 });
                 streamingPipeline.on('finish', () => {
@@ -134,7 +134,7 @@ describe('streaming pipeline =>', () => {
 
             it('emits an error', (done) => {
                 streamingPipeline.on('error', (err) => {
-                    expect(err.type).toEqual('error-streaming-input-type-unsupported');
+                    expect(err.type).toEqual('error-streaming-input-invalid');
                     expect(err.cause).toEqual('input is neither a start nor a data signal');
                 });
                 streamingPipeline.on('finish', () => {
@@ -357,6 +357,69 @@ describe('streaming pipeline =>', () => {
             });
             streamingPipeline.on('finish', () => {
                 expect(errored).toBeTruthy('pipeline should have errored');
+                done();
+            });
+            fixedSource.pipe(streamingPipeline);
+        })
+    });
+
+    describe('with a function with incorrect argument transformers =>', () => {
+        it('rejects the function with an invalid transformer ', () => {
+            try {
+                const userFunction = require('./helpers/transformers/invalid-argument-transformers-streaming-function');
+                new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
+                fail('should fail');
+            } catch (err) {
+                expect(err.type).toEqual('error-argument-transformer');
+                expect(err.cause).toEqual('Argument transformers must be declared in an array. Found: string')
+            }
+        });
+
+        it('rejects the function with an invalid transformer ', () => {
+            try {
+                const userFunction = require('./helpers/transformers/invalid-argument-transformer-streaming-function');
+                new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
+                fail('should fail');
+            } catch (err) {
+                expect(err.type).toEqual('error-argument-transformer');
+                expect(err.cause).toEqual('Argument transformer #2 must be a function. Found: number')
+            }
+        });
+
+        it('rejects the function with a transformer with a wrong arity', () => {
+            try {
+                const userFunction = require('./helpers/transformers/wrong-arity-argument-transformers-streaming-function');
+                new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
+                fail('should fail');
+            } catch (err) {
+                expect(err.type).toEqual('error-argument-transformer');
+                expect(err.cause).toEqual('Argument transformer #2 must be a single-parameter function. Found: 0 parameter(s)')
+            }
+        });
+    });
+
+    describe('with an invalid count of argument transformers =>', () => {
+        const userFunction = require('./helpers/transformers/invalid-argument-transformer-count-streaming-function');
+
+        beforeEach(() => {
+            streamingPipeline = new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
+            fixedSource = newFixedSource([
+                newStartSignal(newStartFrame(['text/plain']))
+            ]);
+        });
+
+        afterEach(() => {
+            fixedSource.destroy();
+            streamingPipeline.destroy();
+        });
+
+        it('ends the pipeline', (done) => {
+            destinationStream.on('data', () => {
+                done(new Error('should not receive any data'));
+            });
+            streamingPipeline.on('error', (err) => {
+                expect(err.type).toEqual('error-argument-transformer');
+                expect(err.cause).toEqual('Function must declare exactly 2 argument transformer(s). Found 1');
                 done();
             });
             fixedSource.pipe(streamingPipeline);

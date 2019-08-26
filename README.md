@@ -41,7 +41,7 @@ module.exports = (inputStreams, outputStreams) => {
     const firstOutputStream = outputStreams["0"];
     const secondOutputStream = outputStreams["0"];
     // do something
-}
+};
 module.exports.$interactionModel = 'node-streams';
 module.exports.$arity = 3;
 ```
@@ -54,12 +54,14 @@ Input streams are [Readable streams](https://nodejs.org/api/stream.html#stream_r
 Output streams are [Writable streams](https://nodejs.org/api/stream.html#stream_class_stream_readable).
 
 The function **must** end the output streams when it is done emitting data or when an error occurs
-(if the output streams are [`pipe`](https://nodejs.org/api/stream.html#stream_readable_pipe_destination_options)'d from input streams, 
+(if the output streams are [`pipe`](https://nodejs.org/api/stream.html#stream_readable_pipe_destination_options)'d from 
+input streams, 
 then this is automatically managed by this invoker).
 
 ## Lifecycle
 
-Functions that communicate with external services, like a database, can use the `$init` and `$destroy` lifecycle hooks on the function.
+Functions that communicate with external services, like a database, can use the `$init` and `$destroy` lifecycle hooks 
+on the function.
 These methods are called once per **function invocation**.
 
 The `$init` method is guaranteed to finish before the main function is invoked.
@@ -89,6 +91,37 @@ module.exports.$destroy = async () => {
 The lifecycle methods are optional, and should only be implemented when needed.
 The hooks may be either traditional or async functions.
 Lifecycle functions have up to **10 seconds** to complete their work, or the function invoker will abort.
+
+## Argument transformers
+
+Sometimes, the content-type information is not enough to extract the payload the user function is supposed to interact 
+with.
+
+Argument transformers are custom functions that take a `Message` (as defined by [`@projectriff/message`](https://github.com/projectriff/node-message))
+and return whatever the function needs. 
+
+The `Message` payload is the result of the first content-type-based  conversion pass. For instance, if the input 
+content-type is `application/json` and its payload is `'{"key": "value"}'` the payload of the `Message` exposed to the 
+transformer will be the corresponding object representation (i.e. `{"key": "value"}`).
+
+Argument transformers are declared this way:
+
+```js
+module.exports.$argumentTransformers = [
+    // transformer for first input
+    (message) => {
+        return message.payload;
+    },
+    // transformer for second input
+    (message) => {
+        return message.headers.get('x-some-header');
+    },
+    // ...
+];
+```
+
+If `$argumentTransformers` is not declared, the default transformer assigned to each input extracts the `Message` 
+payload.
 
 ## Supported protocols
 

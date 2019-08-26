@@ -14,6 +14,7 @@
     "generate-proto": "grpc_tools_node_protoc --js_out=import_style=commonjs,binary:./codegen --grpc_out=./codegen --plugin=protoc-gen-grpc=\"$(which grpc_tools_node_protoc_plugin)\" ./proto/riff-rpc.proto"
   },
   "dependencies": {
+    "@projectriff/message": "^1.0.0",
     "google-protobuf": "3.8.0",
     "grpc": "^1.22.0",
     "negotiator": "^0.6.2",

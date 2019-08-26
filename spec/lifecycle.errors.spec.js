@@ -16,7 +16,7 @@ describe('streaming pipeline =>', () => {
     });
 
     describe('with a function with a too slow $init =>', () => {
-        const userFunction = require('./helpers/lifecycle/slow-init-hook-streaming-function');
+        const userFunction = require('./helpers/hooks/slow-init-hook-streaming-function');
 
         it('emits an error', (done) => {
             streamingPipeline = new StreamingPipeline(userFunction, destinationStream, {
@@ -32,7 +32,7 @@ describe('streaming pipeline =>', () => {
     });
 
     describe('with a function with a too slow $destroy =>', () => {
-        const userFunction = require('./helpers/lifecycle/slow-destroy-hook-streaming-function');
+        const userFunction = require('./helpers/hooks/slow-destroy-hook-streaming-function');
 
         it('emits an error', (done) => {
             streamingPipeline = new StreamingPipeline(userFunction, destinationStream, {
@@ -49,7 +49,7 @@ describe('streaming pipeline =>', () => {
     });
 
     describe('with a function with a failing $init =>', () => {
-        const userFunction = require('./helpers/lifecycle/failing-init-hook-streaming-function');
+        const userFunction = require('./helpers/hooks/failing-init-hook-streaming-function');
 
         it('emits an error', (done) => {
             streamingPipeline = new StreamingPipeline(userFunction, destinationStream, {
@@ -65,7 +65,7 @@ describe('streaming pipeline =>', () => {
     });
 
     describe('with a function with a failing $destroy =>', () => {
-        const userFunction = require('./helpers/lifecycle/failing-destroy-hook-streaming-function');
+        const userFunction = require('./helpers/hooks/failing-destroy-hook-streaming-function');
 
         it('emits an error', (done) => {
             streamingPipeline = new StreamingPipeline(userFunction, destinationStream, {

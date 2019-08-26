@@ -57,36 +57,40 @@ describe('function promoter =>', () => {
         result({"0": source}, {"0": streamingOutput});
     });
 
-    it('preserves lifecycle hooks if any are set', () => {
-        const someFunction = require('./helpers/lifecycle/simple-lifecycle-request-reply-function');
+    describe('when called with functions with hooks hooks => ', () => {
+        it('preserves hooks if any are set', () => {
+            const someFunction = require('./helpers/hooks/simple-lifecycle-request-reply-function');
 
-        const promotedFunction = promoteFunction(someFunction);
+            const promotedFunction = promoteFunction(someFunction);
 
-        expect(someFunction['$init']).toBeTruthy();
-        expect(someFunction['$destroy']).toBeTruthy();
-        expect(promotedFunction['$init']).toEqual(someFunction['$init']);
-        expect(promotedFunction['$destroy']).toEqual(someFunction['$destroy']);
+            expect(someFunction['$init']).toBeTruthy();
+            expect(someFunction['$destroy']).toBeTruthy();
+            expect(promotedFunction['$init']).toEqual(someFunction['$init']);
+            expect(promotedFunction['$destroy']).toEqual(someFunction['$destroy']);
+        });
     });
 
-    it('discards invalid hooks if any are set', () => {
-        const someFunction = require('./helpers/lifecycle/invalid-lifecycle-request-reply-function');
+    describe('when called with functions with an argument transformer => ', () => {
+        it('adapts the argument transformer', () => {
+            const someFunction = require('./helpers/transformers/valid-argument-transformers-request-reply-function');
 
-        const promotedFunction = promoteFunction(someFunction);
+            const promotedFunction = promoteFunction(someFunction);
 
-        expect(someFunction['$init']).toBeTruthy();
-        expect(someFunction['$destroy']).toBeTruthy();
-        expect(promotedFunction['$init']).toBeUndefined();
-        expect(promotedFunction['$destroy']).toBeUndefined();
+            const originalTransformer = someFunction['$argumentTransformers'];
+            expect(originalTransformer).toBeTruthy();
+            expect(promotedFunction['$argumentTransformers']).toEqual(originalTransformer);
+        });
     });
 
-    it('adapts the argument transformer', () => {
-        const someFunction = require('./helpers/lifecycle/invalid-lifecycle-request-reply-function');
+    describe('when called with functions with an invalid number of argument transformers => ', () => {
+        it('adapts the argument transformer', () => {
+            const someFunction = require('./helpers/transformers/valid-argument-transformers-request-reply-function');
 
-        const promotedFunction = promoteFunction(someFunction);
+            const promotedFunction = promoteFunction(someFunction);
 
-        expect(someFunction['$init']).toBeTruthy();
-        expect(someFunction['$destroy']).toBeTruthy();
-        expect(promotedFunction['$init']).toBeUndefined();
-        expect(promotedFunction['$destroy']).toBeUndefined();
+            const originalTransformer = someFunction['$argumentTransformers'];
+            expect(originalTransformer).toBeTruthy();
+            expect(promotedFunction['$argumentTransformers']).toEqual(originalTransformer);
+        });
     });
 });

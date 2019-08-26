@@ -69,7 +69,18 @@ describe('function promoter =>', () => {
     });
 
     it('discards invalid hooks if any are set', () => {
-        const someFunction = require('./helpers/lifecycle/invalid-lifecycle-function');
+        const someFunction = require('./helpers/lifecycle/invalid-lifecycle-request-reply-function');
+
+        const promotedFunction = promoteFunction(someFunction);
+
+        expect(someFunction['$init']).toBeTruthy();
+        expect(someFunction['$destroy']).toBeTruthy();
+        expect(promotedFunction['$init']).toBeUndefined();
+        expect(promotedFunction['$destroy']).toBeUndefined();
+    });
+
+    it('adapts the argument transformer', () => {
+        const someFunction = require('./helpers/lifecycle/invalid-lifecycle-request-reply-function');
 
         const promotedFunction = promoteFunction(someFunction);
 

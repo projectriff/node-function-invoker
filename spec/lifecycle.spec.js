@@ -16,7 +16,7 @@ describe('streaming pipeline =>', () => {
     });
 
     describe('with a function implementing lifecycle hooks =>', () => {
-        const userFunction = require('./helpers/lifecycle/simple-lifecycle-function');
+        const userFunction = require('./helpers/lifecycle/simple-lifecycle-streaming-function');
 
         beforeEach(() => {
             streamingPipeline = new StreamingPipeline(userFunction, destinationStream, {objectMode: true});

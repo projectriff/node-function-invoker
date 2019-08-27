@@ -1,16 +1,13 @@
 require('../../codegen/proto/riff-rpc_grpc_pb');
-const {TextEncoder} = require('util');
 const MappingTransform = require('../../lib/mapping-transform');
 const FixedSource = require('./fixed-source');
-
-const textEncoder = new TextEncoder('utf-8');
 
 module.exports = {
     'newInputFrame': (index, contentType, payload, headers = []) => {
         const inputFrame = new proto.streaming.InputFrame();
         inputFrame.setArgindex(index);
         inputFrame.setContenttype(contentType);
-        inputFrame.setPayload(textEncoder.encode(payload));
+        inputFrame.setPayload(payload);
         const headersMap = inputFrame.getHeadersMap();
         headers.forEach((header) => {
             headersMap.set(header[0], header[1]);
@@ -36,7 +33,7 @@ module.exports = {
         const outputFrame = new proto.streaming.OutputFrame();
         outputFrame.setResultindex(index);
         outputFrame.setContenttype(contentType);
-        outputFrame.setPayload(textEncoder.encode(payload));
+        outputFrame.setPayload(payload);
         return outputFrame;
     },
     'newOutputSignal': (outputFrame) => {

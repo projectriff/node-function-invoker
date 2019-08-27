@@ -1,11 +1,13 @@
-const {newFixedSource, newOutputFrame, newOutputSignal} = require('./helpers/factories');
+const {TextEncoder} = require('util');
 const OutputMarshaller = require('../lib/output-marshaller');
+const {newFixedSource, newOutputFrame, newOutputSignal} = require('./helpers/factories');
 
 describe('output marshaller =>', () => {
 
     let marshaller;
     let source;
     const outputPayloads = [42, "forty-two"];
+    const textEncoder = new TextEncoder();
 
     beforeEach(() => {
         source = newFixedSource(outputPayloads);
@@ -17,8 +19,7 @@ describe('output marshaller =>', () => {
 
     ['application/json', 'application/cloudevents+json'].forEach((mediaType) => {
         const expectedIndex = 0;
-        const expectedResults = [42, '"forty-two"'];
-        const expectedPayloadCount = expectedResults.length;
+        const expectedPayloadCount = outputPayloads.length;
 
         describe(`with ${mediaType} data =>`, () => {
             beforeEach(() => {
@@ -33,7 +34,7 @@ describe('output marshaller =>', () => {
                 let index = 0;
                 marshaller.on('data', (chunk) => {
                     expect(index).toBeLessThan(outputPayloads.length, `should not consume more than ${expectedPayloadCount} elements, about to consume ${index}th one`);
-                    const expectedFrame = newOutputFrame(expectedIndex, mediaType, expectedResults[index]);
+                    const expectedFrame = newOutputFrame(expectedIndex, mediaType, textEncoder.encode(JSON.stringify(outputPayloads[index])));
                     const expectedSignal = newOutputSignal(expectedFrame);
                     expect(chunk).toEqual(expectedSignal);
                     index++;

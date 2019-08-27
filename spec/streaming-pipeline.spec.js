@@ -1,3 +1,4 @@
+const {TextEncoder} = require('util');
 const StreamingPipeline = require('../lib/streaming-pipeline');
 const {PassThrough} = require('stream');
 const {
@@ -12,6 +13,7 @@ const {
 } = require('./helpers/factories');
 
 describe('streaming pipeline =>', () => {
+    const textEncoder = new TextEncoder();
     let destinationStream;
     let streamingPipeline;
     let fixedSource;
@@ -43,7 +45,7 @@ describe('streaming pipeline =>', () => {
                     newInputSignal(newInputFrame(
                         0,
                         'application/json',
-                        '"the ultimate answer to life the universe and everything is: "'
+                        textEncoder.encode('"the ultimate answer to life the universe and everything is: "')
                     ))
                 ]);
             });
@@ -59,7 +61,7 @@ describe('streaming pipeline =>', () => {
                         newOutputSignal(newOutputFrame(
                             0,
                             'text/plain',
-                            'the ultimate answer to life the universe and everything is: 42'
+                            textEncoder.encode('the ultimate answer to life the universe and everything is: 42')
                         ))
                     );
                     dataReceived = true;
@@ -102,7 +104,7 @@ describe('streaming pipeline =>', () => {
             beforeEach(() => {
                 fixedSource = newFixedSource([
                     newStartSignal(newStartFrame(['text/plain', 'text/plain'])),
-                    ...(data.map((payload) => newInputSignal(newInputFrame(0, 'text/plain', payload))))
+                    ...(data.map((payload) => newInputSignal(newInputFrame(0, 'text/plain', textEncoder.encode(payload)))))
                 ]);
             });
 
@@ -119,7 +121,7 @@ describe('streaming pipeline =>', () => {
                 let receivedOutputSignalCount = 0;
                 destinationStream.on('data', (outputSignal) => {
                     expect(receivedOutputSignalCount).toBeLessThan(data.length, `expected to see only ${data.length}, already seen ${receivedOutputSignalCount + 1}th`);
-                    expect(outputSignal).toEqual(newOutputSignal(newOutputFrame(1, 'text/plain', data[receivedOutputSignalCount])));
+                    expect(outputSignal).toEqual(newOutputSignal(newOutputFrame(1, 'text/plain', textEncoder.encode(data[receivedOutputSignalCount]))));
                     receivedOutputSignalCount++;
                 });
                 destinationStream.on('finish', () => {

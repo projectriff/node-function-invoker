@@ -1,7 +1,9 @@
+const {TextEncoder} = require('util');
 const {newFixedSource, newInputFrame, newInputSignal} = require('./helpers/factories');
 const InputUnmarshaller = require('../lib/input-unmarshaller');
 
 describe('input unmarshaller =>', () => {
+    const textEncoder = new TextEncoder();
 
     describe('with the default argument transformer =>', () => {
         let unmarshaller;
@@ -21,8 +23,8 @@ describe('input unmarshaller =>', () => {
 
             beforeEach(() => {
                 inputs = newFixedSource([
-                    newInputSignal(newInputFrame(0, 'text/plain', expectedPayloads[0])),
-                    newInputSignal(newInputFrame(0, 'text/plain', expectedPayloads[1])),
+                    newInputSignal(newInputFrame(0, 'text/plain', textEncoder.encode(expectedPayloads[0]))),
+                    newInputSignal(newInputFrame(0, 'text/plain', textEncoder.encode(expectedPayloads[1]))),
                 ]);
             });
 
@@ -55,8 +57,8 @@ describe('input unmarshaller =>', () => {
 
                 beforeEach(() => {
                     inputs = newFixedSource([
-                        newInputSignal(newInputFrame(0, 'application/json', inputPayloads[0])),
-                        newInputSignal(newInputFrame(0, 'application/json', expectedPayloads[1])),
+                        newInputSignal(newInputFrame(0, 'application/json', textEncoder.encode(inputPayloads[0]))),
+                        newInputSignal(newInputFrame(0, 'application/json', textEncoder.encode(inputPayloads[1]))),
                     ]);
                 });
 
@@ -91,8 +93,8 @@ describe('input unmarshaller =>', () => {
         beforeEach(() => {
             unmarshaller = new InputUnmarshaller({objectMode: true}, (msg) => msg.payload.age);
             inputs = newFixedSource([
-                newInputSignal(newInputFrame(0, 'application/json', inputData[0])),
-                newInputSignal(newInputFrame(0, 'application/json', inputData[1])),
+                newInputSignal(newInputFrame(0, 'application/json', textEncoder.encode(inputData[0]))),
+                newInputSignal(newInputFrame(0, 'application/json', textEncoder.encode(inputData[1]))),
             ]);
         });
 
@@ -126,8 +128,8 @@ describe('input unmarshaller =>', () => {
         beforeEach(() => {
             unmarshaller = new InputUnmarshaller({objectMode: true}, (msg) => msg.headers.getValue('X-Files'));
             inputs = newFixedSource([
-                newInputSignal(newInputFrame(0, 'application/json', '"ignored"', [["X-Files", headers[0]]])),
-                newInputSignal(newInputFrame(0, 'application/json', '"ignored"', [["X-Files", headers[1]]])),
+                newInputSignal(newInputFrame(0, 'application/json', textEncoder.encode('"ignored"'), [["X-Files", headers[0]]])),
+                newInputSignal(newInputFrame(0, 'application/json', textEncoder.encode('"ignored"'), [["X-Files", headers[1]]])),
             ]);
         });
 

@@ -1,3 +1,4 @@
+const {TextEncoder} = require('util');
 const StreamingPipeline = require('../lib/streaming-pipeline');
 const {PassThrough, Transform} = require('stream');
 const {
@@ -10,6 +11,7 @@ const {
 } = require('./helpers/factories');
 
 describe('streaming pipeline =>', () => {
+    const textEncoder = new TextEncoder();
     let destinationStream;
     let streamingPipeline;
     let fixedSource;
@@ -197,7 +199,7 @@ describe('streaming pipeline =>', () => {
         describe('with no start signal to start with =>', () => {
             beforeEach(() => {
                 fixedSource = newFixedSource([newInputSignal(
-                    newInputFrame(42, 'application/x-doom', '??'))
+                    newInputFrame(42, 'application/x-doom', textEncoder.encode('??')))
                 ]);
             });
 
@@ -264,7 +266,7 @@ describe('streaming pipeline =>', () => {
             streamingPipeline = new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
             fixedSource = newFixedSource([
                 newStartSignal(newStartFrame(['text/plain'])),
-                newInputSignal(newInputFrame(0, 'application/json', 'invalid-json'))
+                newInputSignal(newInputFrame(0, 'application/json', textEncoder.encode('invalid-json')))
             ]);
         });
 
@@ -300,7 +302,7 @@ describe('streaming pipeline =>', () => {
             streamingPipeline = new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
             fixedSource = newFixedSource([
                 newStartSignal(newStartFrame(['text/plain'])),
-                newInputSignal(newInputFrame(0, 'application/json', '42'))
+                newInputSignal(newInputFrame(0, 'application/json', textEncoder.encode('42')))
             ]);
         });
 
@@ -336,7 +338,7 @@ describe('streaming pipeline =>', () => {
             streamingPipeline = new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
             fixedSource = newFixedSource([
                 newStartSignal(newStartFrame(['text/plain'])),
-                newInputSignal(newInputFrame(0, 'application/json', '42'))
+                newInputSignal(newInputFrame(0, 'application/json', textEncoder.encode('42')))
             ]);
         });
 

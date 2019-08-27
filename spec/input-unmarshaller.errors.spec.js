@@ -1,7 +1,9 @@
+const {TextEncoder} = require('util');
 const {newFixedSource, newInputFrame, newInputSignal} = require('./helpers/factories');
 const InputUnmarshaller = require('../lib/input-unmarshaller');
 
 describe('input unmarshaller =>', () => {
+    const textEncoder = new TextEncoder();
 
     describe('with the default argument transformer =>', () => {
         let unmarshaller;
@@ -20,7 +22,7 @@ describe('input unmarshaller =>', () => {
 
             beforeEach(() => {
                 unsupportedMediaTypeInputs = newFixedSource([
-                    newInputSignal(newInputFrame(0, 'application/x-doom', '???'))
+                    newInputSignal(newInputFrame(0, 'application/x-doom', textEncoder.encode('???')))
                 ]);
             });
 
@@ -49,7 +51,7 @@ describe('input unmarshaller =>', () => {
 
                 beforeEach(() => {
                     invalidInputs = newFixedSource([
-                        newInputSignal(newInputFrame(0, mediaType, 'invalid payload'))
+                        newInputSignal(newInputFrame(0, mediaType, textEncoder.encode('invalid payload')))
                     ]);
                 });
 
@@ -84,7 +86,7 @@ describe('input unmarshaller =>', () => {
                 throw new Error(message.payload + ' ko');
             });
             inputs = newFixedSource([
-                newInputSignal(newInputFrame(0, 'application/json', '42'))
+                newInputSignal(newInputFrame(0, 'application/json', textEncoder.encode('42')))
             ]);
         });
 

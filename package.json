@@ -2,7 +2,7 @@
   "name": "@projectriff/node-function-invoker",
   "version": "0.2.0-snapshot",
   "description": "riff invoker for Node functions",
-  "main": "server.js",
+  "main": "lib/invoker.js",
   "repository": "git@github.com:fbiville/streaming-node-invoker.git",
   "author": "Florent Biville <fbiville@pivotal.io>",
   "license": "Apache-2.0",

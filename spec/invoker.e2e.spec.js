@@ -38,8 +38,8 @@ describe('invoker =>', () => {
             it('successfully invokes the function', (done) => {
                 const inputs = [
                     newStartSignal(newStartFrame(['application/json'])),
-                    newInputSignal(newInputFrame(0, 'text/plain', textEncoder.encode('2'))),
-                    newInputSignal(newInputFrame(0, 'text/plain', textEncoder.encode('3')))
+                    newInputSignal(newInputFrame(0, 'application/json', textEncoder.encode('2'))),
+                    newInputSignal(newInputFrame(0, 'application/json', textEncoder.encode('3')))
                 ];
                 const expectedOutputs = [
                     newOutputSignal(newOutputFrame(0, 'application/json', textEncoder.encode('4'))),

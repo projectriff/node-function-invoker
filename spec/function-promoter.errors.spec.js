@@ -2,17 +2,7 @@ const promoteFunction = require('../lib/function-promoter');
 
 describe('function promoter =>', () => {
 
-    it('rejects invalid request-reply functions', () => {
-        try {
-            promoteFunction((x, y) => x + y);
-            fail('should fail')
-        } catch (err) {
-            expect(err.type).toEqual('error-promoting-function');
-            expect(err.cause).toEqual('Request-reply function must have exactly 1 argument, 2 found')
-        }
-    });
-
-    describe('when called with functions with invalid hooks hooks => ', () => {
+    describe('when called with functions with invalid hooks => ', () => {
         it('rejects invalid init hook', () => {
             try {
                 const someFunction = require('./helpers/hooks/invalid-init-hook-request-reply-function');
@@ -48,7 +38,7 @@ describe('function promoter =>', () => {
             }
         });
 
-        it('rejects argument transformers with invalid arity', () => {
+        it('rejects too many declared argument transformers', () => {
             try {
                 const someFunction = require('./helpers/transformers/invalid-argument-transformer-count-request-reply-function');
                 promoteFunction(someFunction);

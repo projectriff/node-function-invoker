@@ -23,8 +23,8 @@ describe('invoker =>', () => {
     });
 
     [
-        {interactionType: 'streaming', functionUri: '../samples/streaming-square/streaming-square.js'},
-        {interactionType: 'request-reply', functionUri: '../samples/request-reply-square/square.js'},
+        {interactionType: 'streaming', functionUri: '../spec/helpers/functions/streaming-square.js'},
+        {interactionType: 'request-reply', functionUri: '../spec/helpers/functions/request-reply-square.js'},
     ].forEach((testCase) => {
 
         describe(`with a ${testCase.interactionType} square function =>`, () => {
@@ -73,7 +73,7 @@ describe('invoker =>', () => {
 
         beforeEach(() => {
             jasmine.addCustomEqualityTester(outputSignalCustomEqual);
-            ({server, address} = tryStartInvoker('../samples/request-reply-async-cube/async-cube.js'));
+            ({server, address} = tryStartInvoker('../spec/helpers/functions/request-reply-async-cube.js'));
             client = newClient(address);
         });
 

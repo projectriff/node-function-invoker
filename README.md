@@ -139,9 +139,9 @@ However, it is possible to send HTTP requests and receive HTTP responses if you 
  
 #### Build
 
- - Install dependencies by running `yarn` or `yarn install`
- - Generate the Protobuf client and server with `yarn generate-proto`
- - Run the tests with `yarn test`
+ - Install dependencies by running `npm ci`.
+ - Generate the Protobuf client and server with `npm run generate-proto`
+ - Run the tests with `npm test`
 
 #### Full streaming setup
 
@@ -154,7 +154,7 @@ However, it is possible to send HTTP requests and receive HTTP responses if you 
  - Run Liiklus producers and consumers with this [project](https://github.com/projectriff-samples/liiklus-client).
  - Run this invoker:
 ```shell script
- $ FUNCTION_URI='./samples/streaming-repeater' yarn start
+ $ FUNCTION_URI='./samples/streaming-repeater' npm start
 ```
  - Run the [processor](https://github.com/projectriff/streaming-processor) with the appropriate parameters.
  - Start sending data via the Liiklus producers.
@@ -164,6 +164,6 @@ However, it is possible to send HTTP requests and receive HTTP responses if you 
 Execute the following and enjoy some logs:
 
 ```shell script
- $ FUNCTION_URI=./samples/streaming-repeater NODE_DEBUG='riff' yarn start
+ $ FUNCTION_URI=./samples/streaming-repeater NODE_DEBUG='riff' npm start
 ```
 

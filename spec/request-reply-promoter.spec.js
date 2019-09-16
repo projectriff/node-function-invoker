@@ -1,5 +1,5 @@
 const {newFixedSource, newMappingTransform} = require('./helpers/factories');
-const promoteFunction = require('../lib/function-promoter');
+const promoteFunction = require('../lib/request-reply-promoter');
 const {PassThrough} = require('stream');
 
 describe('function promoter =>', () => {

@@ -1,4 +1,4 @@
-const promoteFunction = require('../lib/function-promoter');
+const promoteFunction = require('../lib/request-reply-promoter');
 
 describe('function promoter =>', () => {
 

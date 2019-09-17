@@ -4,7 +4,7 @@
 
 The node function invoker provides a host for functions consisting of a single NodeJS module.
 It adheres to [riff streaming protocol](https://github.com/projectriff/streaming-processor) 
-and invokes functions accordinly.
+and invokes functions accordingly.
 
 ## Supported functions
 

@@ -1,4 +1,5 @@
 require('../../codegen/proto/riff-rpc_grpc_pb');
+const {Message, Headers} = require('@projectriff/message');
 const MappingTransform = require('../../lib/mapping-transform');
 const FixedSource = require('./fixed-source');
 
@@ -29,11 +30,15 @@ module.exports = {
         inputSignal.setStart(startFrame);
         return inputSignal;
     },
-    'newOutputFrame': (index, contentType, payload) => {
+    'newOutputFrame': (index, contentType, payload, headers = []) => {
         const outputFrame = new proto.streaming.OutputFrame();
         outputFrame.setResultindex(index);
         outputFrame.setContenttype(contentType);
         outputFrame.setPayload(payload);
+        const headersMap = outputFrame.getHeadersMap();
+        headers.forEach((header) => {
+            headersMap.set(header[0], header[1]);
+        });
         return outputFrame;
     },
     'newOutputSignal': (outputFrame) => {
@@ -46,5 +51,11 @@ module.exports = {
     },
     'newMappingTransform': (fn) => {
         return new MappingTransform(fn, {objectMode: true})
+    },
+    'newRiffMessage': (headers, payload) => {
+        return Message.builder().headers(headers).payload(payload).build();
+    },
+    'newRiffHeaders': () => {
+        return new Headers();
     }
 };

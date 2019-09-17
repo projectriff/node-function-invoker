@@ -9,7 +9,7 @@
   "author": "Scott Andrews",
   "license": "Apache-2.0",
   "dependencies": {
-    "mississippi": "^3.0.0",
-    "simple-statistics": "^5.3.1"
+    "mississippi": "^4.0.0",
+    "simple-statistics": "^7.0.5"
   }
 }

@@ -28,6 +28,7 @@ describe('streaming pipeline =>', () => {
         const userFunction = (inputStreams, outputStreams) => {
             inputStreams["0"].pipe(outputStreams["0"]);
         };
+        userFunction.$interactionModel = 'node-streams';
 
         it('fails to instantiate', () => {
             try {
@@ -45,6 +46,7 @@ describe('streaming pipeline =>', () => {
         const userFunction = (inputStreams, outputStreams) => {
             inputStreams["0"].pipe(outputStreams["0"]);
         };
+        userFunction.$interactionModel = 'node-streams';
         userFunction.$arity = 0;
 
         it('fails to instantiate', () => {
@@ -63,6 +65,7 @@ describe('streaming pipeline =>', () => {
         const userFunction = (inputStreams, outputStreams) => {
             inputStreams["0"].pipe(outputStreams["0"]);
         };
+        userFunction.$interactionModel = 'node-streams';
         userFunction.$arity = 1.5;
 
         it('fails to instantiate', () => {
@@ -81,6 +84,7 @@ describe('streaming pipeline =>', () => {
         const userFunction = (inputStreams, outputStreams) => {
             inputStreams["0"].pipe(outputStreams["0"]);
         };
+        userFunction.$interactionModel = 'node-streams';
         userFunction.$arity = 'hello';
 
         it('fails to instantiate', () => {
@@ -296,6 +300,7 @@ describe('streaming pipeline =>', () => {
                 throw new Error('Function failed')
             })).pipe(outputStream);
         };
+        userFunction.$interactionModel = 'node-streams';
         userFunction.$arity = 2;
 
         beforeEach(() => {
@@ -332,6 +337,7 @@ describe('streaming pipeline =>', () => {
         const userFunction = (inputStreams, outputStreams) => {
             inputStreams["0"].pipe(new SimpleTransform({objectMode: true}, (x) => Symbol(x))).pipe(outputStreams["0"]);
         };
+        userFunction.$interactionModel = 'node-streams';
         userFunction.$arity = 2;
 
         beforeEach(() => {

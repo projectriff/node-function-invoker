@@ -32,6 +32,7 @@ describe('streaming pipeline =>', () => {
         const userFunction = (inputStreams, outputStreams) => {
             inputStreams["0"].pipe(newMappingTransform((arg) => arg + 42)).pipe(outputStreams["0"]);
         };
+        userFunction.$interactionModel = 'node-streams';
         userFunction.$arity = 2;
 
         beforeEach(() => {
@@ -89,6 +90,7 @@ describe('streaming pipeline =>', () => {
                         inputEnded = true;
                     })
                 };
+                userFunction.$interactionModel = 'node-streams';
                 userFunction.$arity = 1;
                 streamingPipeline = new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
                 streamingPipeline.on('finish', () => {
@@ -116,6 +118,7 @@ describe('streaming pipeline =>', () => {
                     outputStream1.end();
                     inputStream.pipe(outputStream2);
                 };
+                userFunction.$interactionModel = 'node-streams';
                 userFunction.$arity = 3;
 
                 let receivedOutputSignalCount = 0;

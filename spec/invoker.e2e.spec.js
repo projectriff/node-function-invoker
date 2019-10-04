@@ -109,6 +109,48 @@ describe('invoker =>', () => {
             call.end();
         });
     });
+
+    describe('with a request-reply function =>', () => {
+
+        beforeEach(() => {
+            jasmine.addCustomEqualityTester(outputSignalCustomEqual);
+            ({server, address} = tryStartInvoker('../spec/helpers/functions/request-reply-async-cube.js'));
+            client = newClient(address);
+        });
+
+        it('successfully invokes the function several times', (done) => {
+            const inputs = [
+                newStartSignal(newStartFrame(['application/json'])),
+                newInputSignal(newInputFrame(0, 'text/plain', textEncoder.encode('2'))),
+            ];
+            const expectedOutputs = [
+                newOutputSignal(newOutputFrame(0, 'application/json', textEncoder.encode('8'))),
+            ];
+            const expectedOutputCount = expectedOutputs.length;
+
+            [1, 2].forEach((callNumber) => {
+                const call = client.invoke();
+
+                let seenOutputIndex = 0;
+                call.on('data', (outputSignal) => {
+                    expect(seenOutputIndex).toBeLessThan(expectedOutputCount,
+                        `[call #${callNumber}] expected only ${expectedOutputCount} elements, received at least ${seenOutputIndex}`);
+                    expect(outputSignal).toEqual(expectedOutputs[seenOutputIndex++]);
+                });
+                call.on('end', () => {
+                    expect(seenOutputIndex).toEqual(expectedOutputs.length,
+                        `[call #${callNumber}] expected to receive exactly ${expectedOutputCount}, received ${seenOutputIndex}`);
+                    done();
+                });
+
+                inputs.forEach((input) => {
+                    call.write(input);
+                });
+                call.end();
+            });
+
+        });
+    });
 });
 
 const tryStartInvoker = (functionUri) => {

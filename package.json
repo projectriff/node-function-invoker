@@ -23,7 +23,7 @@
   "devDependencies": {
     "eslint": "^6.1.0",
     "eslint-plugin-jasmine": "^2.10.1",
-    "jasmine": "^3.4.0"
+    "jasmine": "^3.5.0"
   },
   "files": [
     "codegen/**/*.js",

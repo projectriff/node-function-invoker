@@ -8,6 +8,7 @@ module.exports = (inputStreams, outputStreams) => {
     }, {objectMode: true})).pipe(outputStreams["0"]);
 };
 module.exports.$arity = 2;
+module.exports.$interactionModel = 'node-streams';
 
 module.exports.$init = () => {
     counter = 0;

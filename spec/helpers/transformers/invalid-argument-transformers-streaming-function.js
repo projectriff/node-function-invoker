@@ -4,4 +4,5 @@ module.exports = (inputStreams, outputStreams) => {
     inputStreams["1"].pipe(output);
 };
 module.exports.$arity = 3;
+module.exports.$interactionModel = 'node-streams';
 module.exports.$argumentTransformers = "nope";

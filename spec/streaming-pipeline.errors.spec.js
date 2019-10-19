@@ -106,6 +106,7 @@ describe('streaming pipeline =>', () => {
             inputStream.pipe(newMappingTransform((arg) => arg + 42)).pipe(outputStream);
         };
         userFunction.$arity = 2;
+        userFunction.$interactionModel = 'node-streams';
 
         beforeEach(() => {
             streamingPipeline = new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
@@ -232,6 +233,7 @@ describe('streaming pipeline =>', () => {
             null.nope();
         };
         userFunction.$arity = 2;
+        userFunction.$interactionModel = 'node-streams';
 
         beforeEach(() => {
             streamingPipeline = new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
@@ -265,6 +267,7 @@ describe('streaming pipeline =>', () => {
             inputStreams["0"].pipe(outputStreams["0"]);
         };
         userFunction.$arity = 2;
+        userFunction.$interactionModel = 'node-streams';
 
         beforeEach(() => {
             streamingPipeline = new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
@@ -431,6 +434,16 @@ describe('streaming pipeline =>', () => {
                 done();
             });
             fixedSource.pipe(streamingPipeline);
+        })
+    });
+
+    describe('with a request-reply function', () => {
+        it('throws an error when constructing', () => {
+            const userFunction = () => 42;
+            userFunction.$interactionModel = "request-reply";
+            userFunction.$arity = 1;
+            const construct = () => new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
+            expect(construct).toThrow(new Error(`SteamingPipeline expects a function with "node-streams" interaction model, but was "request-reply" instead`));
         })
     });
 });

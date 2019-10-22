@@ -154,7 +154,7 @@ However, it is possible to send HTTP requests and receive HTTP responses if you 
  - Run Liiklus producers and consumers with this [project](https://github.com/projectriff-samples/liiklus-client).
  - Run this invoker:
 ```shell script
- $ FUNCTION_URI='./samples/streaming-repeater' npm start
+ $ FUNCTION_URI='$(pwd)/samples/streaming-repeater' npm start
 ```
  - Run the [processor](https://github.com/projectriff/streaming-processor) with the appropriate parameters.
  - Start sending data via the Liiklus producers.
@@ -164,6 +164,6 @@ However, it is possible to send HTTP requests and receive HTTP responses if you 
 Execute the following and enjoy some logs:
 
 ```shell script
- $ FUNCTION_URI=./samples/streaming-repeater NODE_DEBUG='riff' npm start
+ $ FUNCTION_URI='$(pwd)/samples/streaming-repeater' NODE_DEBUG='riff' npm start
 ```
 

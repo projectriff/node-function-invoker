@@ -151,6 +151,33 @@ describe('invoker =>', () => {
 
         });
     });
+
+    describe('with an input that cannot be unmarshalled =>', () => {
+
+        beforeEach(() => {
+            ({server, address} = tryStartInvoker('../spec/helpers/functions/streaming-square.js'));
+            client = newClient(address);
+        });
+
+        it('ends the source stream', (done) => {
+            const inputs = [
+                newStartSignal(newStartFrame(['application/json'])),
+                newInputSignal(newInputFrame(0, 'text/zglorbf', textEncoder.encode('2'))),
+                newInputSignal(newInputFrame(0, 'application/json', textEncoder.encode('4'))),
+            ];
+
+            const call = client.invoke();
+            call.on('data', () => {
+                done(new Error('no data expected'));
+            });
+            call.on('end', () => {
+                done();
+            });
+            inputs.forEach((input) => {
+                call.write(input);
+            });
+        })
+    });
 });
 
 const tryStartInvoker = (functionUri) => {

@@ -30,13 +30,14 @@ describe('streaming pipeline =>', () => {
 
     describe('with a reliable function =>', () => {
         const userFunction = (inputStreams, outputStreams) => {
-            inputStreams["0"].pipe(newMappingTransform((arg) => arg + 42)).pipe(outputStreams["0"]);
+            inputStreams["input1"].pipe(newMappingTransform((arg) => arg + 42)).pipe(outputStreams["output1"]);
         };
         userFunction.$interactionModel = 'node-streams';
-        userFunction.$arity = 2;
+        // userFunction.$arity = 2;
+        const streamMetadata = {"inputs": ["input1"], "outputs": ["output1"]};
 
         beforeEach(() => {
-            streamingPipeline = new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
+            streamingPipeline = new StreamingPipeline(userFunction, destinationStream, streamMetadata, {objectMode: true});
         });
 
         describe('with valid input signals =>', () => {
@@ -92,7 +93,7 @@ describe('streaming pipeline =>', () => {
                 };
                 userFunction.$interactionModel = 'node-streams';
                 userFunction.$arity = 1;
-                streamingPipeline = new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
+                streamingPipeline = new StreamingPipeline(userFunction, destinationStream, /*TODO: streamMetadata*/ {objectMode: true});
                 streamingPipeline.on('finish', () => {
                     expect(inputEnded).toBeTruthy('input stream should have been ended');
                     done();

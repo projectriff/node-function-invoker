@@ -51,7 +51,6 @@ Parameters can also be looked up by name:
 ```js
 module.exports = (inputStreams, outputStreams) => {
     const { numbers, letters } = inputStreams;
-    const letters = inputStreams["letters"];
     const { repetitions } = outputStreams;
     // do something
 };

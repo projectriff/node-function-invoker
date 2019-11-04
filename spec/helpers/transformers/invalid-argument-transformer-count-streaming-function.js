@@ -4,7 +4,6 @@ module.exports = (inputStreams, outputStreams) => {
     inputStreams["1"].pipe(output);
 };
 module.exports.$interactionModel = 'node-streams';
-module.exports.$arity = 3;
 module.exports.$argumentTransformers = [
     (x) => x.payload
 ];

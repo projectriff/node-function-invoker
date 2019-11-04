@@ -11,4 +11,3 @@ module.exports = (inputs, outputs) => {
     inputs["0"].pipe(meanStream).pipe(outputs["0"]);
 };
 module.exports.$interactionModel = 'node-streams';
-module.exports.$arity = 2;

@@ -13,4 +13,3 @@ module.exports =
         });
     };
 module.exports.$interactionModel = 'node-streams';
-module.exports.$arity = 2;

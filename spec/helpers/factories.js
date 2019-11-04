@@ -15,8 +15,10 @@ module.exports = {
         });
         return inputFrame;
     },
-    'newStartFrame': (contentTypes) => {
+    'newStartFrame': (contentTypes, inputNames = [], outputNames = []) => {
         const startFrame = new proto.streaming.StartFrame();
+        startFrame.setInputnamesList(inputNames);
+        startFrame.setOutputnamesList(outputNames);
         startFrame.setExpectedcontenttypesList(contentTypes);
         return startFrame;
     },

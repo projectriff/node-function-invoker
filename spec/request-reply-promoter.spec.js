@@ -39,7 +39,6 @@ describe('function promoter =>', () => {
         });
 
         const result = promoteFunction(userFunction);
-        expect(result['$arity']).toEqual(2, 'promoted functions should have an arity of 2');
         result({"0": source}, {"0": streamingOutput});
     });
 

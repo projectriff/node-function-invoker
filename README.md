@@ -52,7 +52,7 @@ Parameters can also be looked up by name:
 module.exports = (inputStreams, outputStreams) => {
     const { numbers, letters } = inputStreams;
     const letters = inputStreams["letters"];
-    const repetitions = outputStreams["repetitions"];
+    const { repetitions } = outputStreams;
     // do something
 };
 module.exports.$interactionModel = 'node-streams';

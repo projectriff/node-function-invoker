@@ -37,18 +37,26 @@ module.exports.$interactionModel = 'request-reply';
 Streaming functions must comply to the following signature:
 ```js
 module.exports = (inputStreams, outputStreams) => {
-    const firstInputStream = inputStreams["0"];
-    const firstOutputStream = outputStreams["0"];
-    const secondOutputStream = outputStreams["1"];
+    const firstInputStream = inputStreams.$order[0];
+    const firstOutputStream = outputStreams.$order[0];
+    const secondOutputStream = outputStreams.$order[1];
     // do something
 };
 module.exports.$interactionModel = 'node-streams';
-module.exports.$arity = 3;
 ```
-The interaction mode and the arity are **required** in this case.
 
-The arity is the number of input streams plus the number of output streams the function accepts
-(here: 1 input stream + 2 output streams hence an arity of 3).
+Please note that streaming functions must always declared the corresponding interaction mode.
+
+Parameters can also be looked up by name:
+```js
+module.exports = (inputStreams, outputStreams) => {
+    const { numbers, letters } = inputStreams;
+    const { repetitions } = outputStreams;
+    // do something
+};
+module.exports.$interactionModel = 'node-streams';
+```
+
 
 Input streams are [Readable streams](https://nodejs.org/api/stream.html#stream_readable_streams).
 
@@ -56,8 +64,7 @@ Output streams are [Writable streams](https://nodejs.org/api/stream.html#stream_
 
 The function **must** end the output streams when it is done emitting data or when an error occurs
 (if the output streams are [`pipe`](https://nodejs.org/api/stream.html#stream_readable_pipe_destination_options)'d from 
-input streams, 
-then this is automatically managed by this invoker).
+input streams, then this is automatically managed by this invoker).
 
 ## Lifecycle
 

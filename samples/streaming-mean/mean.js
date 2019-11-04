@@ -8,7 +8,6 @@ module.exports = (inputs, outputs) => {
         mean = stats.addToMean(mean, n++, newValue);
         callback(null, mean);
     });
-    inputs["0"].pipe(meanStream).pipe(outputs["0"]);
+    inputs.$order[0].pipe(meanStream).pipe(outputs.$order[0]);
 };
 module.exports.$interactionModel = 'node-streams';
-module.exports.$arity = 2;

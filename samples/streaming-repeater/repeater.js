@@ -1,9 +1,13 @@
 const _ = require('highland');
 
+const logError = (err) => {
+    console.error(err);
+};
+
 module.exports =
     (inputs, outputs) => {
-        const numberStream = _(inputs["0"]);
-        const wordStream = _(inputs["1"]);
+        const numberStream = _(inputs.$order[0]).errors(logError);
+        const wordStream = _(inputs.$order[1]).errors(logError);
         numberStream
             .zip(wordStream)
             .flatMap((numberWordPair) => {
@@ -13,7 +17,6 @@ module.exports =
                 }
                 return _(result);
             })
-            .pipe(outputs["0"]);
+            .pipe(outputs.$order[0]);
     };
 module.exports.$interactionModel = 'node-streams';
-module.exports.$arity = 3;

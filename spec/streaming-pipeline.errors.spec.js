@@ -24,88 +24,12 @@ describe('streaming pipeline =>', () => {
         destinationStream.destroy();
     });
 
-    describe('with a function of unknown arity =>', () => {
-        const userFunction = (inputStreams, outputStreams) => {
-            inputStreams["0"].pipe(outputStreams["0"]);
-        };
-        userFunction.$interactionModel = 'node-streams';
-
-        it('fails to instantiate', () => {
-            try {
-                new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
-                fail('instantiation should fail');
-            } catch (err) {
-                expect(err.type).toEqual('error-function-arity');
-                expect(err.cause).toEqual('Cannot determine function arity. Aborting now');
-            }
-
-        });
-    });
-
-    describe('with a function of arity with invalid integer value =>', () => {
-        const userFunction = (inputStreams, outputStreams) => {
-            inputStreams["0"].pipe(outputStreams["0"]);
-        };
-        userFunction.$interactionModel = 'node-streams';
-        userFunction.$arity = 0;
-
-        it('fails to instantiate', () => {
-            try {
-                new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
-                fail('instantiation should fail');
-            } catch (err) {
-                expect(err.type).toEqual('error-function-arity');
-                expect(err.cause).toEqual('Function arity must be an integer >= 1, received: 0. Aborting now');
-            }
-
-        });
-    });
-
-    describe('with a function of arity with invalid number value =>', () => {
-        const userFunction = (inputStreams, outputStreams) => {
-            inputStreams["0"].pipe(outputStreams["0"]);
-        };
-        userFunction.$interactionModel = 'node-streams';
-        userFunction.$arity = 1.5;
-
-        it('fails to instantiate', () => {
-            try {
-                new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
-                fail('instantiation should fail');
-            } catch (err) {
-                expect(err.type).toEqual('error-function-arity');
-                expect(err.cause).toEqual('Function arity must be an integer >= 1, received: 1.5. Aborting now');
-            }
-
-        });
-    });
-
-    describe('with a function of arity with invalid value =>', () => {
-        const userFunction = (inputStreams, outputStreams) => {
-            inputStreams["0"].pipe(outputStreams["0"]);
-        };
-        userFunction.$interactionModel = 'node-streams';
-        userFunction.$arity = 'hello';
-
-        it('fails to instantiate', () => {
-            try {
-                new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
-                fail('instantiation should fail');
-            } catch (err) {
-                expect(err.type).toEqual('error-function-arity');
-                expect(err.cause).toEqual('Function arity must be an integer >= 1, received: hello. Aborting now');
-            }
-
-        });
-    });
-
     describe('with a reliable function =>', () => {
         const userFunction = (inputStreams, outputStreams) => {
-            const inputStream = inputStreams["0"];
-            const outputStream = outputStreams["0"];
+            const inputStream = inputStreams.$order[0];
+            const outputStream = outputStreams.$order[0];
             inputStream.pipe(newMappingTransform((arg) => arg + 42)).pipe(outputStream);
         };
-        userFunction.$arity = 2;
         userFunction.$interactionModel = 'node-streams';
 
         beforeEach(() => {
@@ -154,8 +78,8 @@ describe('streaming pipeline =>', () => {
         describe('with too many start signals =>', () => {
             beforeEach(() => {
                 fixedSource = newFixedSource([
-                    newStartSignal(newStartFrame(['text/plain'])),
-                    newStartSignal(newStartFrame(['application/x-doom']))
+                    newStartSignal(newStartFrame(['text/plain'], ['input'], ['output'])),
+                    newStartSignal(newStartFrame(['application/x-doom'], ['input'], ['output']))
                 ]);
             });
 
@@ -167,7 +91,10 @@ describe('streaming pipeline =>', () => {
                     expect(err.type).toEqual('error-streaming-too-many-starts');
                     expect(err.cause).toEqual(
                         'start signal has already been received. ' +
-                        'Rejecting new start signal with content types [application/x-doom]'
+                        'Rejecting start signal with: ' +
+                        'output content types: [application/x-doom], ' +
+                        'input names: [input], ' +
+                        'output names: [output]'
                     );
                 });
                 streamingPipeline.on('finish', () => {
@@ -180,7 +107,8 @@ describe('streaming pipeline =>', () => {
         describe('with a start signal with too many output content types =>', () => {
             beforeEach(() => {
                 fixedSource = newFixedSource([
-                    newStartSignal(newStartFrame(['text/plain', 'text/sgml', 'text/yaml']))
+                    newStartSignal(newStartFrame(
+                        ['text/plain', 'text/sgml', 'text/yaml'], ['input'], ['output']))
                 ]);
             });
 
@@ -191,7 +119,7 @@ describe('streaming pipeline =>', () => {
                 streamingPipeline.on('error', (err) => {
                     expect(err.type).toEqual('error-streaming-invalid-output-count');
                     expect(err.cause).toEqual(
-                        'invalid output count 3: function has only 2 parameter(s)'
+                        'invalid output count 3: function has only 1 output(s)'
                     );
                 });
                 streamingPipeline.on('finish', () => {
@@ -229,16 +157,15 @@ describe('streaming pipeline =>', () => {
 
     describe('with a failing-at-invocation-time function =>', () => {
         const userFunction = (inputStreams, outputStreams) => {
-            inputStreams["0"].pipe(outputStreams["0"]);
+            inputStreams["in"].pipe(outputStreams["out"]);
             null.nope();
         };
-        userFunction.$arity = 2;
         userFunction.$interactionModel = 'node-streams';
 
         beforeEach(() => {
             streamingPipeline = new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
             fixedSource = newFixedSource([
-                newStartSignal(newStartFrame(['text/plain']))
+                newStartSignal(newStartFrame(['text/plain'], ['in'], ['out']))
             ]);
         });
 
@@ -264,15 +191,14 @@ describe('streaming pipeline =>', () => {
 
     describe('with an input that cannot be unmarshalled =>', () => {
         const userFunction = (inputStreams, outputStreams) => {
-            inputStreams["0"].pipe(outputStreams["0"]);
+            inputStreams.$order[0].pipe(outputStreams.$order[0]);
         };
-        userFunction.$arity = 2;
         userFunction.$interactionModel = 'node-streams';
 
         beforeEach(() => {
             streamingPipeline = new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
             fixedSource = newFixedSource([
-                newStartSignal(newStartFrame(['text/plain'])),
+                newStartSignal(newStartFrame(['text/plain'], ['in'], ['out'])),
                 newInputSignal(newInputFrame(0, 'application/json', textEncoder.encode('invalid-json')))
             ]);
         });
@@ -297,19 +223,16 @@ describe('streaming pipeline =>', () => {
 
     describe('with a function that fails when receiving data =>', () => {
         const userFunction = (inputStreams, outputStreams) => {
-            const inputStream = inputStreams["0"];
-            const outputStream = outputStreams["0"];
-            inputStream.pipe(new SimpleTransform({objectMode: true}, () => {
+            inputStreams.$order[0].pipe(new SimpleTransform({objectMode: true}, () => {
                 throw new Error('Function failed')
-            })).pipe(outputStream);
+            })).pipe(outputStreams.$order[0]);
         };
         userFunction.$interactionModel = 'node-streams';
-        userFunction.$arity = 2;
 
         beforeEach(() => {
             streamingPipeline = new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
             fixedSource = newFixedSource([
-                newStartSignal(newStartFrame(['text/plain'])),
+                newStartSignal(newStartFrame(['text/plain'], ['in'], ['out'])),
                 newInputSignal(newInputFrame(0, 'application/json', textEncoder.encode('42')))
             ]);
         });
@@ -338,15 +261,15 @@ describe('streaming pipeline =>', () => {
 
     describe('with a function producing outputs that cannot be marshalled =>', () => {
         const userFunction = (inputStreams, outputStreams) => {
-            inputStreams["0"].pipe(new SimpleTransform({objectMode: true}, (x) => Symbol(x))).pipe(outputStreams["0"]);
+            inputStreams.$order[0].pipe(new SimpleTransform({objectMode: true}, (x) => Symbol(x)))
+                .pipe(outputStreams.$order[0]);
         };
         userFunction.$interactionModel = 'node-streams';
-        userFunction.$arity = 2;
 
         beforeEach(() => {
             streamingPipeline = new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
             fixedSource = newFixedSource([
-                newStartSignal(newStartFrame(['text/plain'])),
+                newStartSignal(newStartFrame(['text/plain'], ['in'], ['out'])),
                 newInputSignal(newInputFrame(0, 'application/json', textEncoder.encode('42')))
             ]);
         });
@@ -375,7 +298,7 @@ describe('streaming pipeline =>', () => {
     });
 
     describe('with a function with incorrect argument transformers =>', () => {
-        it('rejects the function with an invalid transformer ', () => {
+        it('rejects the function with an invalid declaration of transformers ', () => {
             try {
                 const userFunction = require('./helpers/transformers/invalid-argument-transformers-streaming-function');
                 new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
@@ -415,7 +338,7 @@ describe('streaming pipeline =>', () => {
         beforeEach(() => {
             streamingPipeline = new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
             fixedSource = newFixedSource([
-                newStartSignal(newStartFrame(['text/plain']))
+                newStartSignal(newStartFrame(['text/plain'], ['in1', 'in2'], ['out']))
             ]);
         });
 
@@ -441,7 +364,6 @@ describe('streaming pipeline =>', () => {
         it('throws an error when constructing', () => {
             const userFunction = () => 42;
             userFunction.$interactionModel = "request-reply";
-            userFunction.$arity = 1;
             const construct = () => new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
             expect(construct).toThrow(new Error(`SteamingPipeline expects a function with "node-streams" interaction model, but was "request-reply" instead`));
         })

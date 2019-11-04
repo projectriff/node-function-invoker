@@ -30,20 +30,18 @@ describe('streaming pipeline =>', () => {
 
     describe('with a reliable function =>', () => {
         const userFunction = (inputStreams, outputStreams) => {
-            inputStreams["input1"].pipe(newMappingTransform((arg) => arg + 42)).pipe(outputStreams["output1"]);
+            inputStreams['input1'].pipe(newMappingTransform((arg) => arg + 42)).pipe(outputStreams['output1']);
         };
         userFunction.$interactionModel = 'node-streams';
-        // userFunction.$arity = 2;
-        const streamMetadata = {"inputs": ["input1"], "outputs": ["output1"]};
 
         beforeEach(() => {
-            streamingPipeline = new StreamingPipeline(userFunction, destinationStream, streamMetadata, {objectMode: true});
+            streamingPipeline = new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
         });
 
         describe('with valid input signals =>', () => {
             beforeEach(() => {
                 fixedSource = newFixedSource([
-                    newStartSignal(newStartFrame(['text/plain'])),
+                    newStartSignal(newStartFrame(['text/plain'], ['input1'], ['output1'])),
                     newInputSignal(newInputFrame(
                         0,
                         'application/json',
@@ -78,7 +76,7 @@ describe('streaming pipeline =>', () => {
         describe('with a closed input stream =>', () => {
             beforeEach(() => {
                 fixedSource = newFixedSource([
-                    newStartSignal(newStartFrame([]))
+                    newStartSignal(newStartFrame([], ['ignored'], []))
                 ]);
             });
 
@@ -87,13 +85,13 @@ describe('streaming pipeline =>', () => {
             it('will end input streams when the piped source ends', (done) => {
                 let inputEnded = false;
                 const userFunction = (inputStreams) => {
-                    inputStreams["0"].on('end', () => {
+                    inputStreams.$order[0].on('end', () => {
                         inputEnded = true;
                     })
                 };
                 userFunction.$interactionModel = 'node-streams';
-                userFunction.$arity = 1;
-                streamingPipeline = new StreamingPipeline(userFunction, destinationStream, /*TODO: streamMetadata*/ {objectMode: true});
+
+                streamingPipeline = new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
                 streamingPipeline.on('finish', () => {
                     expect(inputEnded).toBeTruthy('input stream should have been ended');
                     done();
@@ -106,21 +104,17 @@ describe('streaming pipeline =>', () => {
             const data = ['1', '4', '9'];
             beforeEach(() => {
                 fixedSource = newFixedSource([
-                    newStartSignal(newStartFrame(['text/plain', 'text/plain'])),
+                    newStartSignal(newStartFrame(['text/plain', 'text/plain'], ['input'], ['output1', 'output2'])),
                     ...(data.map((payload) => newInputSignal(newInputFrame(0, 'text/plain', textEncoder.encode(payload)))))
                 ]);
             });
 
             it('the other output stream can still emit to the destination stream', (done) => {
                 const userFunction = (inputStreams, outputStreams) => {
-                    const inputStream = inputStreams["0"];
-                    const outputStream1 = outputStreams["0"];
-                    const outputStream2 = outputStreams["1"];
-                    outputStream1.end();
-                    inputStream.pipe(outputStream2);
+                    outputStreams.$order[0].end();
+                    inputStreams['input'].pipe(outputStreams['output2']);
                 };
                 userFunction.$interactionModel = 'node-streams';
-                userFunction.$arity = 3;
 
                 let receivedOutputSignalCount = 0;
                 destinationStream.on('data', (outputSignal) => {

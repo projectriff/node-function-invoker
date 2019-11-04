@@ -268,7 +268,7 @@ if (goog.DEBUG && !COMPILED) {
  * @private {!Array<number>}
  * @const
  */
-proto.streaming.StartFrame.repeatedFields_ = [1];
+proto.streaming.StartFrame.repeatedFields_ = [1,2,3];
 
 
 
@@ -299,7 +299,9 @@ proto.streaming.StartFrame.prototype.toObject = function(opt_includeInstance) {
  */
 proto.streaming.StartFrame.toObject = function(includeInstance, msg) {
   var f, obj = {
-    expectedcontenttypesList: jspb.Message.getRepeatedField(msg, 1)
+    expectedcontenttypesList: jspb.Message.getRepeatedField(msg, 1),
+    inputnamesList: jspb.Message.getRepeatedField(msg, 2),
+    outputnamesList: jspb.Message.getRepeatedField(msg, 3)
   };
 
   if (includeInstance) {
@@ -340,6 +342,14 @@ proto.streaming.StartFrame.deserializeBinaryFromReader = function(msg, reader) {
       var value = /** @type {string} */ (reader.readString());
       msg.addExpectedcontenttypes(value);
       break;
+    case 2:
+      var value = /** @type {string} */ (reader.readString());
+      msg.addInputnames(value);
+      break;
+    case 3:
+      var value = /** @type {string} */ (reader.readString());
+      msg.addOutputnames(value);
+      break;
     default:
       reader.skipField();
       break;
@@ -376,6 +386,20 @@ proto.streaming.StartFrame.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
+  f = message.getInputnamesList();
+  if (f.length > 0) {
+    writer.writeRepeatedString(
+      2,
+      f
+    );
+  }
+  f = message.getOutputnamesList();
+  if (f.length > 0) {
+    writer.writeRepeatedString(
+      3,
+      f
+    );
+  }
 };
 
 
@@ -405,6 +429,64 @@ proto.streaming.StartFrame.prototype.addExpectedcontenttypes = function(value, o
 
 proto.streaming.StartFrame.prototype.clearExpectedcontenttypesList = function() {
   this.setExpectedcontenttypesList([]);
+};
+
+
+/**
+ * repeated string inputNames = 2;
+ * @return {!Array<string>}
+ */
+proto.streaming.StartFrame.prototype.getInputnamesList = function() {
+  return /** @type {!Array<string>} */ (jspb.Message.getRepeatedField(this, 2));
+};
+
+
+/** @param {!Array<string>} value */
+proto.streaming.StartFrame.prototype.setInputnamesList = function(value) {
+  jspb.Message.setField(this, 2, value || []);
+};
+
+
+/**
+ * @param {string} value
+ * @param {number=} opt_index
+ */
+proto.streaming.StartFrame.prototype.addInputnames = function(value, opt_index) {
+  jspb.Message.addToRepeatedField(this, 2, value, opt_index);
+};
+
+
+proto.streaming.StartFrame.prototype.clearInputnamesList = function() {
+  this.setInputnamesList([]);
+};
+
+
+/**
+ * repeated string outputNames = 3;
+ * @return {!Array<string>}
+ */
+proto.streaming.StartFrame.prototype.getOutputnamesList = function() {
+  return /** @type {!Array<string>} */ (jspb.Message.getRepeatedField(this, 3));
+};
+
+
+/** @param {!Array<string>} value */
+proto.streaming.StartFrame.prototype.setOutputnamesList = function(value) {
+  jspb.Message.setField(this, 3, value || []);
+};
+
+
+/**
+ * @param {string} value
+ * @param {number=} opt_index
+ */
+proto.streaming.StartFrame.prototype.addOutputnames = function(value, opt_index) {
+  jspb.Message.addToRepeatedField(this, 3, value, opt_index);
+};
+
+
+proto.streaming.StartFrame.prototype.clearOutputnamesList = function() {
+  this.setOutputnamesList([]);
 };
 
 

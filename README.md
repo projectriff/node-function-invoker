@@ -50,7 +50,7 @@ Please note that streaming functions must always declared the corresponding inte
 Parameters can also be looked up by name:
 ```js
 module.exports = (inputStreams, outputStreams) => {
-    const numbers = inputStreams["numbers"];
+    const { numbers, letters } = inputStreams;
     const letters = inputStreams["letters"];
     const repetitions = outputStreams["repetitions"];
     // do something

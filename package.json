@@ -23,6 +23,7 @@
   "devDependencies": {
     "eslint": "^6.6.0",
     "eslint-plugin-jasmine": "^2.10.1",
+    "grpc-tools": "^1.8.0",
     "jasmine": "^3.5.0"
   },
   "files": [

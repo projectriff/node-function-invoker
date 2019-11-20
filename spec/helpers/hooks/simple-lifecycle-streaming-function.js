@@ -3,11 +3,10 @@ const MappingTransform = require('../../../lib/mapping-transform');
 let counter = Number.MIN_SAFE_INTEGER;
 
 module.exports = (inputStreams, outputStreams) => {
-    inputStreams["0"].pipe(new MappingTransform((x) => {
+    inputStreams.$order[0].pipe(new MappingTransform((x) => {
         return x ** 2;
-    }, {objectMode: true})).pipe(outputStreams["0"]);
+    }, {objectMode: true})).pipe(outputStreams.$order[0]);
 };
-module.exports.$arity = 2;
 module.exports.$interactionModel = 'node-streams';
 
 module.exports.$init = () => {

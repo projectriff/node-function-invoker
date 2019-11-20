@@ -37,9 +37,9 @@ module.exports.$interactionModel = 'request-reply';
 Streaming functions must comply to the following signature:
 ```js
 module.exports = (inputStreams, outputStreams) => {
-    const firstInputStream = inputStreams["0"];
-    const firstOutputStream = outputStreams["0"];
-    const secondOutputStream = outputStreams["1"];
+    const firstInputStream = inputStreams.$order[0];
+    const firstOutputStream = outputStreams.$order[0];
+    const secondOutputStream = outputStreams.$order[1];
     // do something
 };
 module.exports.$interactionModel = 'node-streams';

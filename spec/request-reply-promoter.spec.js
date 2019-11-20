@@ -6,14 +6,14 @@ describe('function promoter =>', () => {
     const data = [1, 2, 4];
     const userFunction = (x) => x ** 2;
     const streamingUserFunction = (inputs, outputs) => {
-        const inputStream = inputs["0"];
-        const outputStream = outputs["0"];
+        const inputStream = inputs.$order[0];
+        const outputStream = outputs.$order[0];
         inputStream
             .pipe(newMappingTransform(userFunction))
             .pipe(outputStream);
     };
     streamingUserFunction.$interactionModel = 'node-streams';
-    streamingUserFunction.$arity = 2;
+
     let streamingOutput;
     const expectedResults = data.map(userFunction);
     let source;
@@ -39,7 +39,7 @@ describe('function promoter =>', () => {
         });
 
         const result = promoteFunction(userFunction);
-        result({"0": source}, {"0": streamingOutput});
+        result({"$order": [source]}, {"$order": [streamingOutput]});
     });
 
     it('returns streaming functions as-is', (done) => {
@@ -53,10 +53,10 @@ describe('function promoter =>', () => {
         });
 
         const result = promoteFunction(streamingUserFunction);
-        result({"0": source}, {"0": streamingOutput});
+        result({"$order": [source]}, {"$order": [streamingOutput]});
     });
 
-    describe('when called with functions with hooks hooks => ', () => {
+    describe('when called with functions with hooks => ', () => {
         it('preserves hooks if any are set', () => {
             const someFunction = require('./helpers/hooks/simple-lifecycle-request-reply-function');
 

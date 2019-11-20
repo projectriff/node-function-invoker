@@ -1,7 +1,7 @@
 module.exports = (inputStreams, outputStreams) => {
-    const output = outputStreams["0"];
-    inputStreams["0"].pipe(output);
-    inputStreams["1"].pipe(output);
+    const output = outputStreams.$order[0];
+    inputStreams.$order[0].pipe(output);
+    inputStreams.$order[1].pipe(output);
 };
 module.exports.$interactionModel = 'node-streams';
 module.exports.$argumentTransformers = "nope";

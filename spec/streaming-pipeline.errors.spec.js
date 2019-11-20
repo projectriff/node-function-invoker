@@ -26,8 +26,8 @@ describe('streaming pipeline =>', () => {
 
     describe('with a reliable function =>', () => {
         const userFunction = (inputStreams, outputStreams) => {
-            const inputStream = inputStreams["0"];
-            const outputStream = outputStreams["0"];
+            const inputStream = inputStreams.$order[0];
+            const outputStream = outputStreams.$order[0];
             inputStream.pipe(newMappingTransform((arg) => arg + 42)).pipe(outputStream);
         };
         userFunction.$interactionModel = 'node-streams';
@@ -191,7 +191,7 @@ describe('streaming pipeline =>', () => {
 
     describe('with an input that cannot be unmarshalled =>', () => {
         const userFunction = (inputStreams, outputStreams) => {
-            inputStreams["0"].pipe(outputStreams["0"]);
+            inputStreams.$order[0].pipe(outputStreams.$order[0]);
         };
         userFunction.$interactionModel = 'node-streams';
 
@@ -223,9 +223,9 @@ describe('streaming pipeline =>', () => {
 
     describe('with a function that fails when receiving data =>', () => {
         const userFunction = (inputStreams, outputStreams) => {
-            inputStreams["0"].pipe(new SimpleTransform({objectMode: true}, () => {
+            inputStreams.$order[0].pipe(new SimpleTransform({objectMode: true}, () => {
                 throw new Error('Function failed')
-            })).pipe(outputStreams["0"]);
+            })).pipe(outputStreams.$order[0]);
         };
         userFunction.$interactionModel = 'node-streams';
 
@@ -261,7 +261,8 @@ describe('streaming pipeline =>', () => {
 
     describe('with a function producing outputs that cannot be marshalled =>', () => {
         const userFunction = (inputStreams, outputStreams) => {
-            inputStreams["0"].pipe(new SimpleTransform({objectMode: true}, (x) => Symbol(x))).pipe(outputStreams["0"]);
+            inputStreams.$order[0].pipe(new SimpleTransform({objectMode: true}, (x) => Symbol(x)))
+                .pipe(outputStreams.$order[0]);
         };
         userFunction.$interactionModel = 'node-streams';
 
@@ -363,7 +364,6 @@ describe('streaming pipeline =>', () => {
         it('throws an error when constructing', () => {
             const userFunction = () => 42;
             userFunction.$interactionModel = "request-reply";
-            userFunction.$arity = 1;
             const construct = () => new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
             expect(construct).toThrow(new Error(`SteamingPipeline expects a function with "node-streams" interaction model, but was "request-reply" instead`));
         })

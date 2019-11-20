@@ -85,7 +85,7 @@ describe('streaming pipeline =>', () => {
             it('will end input streams when the piped source ends', (done) => {
                 let inputEnded = false;
                 const userFunction = (inputStreams) => {
-                    inputStreams['0'].on('end', () => {
+                    inputStreams.$order[0].on('end', () => {
                         inputEnded = true;
                     })
                 };
@@ -111,7 +111,7 @@ describe('streaming pipeline =>', () => {
 
             it('the other output stream can still emit to the destination stream', (done) => {
                 const userFunction = (inputStreams, outputStreams) => {
-                    outputStreams['0'].end();
+                    outputStreams.$order[0].end();
                     inputStreams['input'].pipe(outputStreams['output2']);
                 };
                 userFunction.$interactionModel = 'node-streams';

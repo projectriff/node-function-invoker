@@ -47,14 +47,17 @@ describe('streaming pipeline =>', () => {
             });
 
             it('emits an error', (done) => {
-                streamingPipeline.on('error', (err) => {
+                let errored = false;
+                streamingPipeline.prependListener('error', (err) => {
                     expect(err.type).toEqual('error-streaming-input-invalid');
                     expect(err.cause).toEqual('invalid input type [object String]');
+                    errored = true;
                 });
-                streamingPipeline.on('finish', () => {
+                streamingPipeline.on('close', () => {
+                    expect(errored).toBeTruthy('pipeline should have errored');
                     done();
                 });
-                fixedSource.pipe(streamingPipeline);
+                fixedSource.pipe(streamingPipeline, {end: false});
             });
         });
 
@@ -64,14 +67,17 @@ describe('streaming pipeline =>', () => {
             });
 
             it('emits an error', (done) => {
-                streamingPipeline.on('error', (err) => {
+                let errored = false;
+                streamingPipeline.prependListener('error', (err) => {
                     expect(err.type).toEqual('error-streaming-input-invalid');
                     expect(err.cause).toEqual('input is neither a start nor a data signal');
+                    errored = true;
                 });
-                streamingPipeline.on('finish', () => {
+                streamingPipeline.on('close', () => {
+                    expect(errored).toBeTruthy('pipeline should have errored');
                     done();
                 });
-                fixedSource.pipe(streamingPipeline);
+                fixedSource.pipe(streamingPipeline, {end: false});
             });
         });
 
@@ -87,7 +93,8 @@ describe('streaming pipeline =>', () => {
                 destinationStream.on('data', () => {
                     done(new Error('should not receive any data'));
                 });
-                streamingPipeline.on('error', (err) => {
+                let errored = false;
+                streamingPipeline.prependListener('error', (err) => {
                     expect(err.type).toEqual('error-streaming-too-many-starts');
                     expect(err.cause).toEqual(
                         'start signal has already been received. ' +
@@ -96,11 +103,13 @@ describe('streaming pipeline =>', () => {
                         'input names: [input], ' +
                         'output names: [output]'
                     );
+                    errored = true;
                 });
-                streamingPipeline.on('finish', () => {
+                streamingPipeline.on('close', () => {
+                    expect(errored).toBeTruthy('pipeline should have errored');
                     done();
                 });
-                fixedSource.pipe(streamingPipeline);
+                fixedSource.pipe(streamingPipeline, {end: false});
             })
         });
 
@@ -116,16 +125,19 @@ describe('streaming pipeline =>', () => {
                 destinationStream.on('data', () => {
                     done(new Error('should not receive any data'));
                 });
-                streamingPipeline.on('error', (err) => {
+                let errored = false;
+                streamingPipeline.prependListener('error', (err) => {
                     expect(err.type).toEqual('error-streaming-invalid-output-count');
                     expect(err.cause).toEqual(
                         'invalid output count 3: function has only 1 output(s)'
                     );
+                    errored = true;
                 });
-                streamingPipeline.on('finish', () => {
+                streamingPipeline.on('close', () => {
+                    expect(errored).toBeTruthy('pipeline should have errored');
                     done();
                 });
-                fixedSource.pipe(streamingPipeline);
+                fixedSource.pipe(streamingPipeline, {end: false});
             })
         });
 
@@ -140,17 +152,20 @@ describe('streaming pipeline =>', () => {
                 destinationStream.on('data', () => {
                     done(new Error('should not receive any data'));
                 });
-                streamingPipeline.on('error', (err) => {
+                let errored = false;
+                streamingPipeline.prependListener('error', (err) => {
                     expect(err.type).toEqual('error-streaming-missing-start');
                     expect(err.cause).toEqual(
                         'start signal has not been received or processed yet. ' +
                         'Rejecting data signal'
                     );
+                    errored = true;
                 });
-                streamingPipeline.on('finish', () => {
+                streamingPipeline.on('close', () => {
+                    expect(errored).toBeTruthy('pipeline should have errored');
                     done();
                 });
-                fixedSource.pipe(streamingPipeline);
+                fixedSource.pipe(streamingPipeline, {end: false});
             })
         });
     });
@@ -178,14 +193,17 @@ describe('streaming pipeline =>', () => {
             destinationStream.on('data', () => {
                 done(new Error('should not receive any data'));
             });
-            streamingPipeline.on('error', (err) => {
+            let errored = false;
+            streamingPipeline.prependListener('error', (err) => {
                 expect(err.type).toEqual('streaming-function-runtime-error');
                 expect(err.cause.message).toEqual(`Cannot read property 'nope' of null`);
+                errored = true;
             });
-            streamingPipeline.on('finish', () => {
+            streamingPipeline.on('close', () => {
+                expect(errored).toBeTruthy('pipeline should have errored');
                 done();
             });
-            fixedSource.pipe(streamingPipeline);
+            fixedSource.pipe(streamingPipeline, {end: false});
         })
     });
 
@@ -208,16 +226,16 @@ describe('streaming pipeline =>', () => {
                 done(new Error('should not receive any data'));
             });
             let errored = false;
-            streamingPipeline.on('error', (err) => {
+            streamingPipeline.prependListener('error', (err) => {
                 expect(err.type).toEqual('error-input-invalid');
                 expect(err.cause.message).toEqual('Unexpected token i in JSON at position 0');
                 errored = true;
             });
-            streamingPipeline.on('finish', () => {
+            streamingPipeline.on('close', () => {
                 expect(errored).toBeTruthy('pipeline should have errored');
                 done();
             });
-            fixedSource.pipe(streamingPipeline);
+            fixedSource.pipe(streamingPipeline, {end: false});
         })
     });
 
@@ -247,21 +265,22 @@ describe('streaming pipeline =>', () => {
                 done(new Error('should not receive any data'));
             });
             let errored = false;
-            streamingPipeline.on('error', (err) => {
+            streamingPipeline.prependListener('error', (err) => {
                 expect(err.message).toEqual('Function failed');
                 errored = true;
             });
-            streamingPipeline.on('finish', () => {
+            streamingPipeline.on('close', () => {
                 expect(errored).toBeTruthy('pipeline should have errored');
                 done();
             });
-            fixedSource.pipe(streamingPipeline);
+            fixedSource.pipe(streamingPipeline, {end: false});
         })
     });
 
     describe('with a function producing outputs that cannot be marshalled =>', () => {
         const userFunction = (inputStreams, outputStreams) => {
-            inputStreams.$order[0].pipe(new SimpleTransform({objectMode: true}, (x) => Symbol(x)))
+            inputStreams.$order[0]
+                .pipe(new SimpleTransform({objectMode: true}, (x) => Symbol(x)))
                 .pipe(outputStreams.$order[0]);
         };
         userFunction.$interactionModel = 'node-streams';
@@ -284,16 +303,16 @@ describe('streaming pipeline =>', () => {
                 done(new Error('should not receive any data'));
             });
             let errored = false;
-            streamingPipeline.on('error', (err) => {
+            streamingPipeline.prependListener('error', (err) => {
                 expect(err.type).toEqual('error-output-invalid');
                 expect(err.cause.message).toEqual('Cannot convert a Symbol value to a string');
                 errored = true;
             });
-            streamingPipeline.on('finish', () => {
+            streamingPipeline.on('close', () => {
                 expect(errored).toBeTruthy('pipeline should have errored');
                 done();
             });
-            fixedSource.pipe(streamingPipeline);
+            fixedSource.pipe(streamingPipeline, {end: false});
         })
     });
 
@@ -356,7 +375,7 @@ describe('streaming pipeline =>', () => {
                 expect(err.cause).toEqual('Function must declare exactly 2 argument transformer(s). Found 1');
                 done();
             });
-            fixedSource.pipe(streamingPipeline);
+            fixedSource.pipe(streamingPipeline, {end: false});
         })
     });
 

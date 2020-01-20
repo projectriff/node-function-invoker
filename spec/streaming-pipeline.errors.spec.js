@@ -49,7 +49,7 @@ describe('streaming pipeline =>', () => {
             it('emits an error', (done) => {
                 streamingPipeline.on('error', (err) => {
                     expect(err.type).toEqual('error-streaming-input-invalid');
-                    expect(err.cause).toEqual('invalid input type [object String]');
+                    expect(err.cause).toEqual('Invalid input type [object String]');
                 });
                 streamingPipeline.on('finish', () => {
                     done();
@@ -66,7 +66,7 @@ describe('streaming pipeline =>', () => {
             it('emits an error', (done) => {
                 streamingPipeline.on('error', (err) => {
                     expect(err.type).toEqual('error-streaming-input-invalid');
-                    expect(err.cause).toEqual('input is neither a start nor a data signal');
+                    expect(err.cause).toEqual('Input is neither a start nor a data signal');
                 });
                 streamingPipeline.on('finish', () => {
                     done();
@@ -90,7 +90,7 @@ describe('streaming pipeline =>', () => {
                 streamingPipeline.on('error', (err) => {
                     expect(err.type).toEqual('error-streaming-too-many-starts');
                     expect(err.cause).toEqual(
-                        'start signal has already been received. ' +
+                        'Start signal has already been received. ' +
                         'Rejecting start signal with: ' +
                         'output content types: [application/x-doom], ' +
                         'input names: [input], ' +
@@ -119,7 +119,7 @@ describe('streaming pipeline =>', () => {
                 streamingPipeline.on('error', (err) => {
                     expect(err.type).toEqual('error-streaming-invalid-output-count');
                     expect(err.cause).toEqual(
-                        'invalid output count 3: function has only 1 output(s)'
+                        'Invalid output count 3: function has only 1 output(s)'
                     );
                 });
                 streamingPipeline.on('finish', () => {
@@ -143,7 +143,7 @@ describe('streaming pipeline =>', () => {
                 streamingPipeline.on('error', (err) => {
                     expect(err.type).toEqual('error-streaming-missing-start');
                     expect(err.cause).toEqual(
-                        'start signal has not been received or processed yet. ' +
+                        'Start signal has not been received or processed yet. ' +
                         'Rejecting data signal'
                     );
                 });

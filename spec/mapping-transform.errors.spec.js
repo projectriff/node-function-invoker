@@ -1,6 +1,6 @@
 const MappingTransform = require('../lib/mapping-transform');
 
-describe('MappingTransform =>', () => {
+describe('erroring MappingTransform =>', () => {
 
     let mappingTransform;
 

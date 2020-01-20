@@ -1,7 +1,7 @@
 const StreamingPipeline = require('../lib/streaming-pipeline');
 const {PassThrough} = require('stream');
 
-describe('streaming pipeline =>', () => {
+describe('erroring streaming pipeline with hooks =>', () => {
 
     let streamingPipeline;
     let destinationStream;

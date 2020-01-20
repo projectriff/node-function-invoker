@@ -1,7 +1,7 @@
 const StreamingPipeline = require('../lib/streaming-pipeline');
 const {PassThrough} = require('stream');
 
-describe('streaming pipeline =>', () => {
+describe('streaming pipeline with hooks =>', () => {
 
     let streamingPipeline;
     let destinationStream;
@@ -15,7 +15,7 @@ describe('streaming pipeline =>', () => {
         destinationStream.destroy();
     });
 
-    describe('with a function implementing hooks hooks =>', () => {
+    describe('with a function implementing hooks =>', () => {
         const userFunction = require('./helpers/hooks/simple-lifecycle-streaming-function');
 
         beforeEach(() => {

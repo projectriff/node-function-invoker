@@ -2,7 +2,7 @@ const {TextEncoder} = require('util');
 const {newFixedSource, newInputFrame, newInputSignal} = require('./helpers/factories');
 const InputUnmarshaller = require('../lib/input-unmarshaller');
 
-describe('input unmarshaller =>', () => {
+describe('erroring input unmarshaller =>', () => {
     const textEncoder = new TextEncoder();
 
     describe('with the default argument transformer =>', () => {

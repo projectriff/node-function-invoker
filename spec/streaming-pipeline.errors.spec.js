@@ -10,7 +10,7 @@ const {
     newStartSignal
 } = require('./helpers/factories');
 
-describe('streaming pipeline =>', () => {
+describe('erroring streaming pipeline =>', () => {
     const textEncoder = new TextEncoder();
     let destinationStream;
     let streamingPipeline;

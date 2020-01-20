@@ -80,12 +80,13 @@ describe('streaming pipeline =>', () => {
                 ]);
             });
 
-            // when the source ends (such as an internal call like `this.push(null)`), the piped destination will have its 'end' method called
-            // see https://nodejs.org/api/stream.html#stream_readable_pipe_destination_options
+            // as per https://nodejs.org/api/stream.html#stream_readable_pipe_destination_options,
+            // when the fixed source ends, the streaming pipeline's end will be called, emitting in turn a 'finish'
+            // this test makes sure that the pipeline ends all input streams when normally completing
             it('will end input streams when the piped source ends', (done) => {
                 let inputEnded = false;
                 const userFunction = (inputStreams) => {
-                    inputStreams.$order[0].on('end', () => {
+                    inputStreams.$order[0].on('finish', () => {
                         inputEnded = true;
                     })
                 };

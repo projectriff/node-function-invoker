@@ -1,6 +1,6 @@
 const promoteFunction = require('../lib/request-reply-promoter');
 
-describe('function promoter =>', () => {
+describe('erroring function promoter =>', () => {
 
     describe('when called with functions with invalid hooks => ', () => {
         it('rejects invalid init hook', () => {

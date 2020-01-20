@@ -1,7 +1,7 @@
 const {newFixedSource} = require('./helpers/factories');
 const OutputMarshaller = require('../lib/output-marshaller');
 
-describe('output marshaller =>', () => {
+describe('erroring output marshaller =>', () => {
 
     it('fails to instantiate if the output index is invalid', () => {
         try {

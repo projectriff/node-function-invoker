@@ -36,7 +36,7 @@ describe('input unmarshaller =>', () => {
                 });
                 unmarshaller.on('error', (err) => {
                     expect(err.type).toEqual('error-input-content-type-unsupported');
-                    expect(err.cause).toEqual('unsupported input #0\'s content-type application/x-doom');
+                    expect(err.cause).toEqual(`Unsupported content-type 'application/x-doom' for input #0`);
                     done();
                 });
 

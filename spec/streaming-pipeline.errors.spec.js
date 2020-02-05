@@ -262,7 +262,7 @@ describe('streaming pipeline =>', () => {
         })
     });
 
-    describe('with an input that cannot be unmarshalled =>', () => {
+    describe('with an unmarshallable input =>', () => {
         const userFunction = (inputStreams, outputStreams) => {
             inputStreams.$order[0].pipe(outputStreams.$order[0]);
         };
@@ -283,7 +283,10 @@ describe('streaming pipeline =>', () => {
             streamingPipeline.on('error', (err) => {
                 expect(err.type).toEqual('error-input-invalid');
                 expect(err.cause.message).toEqual('Unexpected token i in JSON at position 0');
-                expect(destinationStream.call.cancelWithStatus).not.toHaveBeenCalled();
+                expect(destinationStream.call.cancelWithStatus).toHaveBeenCalledWith(
+                    grpc.status.UNKNOWN,
+                    'Invoker: Unexpected Error: SyntaxError: Unexpected token i in JSON at position 0'
+                );
                 done();
             });
             fixedSource.pipe(streamingPipeline);
@@ -317,7 +320,10 @@ describe('streaming pipeline =>', () => {
             });
             streamingPipeline.on('error', (err) => {
                 expect(err.message).toEqual('Function failed');
-                expect(destinationStream.call.cancelWithStatus).not.toHaveBeenCalled();
+                expect(destinationStream.call.cancelWithStatus).toHaveBeenCalledWith(
+                    grpc.status.UNKNOWN,
+                    'Invoker: Unexpected Error: Function failed'
+                );
                 done();
             });
             fixedSource.pipe(streamingPipeline);
@@ -351,7 +357,10 @@ describe('streaming pipeline =>', () => {
             streamingPipeline.on('error', (err) => {
                 expect(err.type).toEqual('error-output-invalid');
                 expect(err.cause.message).toEqual('Cannot convert a Symbol value to a string');
-                expect(destinationStream.call.cancelWithStatus).not.toHaveBeenCalled();
+                expect(destinationStream.call.cancelWithStatus).toHaveBeenCalledWith(
+                    grpc.status.UNKNOWN,
+                    'Invoker: Unexpected Error: TypeError: Cannot convert a Symbol value to a string'
+                );
                 done();
             });
             fixedSource.pipe(streamingPipeline);

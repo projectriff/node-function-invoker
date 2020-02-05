@@ -1,5 +1,6 @@
 const StreamingPipeline = require('../lib/streaming-pipeline');
 const {PassThrough} = require('stream');
+const grpc = require('grpc');
 
 describe('streaming pipeline =>', () => {
 
@@ -8,6 +9,8 @@ describe('streaming pipeline =>', () => {
 
     beforeEach(() => {
         destinationStream = new PassThrough({objectMode: true});
+        destinationStream.call = {};
+        destinationStream.call.cancelWithStatus = jasmine.createSpy('cancelWithStatus');
     });
 
     afterEach(() => {
@@ -26,6 +29,10 @@ describe('streaming pipeline =>', () => {
             streamingPipeline.on('error', (err) => {
                 expect(err.type).toEqual('error-hook-timeout');
                 expect(err.cause).toEqual('The hook took too long to run. Aborting now');
+                expect(destinationStream.call.cancelWithStatus).toHaveBeenCalledWith(
+                    grpc.status.UNKNOWN,
+                    'Invoker: Unexpected Error: The hook took too long to run. Aborting now'
+                );
                 done();
             });
         });
@@ -42,6 +49,10 @@ describe('streaming pipeline =>', () => {
             streamingPipeline.on('error', (err) => {
                 expect(err.type).toEqual('error-hook-timeout');
                 expect(err.cause).toEqual('The hook took too long to run. Aborting now');
+                expect(destinationStream.call.cancelWithStatus).toHaveBeenCalledWith(
+                    grpc.status.UNKNOWN,
+                    'Invoker: Unexpected Error: The hook took too long to run. Aborting now'
+                );
                 done();
             });
             destinationStream.end();
@@ -59,6 +70,10 @@ describe('streaming pipeline =>', () => {
             streamingPipeline.on('error', (err) => {
                 expect(err.type).toEqual('error-hook-runtime-error');
                 expect(err.cause.message).toEqual('oopsie');
+                expect(destinationStream.call.cancelWithStatus).toHaveBeenCalledWith(
+                    grpc.status.UNKNOWN,
+                    'Invoker: Unexpected Error: Error: oopsie'
+                );
                 done();
             });
         });
@@ -75,6 +90,10 @@ describe('streaming pipeline =>', () => {
             streamingPipeline.on('error', (err) => {
                 expect(err.type).toEqual('error-hook-runtime-error');
                 expect(err.cause.message).toEqual('oopsie');
+                expect(destinationStream.call.cancelWithStatus).toHaveBeenCalledWith(
+                    grpc.status.UNKNOWN,
+                    'Invoker: Unexpected Error: Error: oopsie'
+                );
                 done();
             });
             destinationStream.end();

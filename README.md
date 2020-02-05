@@ -45,7 +45,7 @@ module.exports = (inputStreams, outputStreams) => {
 module.exports.$interactionModel = 'node-streams';
 ```
 
-Please note that streaming functions must always declared the corresponding interaction mode.
+Please note that streaming functions must always declare the corresponding interaction mode.
 
 Parameters can also be looked up by name:
 ```js

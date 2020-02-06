@@ -354,13 +354,9 @@ describe('streaming pipeline =>', () => {
             destinationStream.on('data', () => {
                 done(new Error('should not receive any data'));
             });
-            streamingPipeline.on('error', (err) => {
+            destinationStream.on('error', (err) => {
                 expect(err.type).toEqual('error-output-invalid');
                 expect(err.cause.message).toEqual('Cannot convert a Symbol value to a string');
-                expect(destinationStream.call.cancelWithStatus).toHaveBeenCalledWith(
-                    grpc.status.UNKNOWN,
-                    'Invoker: Unexpected Error: TypeError: Cannot convert a Symbol value to a string'
-                );
                 done();
             });
             fixedSource.pipe(streamingPipeline);

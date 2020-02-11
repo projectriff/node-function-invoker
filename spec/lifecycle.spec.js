@@ -19,7 +19,7 @@ describe('streaming pipeline =>', () => {
         const userFunction = require('./helpers/hooks/simple-lifecycle-streaming-function');
 
         beforeEach(() => {
-            streamingPipeline = new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
+            streamingPipeline = new StreamingPipeline(userFunction, destinationStream);
         });
 
         it('invokes the $init hook when the pipeline is instantiated', () => {

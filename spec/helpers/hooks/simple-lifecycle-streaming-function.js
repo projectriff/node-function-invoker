@@ -5,7 +5,7 @@ let counter = Number.MIN_SAFE_INTEGER;
 module.exports = (inputStreams, outputStreams) => {
     inputStreams.$order[0].pipe(new MappingTransform((x) => {
         return x ** 2;
-    }, {objectMode: true})).pipe(outputStreams.$order[0]);
+    })).pipe(outputStreams.$order[0]);
 };
 module.exports.$interactionModel = 'node-streams';
 

@@ -9,7 +9,7 @@ describe('input unmarshaller =>', () => {
         let unmarshaller;
 
         beforeEach(() => {
-            unmarshaller = new InputUnmarshaller({objectMode: true});
+            unmarshaller = new InputUnmarshaller();
         });
 
         afterEach(() => {
@@ -82,7 +82,7 @@ describe('input unmarshaller =>', () => {
         let inputs;
 
         beforeEach(() => {
-            unmarshaller = new InputUnmarshaller({objectMode: true}, (message) => {
+            unmarshaller = new InputUnmarshaller((message) => {
                 throw new Error(message.payload + ' ko');
             });
             inputs = newFixedSource([

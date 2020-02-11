@@ -10,7 +10,7 @@ describe('MappingTransform =>', () => {
 
     describe('when dealing with synchronous functions =>', () => {
         beforeEach(() => {
-            mappingTransform = new MappingTransform((x) => x.foo(), {objectMode: true});
+            mappingTransform = new MappingTransform((x) => x.foo());
         });
 
         it('intercepts runtime errors and sends error events', (done) => {
@@ -29,7 +29,7 @@ describe('MappingTransform =>', () => {
 
     describe('when dealing with asynchronous functions =>', () => {
         beforeEach(() => {
-            mappingTransform = new MappingTransform(async (x) => x.foo(), {objectMode: true});
+            mappingTransform = new MappingTransform(async (x) => x.foo());
         });
 
         it('intercepts async runtime errors and sends error events', (done) => {
@@ -48,7 +48,7 @@ describe('MappingTransform =>', () => {
 
     describe('when dealing with promise-based functions =>', () => {
         beforeEach(() => {
-            mappingTransform = new MappingTransform((x) => Promise.resolve(x.foo()), {objectMode: true});
+            mappingTransform = new MappingTransform((x) => Promise.resolve(x.foo()));
         });
 
         it('intercepts async runtime errors and sends error events', (done) => {

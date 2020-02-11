@@ -37,7 +37,7 @@ describe('streaming pipeline =>', () => {
         userFunction.$interactionModel = 'node-streams';
 
         beforeEach(() => {
-            streamingPipeline = new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
+            streamingPipeline = new StreamingPipeline(userFunction, destinationStream);
         });
 
         afterEach(() => {
@@ -171,7 +171,7 @@ describe('streaming pipeline =>', () => {
         userFunction.$interactionModel = 'node-streams';
 
         beforeEach(() => {
-            streamingPipeline = new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
+            streamingPipeline = new StreamingPipeline(userFunction, destinationStream);
             fixedSource = newFixedSource([
                 newStartSignal(newStartFrame(['text/zglorbf'], ['in'], ['out'])),
                 newInputSignal(newInputFrame(0, 'application/json', textEncoder.encode('42')))
@@ -202,7 +202,7 @@ describe('streaming pipeline =>', () => {
         userFunction.$interactionModel = 'node-streams';
 
         beforeEach(() => {
-            streamingPipeline = new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
+            streamingPipeline = new StreamingPipeline(userFunction, destinationStream);
             fixedSource = newFixedSource([
                 newStartSignal(newStartFrame(['text/plain'], ['in'], ['out'])),
                 newInputSignal(newInputFrame(0, 'application/jackson-five', textEncoder.encode('1234')))
@@ -234,7 +234,7 @@ describe('streaming pipeline =>', () => {
         userFunction.$interactionModel = 'node-streams';
 
         beforeEach(() => {
-            streamingPipeline = new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
+            streamingPipeline = new StreamingPipeline(userFunction, destinationStream);
             fixedSource = newFixedSource([
                 newStartSignal(newStartFrame(['text/plain'], ['in'], ['out']))
             ]);
@@ -269,7 +269,7 @@ describe('streaming pipeline =>', () => {
         userFunction.$interactionModel = 'node-streams';
 
         beforeEach(() => {
-            streamingPipeline = new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
+            streamingPipeline = new StreamingPipeline(userFunction, destinationStream);
             fixedSource = newFixedSource([
                 newStartSignal(newStartFrame(['text/plain'], ['in'], ['out'])),
                 newInputSignal(newInputFrame(0, 'application/json', textEncoder.encode('invalid-json')))
@@ -295,14 +295,14 @@ describe('streaming pipeline =>', () => {
 
     describe('with a function throwing when receiving data =>', () => {
         const userFunction = (inputStreams, outputStreams) => {
-            inputStreams.$order[0].pipe(new SimpleTransform({objectMode: true}, () => {
+            inputStreams.$order[0].pipe(new SimpleTransform(() => {
                 throw new Error('Function failed')
             })).pipe(outputStreams.$order[0]);
         };
         userFunction.$interactionModel = 'node-streams';
 
         beforeEach(() => {
-            streamingPipeline = new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
+            streamingPipeline = new StreamingPipeline(userFunction, destinationStream);
             fixedSource = newFixedSource([
                 newStartSignal(newStartFrame(['text/plain'], ['in'], ['out'])),
                 newInputSignal(newInputFrame(0, 'application/json', textEncoder.encode('42')))
@@ -332,13 +332,13 @@ describe('streaming pipeline =>', () => {
 
     describe('with a function producing unmarshallable outputs =>', () => {
         const userFunction = (inputStreams, outputStreams) => {
-            inputStreams.$order[0].pipe(new SimpleTransform({objectMode: true}, (x) => Symbol(x)))
+            inputStreams.$order[0].pipe(new SimpleTransform((x) => Symbol(x)))
                 .pipe(outputStreams.$order[0]);
         };
         userFunction.$interactionModel = 'node-streams';
 
         beforeEach(() => {
-            streamingPipeline = new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
+            streamingPipeline = new StreamingPipeline(userFunction, destinationStream);
             fixedSource = newFixedSource([
                 newStartSignal(newStartFrame(['text/plain'], ['in'], ['out'])),
                 newInputSignal(newInputFrame(0, 'application/json', textEncoder.encode('42')))
@@ -371,7 +371,7 @@ describe('streaming pipeline =>', () => {
         it('rejects the function with an invalid declaration of transformers ', () => {
             try {
                 const userFunction = require('./helpers/transformers/invalid-argument-transformers-streaming-function');
-                new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
+                new StreamingPipeline(userFunction, destinationStream);
                 fail('should fail');
             } catch (err) {
                 expect(err.type).toEqual('error-argument-transformer');
@@ -382,7 +382,7 @@ describe('streaming pipeline =>', () => {
         it('rejects the function with an invalid transformer ', () => {
             try {
                 const userFunction = require('./helpers/transformers/invalid-argument-transformer-streaming-function');
-                new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
+                new StreamingPipeline(userFunction, destinationStream);
                 fail('should fail');
             } catch (err) {
                 expect(err.type).toEqual('error-argument-transformer');
@@ -393,7 +393,7 @@ describe('streaming pipeline =>', () => {
         it('rejects the function with a transformer with a wrong arity', () => {
             try {
                 const userFunction = require('./helpers/transformers/wrong-arity-argument-transformers-streaming-function');
-                new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
+                new StreamingPipeline(userFunction, destinationStream);
                 fail('should fail');
             } catch (err) {
                 expect(err.type).toEqual('error-argument-transformer');
@@ -406,7 +406,7 @@ describe('streaming pipeline =>', () => {
         const userFunction = require('./helpers/transformers/invalid-argument-transformer-count-streaming-function');
 
         beforeEach(() => {
-            streamingPipeline = new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
+            streamingPipeline = new StreamingPipeline(userFunction, destinationStream);
             fixedSource = newFixedSource([
                 newStartSignal(newStartFrame(['text/plain'], ['in1', 'in2'], ['out']))
             ]);
@@ -435,15 +435,15 @@ describe('streaming pipeline =>', () => {
         it('throws an error when constructing', () => {
             const userFunction = () => 42;
             userFunction.$interactionModel = "request-reply";
-            expect(() => new StreamingPipeline(userFunction, destinationStream, {objectMode: true}))
+            expect(() => new StreamingPipeline(userFunction, destinationStream))
                 .toThrow(new Error(`SteamingPipeline expects a function with "node-streams" interaction model, but was "request-reply" instead`));
         })
     });
 });
 
 class SimpleTransform extends Transform {
-    constructor(options, fn) {
-        super(options);
+    constructor(fn) {
+        super({ objectMode: true });
         this.fn = fn;
     }
 

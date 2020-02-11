@@ -10,7 +10,7 @@ describe('output marshaller =>', () => {
             let outputPayloadSource;
 
             beforeEach(() => {
-                marshaller = new OutputMarshaller(0, mediaType, {objectMode: true});
+                marshaller = new OutputMarshaller(0, mediaType);
                 outputPayloadSource = newFixedSource([Symbol(42)]);
             });
 

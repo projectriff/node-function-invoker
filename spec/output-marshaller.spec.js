@@ -16,7 +16,7 @@ describe('output marshaller =>', () => {
         describe(`with ${mediaType} data =>`, () => {
             beforeEach(() => {
                 source = newFixedSource(outputPayloads);
-                marshaller = new OutputMarshaller(expectedIndex, mediaType, {objectMode: true});
+                marshaller = new OutputMarshaller(expectedIndex, mediaType);
             });
 
             afterEach(() => {
@@ -53,7 +53,7 @@ describe('output marshaller =>', () => {
                 .addHeader('Content-Type', 'text/csv', 'ignored')
                 .addHeader('X-Custom-Header', 'custom value');
             source = newFixedSource([newRiffMessage(messageHeaders, payload)]);
-            marshaller = new OutputMarshaller(0, mediaType, {objectMode: true});
+            marshaller = new OutputMarshaller(0, mediaType);
         });
 
         afterEach(() => {

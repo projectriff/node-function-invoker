@@ -11,7 +11,7 @@ describe('MappingTransform =>', () => {
     describe('when dealing with non-streaming synchronous functions =>', () => {
         beforeEach(() => {
             const synchronousFunction = (x) => x.foo();
-            mappingTransform = new MappingTransform(synchronousFunction, {objectMode: true});
+            mappingTransform = new MappingTransform(synchronousFunction);
         });
 
         it('maps them to streaming transform', (done) => {
@@ -26,7 +26,7 @@ describe('MappingTransform =>', () => {
     describe('when dealing with non-streaming asynchronous functions =>', () => {
         beforeEach(() => {
             const asynchronousFunction = async (x) => x.foo();
-            mappingTransform = new MappingTransform(asynchronousFunction, {objectMode: true});
+            mappingTransform = new MappingTransform(asynchronousFunction);
         });
 
         it('maps them to streaming transform', (done) => {
@@ -41,7 +41,7 @@ describe('MappingTransform =>', () => {
     describe('when dealing with non-streaming promise-based functions =>', () => {
         beforeEach(() => {
             const asynchronousFunction = (x) => Promise.resolve(x.foo());
-            mappingTransform = new MappingTransform(asynchronousFunction, {objectMode: true});
+            mappingTransform = new MappingTransform(asynchronousFunction);
         });
 
         it('maps them to streaming transform', (done) => {

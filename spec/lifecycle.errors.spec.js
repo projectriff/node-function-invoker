@@ -23,8 +23,7 @@ describe('streaming pipeline =>', () => {
 
         it('emits an error', (done) => {
             streamingPipeline = new StreamingPipeline(userFunction, destinationStream, {
-                objectMode: true,
-                hookTimeoutInMs: 100
+                hookTimeoutInMs: 10
             });
             streamingPipeline.on('error', (err) => {
                 expect(err.type).toEqual('error-hook-timeout');
@@ -43,8 +42,7 @@ describe('streaming pipeline =>', () => {
 
         it('emits an error', (done) => {
             streamingPipeline = new StreamingPipeline(userFunction, destinationStream, {
-                objectMode: true,
-                hookTimeoutInMs: 100
+                hookTimeoutInMs: 10
             });
             streamingPipeline.on('error', (err) => {
                 expect(err.type).toEqual('error-hook-timeout');
@@ -63,10 +61,7 @@ describe('streaming pipeline =>', () => {
         const userFunction = require('./helpers/hooks/failing-init-hook-streaming-function');
 
         it('emits an error', (done) => {
-            streamingPipeline = new StreamingPipeline(userFunction, destinationStream, {
-                objectMode: true,
-                hookTimeoutInMs: 100
-            });
+            streamingPipeline = new StreamingPipeline(userFunction, destinationStream);
             streamingPipeline.on('error', (err) => {
                 expect(err.type).toEqual('error-hook-runtime-error');
                 expect(err.cause.message).toEqual('oopsie');
@@ -83,10 +78,7 @@ describe('streaming pipeline =>', () => {
         const userFunction = require('./helpers/hooks/failing-destroy-hook-streaming-function');
 
         it('emits an error', (done) => {
-            streamingPipeline = new StreamingPipeline(userFunction, destinationStream, {
-                objectMode: true,
-                hookTimeoutInMs: 100
-            });
+            streamingPipeline = new StreamingPipeline(userFunction, destinationStream);
             streamingPipeline.on('error', (err) => {
                 expect(err.type).toEqual('error-hook-runtime-error');
                 expect(err.cause.message).toEqual('oopsie');

@@ -3,8 +3,8 @@ const {min} = Math;
 
 module.exports = class FixedSource extends Readable {
 
-    constructor(values, options) {
-        super(options);
+    constructor(values) {
+        super({objectMode: true});
         this.values = values;
         this.length = this.values.length;
         this._index = 0;

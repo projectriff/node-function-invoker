@@ -35,7 +35,7 @@ describe('streaming pipeline =>', () => {
         userFunction.$interactionModel = 'node-streams';
 
         beforeEach(() => {
-            streamingPipeline = new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
+            streamingPipeline = new StreamingPipeline(userFunction, destinationStream);
         });
 
         describe('with valid input signals =>', () => {
@@ -91,7 +91,7 @@ describe('streaming pipeline =>', () => {
                 };
                 userFunction.$interactionModel = 'node-streams';
 
-                streamingPipeline = new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
+                streamingPipeline = new StreamingPipeline(userFunction, destinationStream);
                 streamingPipeline.on('finish', () => {
                     expect(inputEnded).toBeTruthy('input stream should have been ended');
                     done();
@@ -126,7 +126,7 @@ describe('streaming pipeline =>', () => {
                     expect(receivedOutputSignalCount).toEqual(data.length, `expected to see only ${data.length}, seen ${receivedOutputSignalCount}`);
                     done();
                 });
-                streamingPipeline = new StreamingPipeline(userFunction, destinationStream, {objectMode: true});
+                streamingPipeline = new StreamingPipeline(userFunction, destinationStream);
                 fixedSource.pipe(streamingPipeline);
             })
         });

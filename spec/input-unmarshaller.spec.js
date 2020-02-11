@@ -9,7 +9,7 @@ describe('input unmarshaller =>', () => {
         let unmarshaller;
 
         beforeEach(() => {
-            unmarshaller = new InputUnmarshaller({objectMode: true});
+            unmarshaller = new InputUnmarshaller();
         });
 
         afterEach(() => {
@@ -91,7 +91,7 @@ describe('input unmarshaller =>', () => {
         const outputData = [42, 2];
 
         beforeEach(() => {
-            unmarshaller = new InputUnmarshaller({objectMode: true}, (msg) => msg.payload.age);
+            unmarshaller = new InputUnmarshaller((msg) => msg.payload.age);
             inputs = newFixedSource([
                 newInputSignal(newInputFrame(0, 'application/json', textEncoder.encode(inputData[0]))),
                 newInputSignal(newInputFrame(0, 'application/json', textEncoder.encode(inputData[1]))),
@@ -126,7 +126,7 @@ describe('input unmarshaller =>', () => {
         const headers = ["the truth is...", "... still out there"];
 
         beforeEach(() => {
-            unmarshaller = new InputUnmarshaller({objectMode: true}, (msg) => msg.headers.getValue('X-Files'));
+            unmarshaller = new InputUnmarshaller((msg) => msg.headers.getValue('X-Files'));
             inputs = newFixedSource([
                 newInputSignal(newInputFrame(0, 'application/json', textEncoder.encode('"ignored"'), [["X-Files", headers[0]]])),
                 newInputSignal(newInputFrame(0, 'application/json', textEncoder.encode('"ignored"'), [["X-Files", headers[1]]])),

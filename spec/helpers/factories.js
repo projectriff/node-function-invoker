@@ -49,10 +49,10 @@ module.exports = {
         return outputSignal;
     },
     'newFixedSource': (data) => {
-        return new FixedSource(data, {objectMode: true})
+        return new FixedSource(data)
     },
     'newMappingTransform': (fn) => {
-        return new MappingTransform(fn, {objectMode: true})
+        return new MappingTransform(fn)
     },
     'newRiffMessage': (headers, payload) => {
         return Message.builder().headers(headers).payload(payload).build();

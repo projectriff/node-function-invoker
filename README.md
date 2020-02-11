@@ -1,4 +1,6 @@
-# Node Function Invoker [![Build Status](https://travis-ci.com/projectriff/node-function-invoker.svg?branch=master)](https://travis-ci.com/projectriff/node-function-invoker) [![Greenkeeper badge](https://badges.greenkeeper.io/projectriff/node-function-invoker.svg)](https://greenkeeper.io/)
+# Node Function Invoker
+
+![CI](https://github.com/projectriff/node-function-invoker/workflows/CI/badge.svg)
 
 ## Purpose
 

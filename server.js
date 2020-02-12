@@ -6,4 +6,18 @@ if (typeof userFunctionUri === 'undefined' || userFunctionUri.trim() === '') {
 }
 const port = process.env.GRPC_PORT || '8081';
 
-startInvoker(userFunctionUri, port);
+const shutdownSignal = new Promise(resolve => {
+    process.once('SIGTERM', resolve);
+    process.once('SIGINT', resolve);
+});
+
+(async () => {
+    try {
+        const {shutdownPromise} = await startInvoker(userFunctionUri, {port}, shutdownSignal);
+        await shutdownPromise;
+        process.exit(0);
+    } catch (err) {
+        process.exit(1);
+    }
+}
+)();

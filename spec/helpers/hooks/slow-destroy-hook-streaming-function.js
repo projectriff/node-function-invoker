@@ -1,7 +1,8 @@
-module.exports = (inputStreams, outputStreams) => {
-    inputStreams.$order[0].pipe(outputStreams.$order[0]);
+module.exports = () => {
 };
 module.exports.$interactionModel = 'node-streams';
+
+module.exports.$init = jasmine.createSpy('$init');
 
 module.exports.$destroy = async () => {
     return new Promise(resolve => {

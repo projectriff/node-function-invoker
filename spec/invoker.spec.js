@@ -1,5 +1,5 @@
 const {TextEncoder} = require('util');
-const startInvoker = require('../lib/invoker');
+const tryStartInvoker = require('./helpers/try-start-invoker');
 const outputSignalCustomEqual = require('./helpers/output-signal-custom-equality');
 const newClient = require('./helpers/grpc-client');
 const {
@@ -10,16 +10,16 @@ const {
     newStartFrame,
     newStartSignal
 } = require('./helpers/factories');
+const DeferredPromiseWrapper = require('./helpers/deferred-promise');
 
 describe('invoker =>', () => {
     const textEncoder = new TextEncoder();
-    let server;
-    let address;
+    let shutdownTrigger;
+    let shutdownPromise;
     let client;
 
-    afterEach((done) => {
-        server.tryShutdown(done);
-        client.close();
+    beforeEach(() => {
+        shutdownTrigger = new DeferredPromiseWrapper();
     });
 
     [
@@ -29,9 +29,12 @@ describe('invoker =>', () => {
 
         describe(`with a ${testCase.interactionType} square function =>`, () => {
 
-            beforeEach(() => {
+            beforeEach(async () => {
                 jasmine.addCustomEqualityTester(outputSignalCustomEqual);
-                ({server, address} = tryStartInvoker(testCase.functionUri));
+                const {address, shutdownPromise: shutdown} = await tryStartInvoker(
+                    testCase.functionUri,
+                    shutdownTrigger.getPromise());
+                shutdownPromise = shutdown;
                 client = newClient(address);
             });
 
@@ -71,10 +74,13 @@ describe('invoker =>', () => {
 
     describe('with an async request-reply cube function =>', () => {
 
-        beforeEach(() => {
+        beforeEach(async () => {
             jasmine.addCustomEqualityTester(outputSignalCustomEqual);
-            ({server, address} = tryStartInvoker('../spec/helpers/functions/request-reply-async-cube.js'));
+            const {address, shutdownPromise: shutdown} = await tryStartInvoker(
+                '../spec/helpers/functions/request-reply-async-cube.js',
+                shutdownTrigger.getPromise());
             client = newClient(address);
+            shutdownPromise = shutdown;
         });
 
         it('successfully invokes the function', (done) => {
@@ -112,10 +118,13 @@ describe('invoker =>', () => {
 
     describe('with a request-reply function =>', () => {
 
-        beforeEach(() => {
+        beforeEach(async () => {
             jasmine.addCustomEqualityTester(outputSignalCustomEqual);
-            ({server, address} = tryStartInvoker('../spec/helpers/functions/request-reply-async-cube.js'));
+            const {address, shutdownPromise: shutdown} = await tryStartInvoker(
+                '../spec/helpers/functions/request-reply-async-cube.js',
+                shutdownTrigger.getPromise());
             client = newClient(address);
+            shutdownPromise = shutdown;
         });
 
         it('successfully invokes the function several times', (done) => {
@@ -148,26 +157,36 @@ describe('invoker =>', () => {
                 });
                 call.end();
             });
-
         });
     });
+
+    describe('with a function implementing hooks =>', () => {
+        let userFunction;
+
+        beforeEach(async () => {
+            const {userFunction: userFn, shutdownPromise: shutdown} = await tryStartInvoker(
+                '../spec/helpers/hooks/simple-lifecycle-streaming-function',
+                shutdownTrigger.getPromise());
+
+            userFunction = userFn;
+            shutdownPromise = shutdown;
+        });
+
+        afterEach(() => {
+            userFunction.$init.calls.reset();
+            userFunction.$destroy.calls.reset();
+        });
+
+        it('invokes the $init hook only once when the process starts', () => {
+            expect(userFunction.$init).toHaveBeenCalledTimes(1);
+        });
+
+        it('invokes the $destroy hook only once when the server shuts down', (done) => {
+            shutdownPromise.then(() => {
+                expect(userFunction.$destroy).toHaveBeenCalledTimes(1);
+                done();
+            });
+            shutdownTrigger.resolveNow();
+        });
+    })
 });
-
-const tryStartInvoker = (functionUri) => {
-    let lastError;
-    const triedPorts = [];
-    for (let i = 0; i < 5; i++) {
-        const port = randomPort();
-        triedPorts.push(port);
-        try {
-            return {server: startInvoker(functionUri, port), address: `localhost:${port}`};
-        } catch (err) {
-            lastError = err;
-        }
-    }
-    throw new Error(`An error occurred when starting the server. Tried: ${triedPorts.join(", ")}. Last error was: ${lastError}`)
-};
-
-const randomPort = () => {
-    return 1024 + Math.floor(Math.random() * Math.floor(64511));
-};

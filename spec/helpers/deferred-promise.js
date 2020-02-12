@@ -1,7 +1,6 @@
 module.exports = class DeferredPromiseWrapper {
-
     constructor() {
-        this._promise = new Promise((resolve) => {
+        this._promise = new Promise(resolve => {
             this._resolve = resolve;
         });
     }

@@ -1,7 +1,10 @@
 module.exports = (firstOutputSignal, secondOutputSignal) => {
-
-    if (!firstOutputSignal.getStart && !firstOutputSignal.getData &&
-        !secondOutputSignal.getStart && !secondOutputSignal.getData) {
+    if (
+        !firstOutputSignal.getStart &&
+        !firstOutputSignal.getData &&
+        !secondOutputSignal.getStart &&
+        !secondOutputSignal.getData
+    ) {
         // pass on to other equality tester
         return undefined;
     }
@@ -14,22 +17,31 @@ module.exports = (firstOutputSignal, secondOutputSignal) => {
     }
 
     if (firstOutputSignal.getStart) {
-        const firstContentTypes = firstOutputSignal.getStart().getExpectedcontenttypesList();
-        const secondContentTypes = secondOutputSignal.getStart().getExpectedcontenttypesList();
+        const firstContentTypes = firstOutputSignal
+            .getStart()
+            .getExpectedcontenttypesList();
+        const secondContentTypes = secondOutputSignal
+            .getStart()
+            .getExpectedcontenttypesList();
         return firstContentTypes === secondContentTypes;
     }
 
     const firstData = firstOutputSignal.getData();
     const secondData = secondOutputSignal.getData();
 
-    return firstData.getResultindex() === secondData.getResultindex() &&
-        arrayEqual(firstData.getHeadersMap().toArray(), secondData.getHeadersMap().toArray()) &&
+    return (
+        firstData.getResultindex() === secondData.getResultindex() &&
+        arrayEqual(
+            firstData.getHeadersMap().toArray(),
+            secondData.getHeadersMap().toArray()
+        ) &&
         firstData.getContenttype() === secondData.getContenttype() &&
-        typedArrayEqual(firstData.getPayload(), secondData.getPayload());
+        typedArrayEqual(firstData.getPayload(), secondData.getPayload())
+    );
 };
 
 const xor = (expr1, expr2) => {
-    return expr1 && !expr2 || !expr1 && expr2;
+    return (expr1 && !expr2) || (!expr1 && expr2);
 };
 
 const arrayEqual = (array1, array2) => {

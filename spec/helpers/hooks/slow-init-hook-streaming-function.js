@@ -1,6 +1,5 @@
-module.exports = () => {
-};
-module.exports.$interactionModel = 'node-streams';
+module.exports = () => {};
+module.exports.$interactionModel = "node-streams";
 
 module.exports.$init = async () => {
     return new Promise(resolve => {
@@ -8,4 +7,4 @@ module.exports.$init = async () => {
     });
 };
 
-module.exports.$destroy = jasmine.createSpy('$destroy');
+module.exports.$destroy = jasmine.createSpy("$destroy");

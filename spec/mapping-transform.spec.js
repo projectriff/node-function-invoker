@@ -1,55 +1,54 @@
-const MappingTransform = require('../lib/mapping-transform');
+const MappingTransform = require("../lib/mapping-transform");
 
-describe('MappingTransform =>', () => {
-
+describe("MappingTransform =>", () => {
     let mappingTransform;
 
     afterEach(() => {
         mappingTransform.destroy();
     });
 
-    describe('when dealing with non-streaming synchronous functions =>', () => {
+    describe("when dealing with non-streaming synchronous functions =>", () => {
         beforeEach(() => {
-            const synchronousFunction = (x) => x.foo();
+            const synchronousFunction = x => x.foo();
             mappingTransform = new MappingTransform(synchronousFunction);
         });
 
-        it('maps them to streaming transform', (done) => {
-            mappingTransform.on('data', (chunk) => {
+        it("maps them to streaming transform", done => {
+            mappingTransform.on("data", chunk => {
                 expect(chunk).toEqual(42);
                 done();
             });
-            mappingTransform.write({foo: () => 42});
+            mappingTransform.write({ foo: () => 42 });
         });
     });
 
-    describe('when dealing with non-streaming asynchronous functions =>', () => {
+    describe("when dealing with non-streaming asynchronous functions =>", () => {
         beforeEach(() => {
-            const asynchronousFunction = async (x) => x.foo();
+            const asynchronousFunction = async x => x.foo();
             mappingTransform = new MappingTransform(asynchronousFunction);
         });
 
-        it('maps them to streaming transform', (done) => {
-            mappingTransform.on('data', (chunk) => {
+        it("maps them to streaming transform", done => {
+            mappingTransform.on("data", chunk => {
                 expect(chunk).toEqual(42);
                 done();
             });
-            mappingTransform.write({foo: () => 42});
+            mappingTransform.write({ foo: () => 42 });
         });
     });
 
-    describe('when dealing with non-streaming promise-based functions =>', () => {
+    describe("when dealing with non-streaming promise-based functions =>", () => {
         beforeEach(() => {
-            const asynchronousFunction = (x) => Promise.resolve(x.foo());
+            const asynchronousFunction = x => Promise.resolve(x.foo());
             mappingTransform = new MappingTransform(asynchronousFunction);
         });
 
-        it('maps them to streaming transform', (done) => {
-            mappingTransform.on('data', (chunk) => {
+        it("maps them to streaming transform", done => {
+            mappingTransform.on("data", chunk => {
                 expect(chunk).toEqual(42);
                 done();
             });
-            mappingTransform.write({foo: () => 42});
+            mappingTransform.write({ foo: () => 42 });
         });
     });
 });

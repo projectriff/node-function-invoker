@@ -72,11 +72,11 @@ input streams, then this is automatically managed by this invoker).
 
 Functions that communicate with external services, like a database, can use the `$init` and `$destroy` lifecycle hooks 
 on the function.
-These methods are called once per **function invocation**.
+These methods are called once **per process**.
 
-The `$init` method is guaranteed to finish before the main function is invoked.
+The `$init` method is guaranteed to finish before the main function is invoked for the first time.
 
-The `$destroy` method is guaranteed to be invoked after all of the main functions are finished.
+The `$destroy` method is guaranteed to be invoked after all of the main functions are finished, before the process shuts down.
 
 ```js
 let client;

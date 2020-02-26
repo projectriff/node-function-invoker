@@ -1,10 +1,9 @@
-const {Readable} = require('stream');
-const {min} = Math;
+const { Readable } = require("stream");
+const { min } = Math;
 
 module.exports = class FixedSource extends Readable {
-
     constructor(values) {
-        super({objectMode: true});
+        super({ objectMode: true });
         this.values = values;
         this.length = this.values.length;
         this._index = 0;
@@ -18,7 +17,7 @@ module.exports = class FixedSource extends Readable {
             }
             this._index += end;
         } else {
-            this.push(null)
+            this.push(null);
         }
     }
 };

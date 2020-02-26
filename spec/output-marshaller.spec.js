@@ -1,13 +1,18 @@
-const {TextEncoder} = require('util');
-const OutputMarshaller = require('../lib/output-marshaller');
-const {newFixedSource, newOutputFrame, newOutputSignal, newRiffHeaders, newRiffMessage} = require('./helpers/factories');
+const { TextEncoder } = require("util");
+const OutputMarshaller = require("../lib/output-marshaller");
+const {
+    newFixedSource,
+    newOutputFrame,
+    newOutputSignal,
+    newRiffHeaders,
+    newRiffMessage
+} = require("./helpers/factories");
 
-describe('output marshaller =>', () => {
-
+describe("output marshaller =>", () => {
     let marshaller;
     let source;
 
-    ['application/json', 'application/cloudevents+json'].forEach((mediaType) => {
+    ["application/json", "application/cloudevents+json"].forEach(mediaType => {
         const outputPayloads = [42, "forty-two"];
         const textEncoder = new TextEncoder();
         const expectedIndex = 0;
@@ -24,17 +29,29 @@ describe('output marshaller =>', () => {
                 marshaller.destroy();
             });
 
-            it('transforms and forwards the received outputs', (done) => {
+            it("transforms and forwards the received outputs", done => {
                 let index = 0;
-                marshaller.on('data', (chunk) => {
-                    expect(index).toBeLessThan(outputPayloads.length, `should not consume more than ${expectedPayloadCount} elements, about to consume ${index}th one`);
-                    const expectedFrame = newOutputFrame(expectedIndex, mediaType, textEncoder.encode(JSON.stringify(outputPayloads[index])));
+                marshaller.on("data", chunk => {
+                    expect(index).toBeLessThan(
+                        outputPayloads.length,
+                        `should not consume more than ${expectedPayloadCount} elements, about to consume ${index}th one`
+                    );
+                    const expectedFrame = newOutputFrame(
+                        expectedIndex,
+                        mediaType,
+                        textEncoder.encode(
+                            JSON.stringify(outputPayloads[index])
+                        )
+                    );
                     const expectedSignal = newOutputSignal(expectedFrame);
                     expect(chunk).toEqual(expectedSignal);
                     index++;
                 });
-                marshaller.on('end', () => {
-                    expect(index).toEqual(outputPayloads.length, `should have consumed ${outputPayloads.length} element(s), consumed ${index}`);
+                marshaller.on("end", () => {
+                    expect(index).toEqual(
+                        outputPayloads.length,
+                        `should have consumed ${outputPayloads.length} element(s), consumed ${index}`
+                    );
                     done();
                 });
 
@@ -43,15 +60,15 @@ describe('output marshaller =>', () => {
         });
     });
 
-    describe('with riff message data =>', () => {
-        const payload = '42';
+    describe("with riff message data =>", () => {
+        const payload = "42";
         const textEncoder = new TextEncoder();
-        const mediaType = 'text/plain';
+        const mediaType = "text/plain";
 
         beforeEach(() => {
             const messageHeaders = newRiffHeaders()
-                .addHeader('Content-Type', 'text/csv', 'ignored')
-                .addHeader('X-Custom-Header', 'custom value');
+                .addHeader("Content-Type", "text/csv", "ignored")
+                .addHeader("X-Custom-Header", "custom value");
             source = newFixedSource([newRiffMessage(messageHeaders, payload)]);
             marshaller = new OutputMarshaller(0, mediaType);
         });
@@ -61,25 +78,31 @@ describe('output marshaller =>', () => {
             marshaller.destroy();
         });
 
-        it('properly marshalls them', (done) => {
+        it("properly marshalls them", done => {
             let index = 0;
-            marshaller.on('data', (chunk) => {
-                expect(index).toBeLessThan(1, `should not consume more than 1 element, about to consume ${index}th one`);
+            marshaller.on("data", chunk => {
+                expect(index).toBeLessThan(
+                    1,
+                    `should not consume more than 1 element, about to consume ${index}th one`
+                );
                 const expectedFrame = newOutputFrame(
                     0,
                     mediaType,
                     textEncoder.encode(payload),
                     [
-                        ['Content-Type', 'text/csv'],
-                        ['X-Custom-Header', 'custom value']
+                        ["Content-Type", "text/csv"],
+                        ["X-Custom-Header", "custom value"]
                     ]
                 );
                 const expectedSignal = newOutputSignal(expectedFrame);
                 expect(chunk).toEqual(expectedSignal);
                 index++;
             });
-            marshaller.on('end', () => {
-                expect(index).toEqual(1, `should have consumed 1 element, consumed ${index}`);
+            marshaller.on("end", () => {
+                expect(index).toEqual(
+                    1,
+                    `should have consumed 1 element, consumed ${index}`
+                );
                 done();
             });
 

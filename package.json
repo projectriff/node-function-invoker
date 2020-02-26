@@ -11,6 +11,7 @@
     "test": "npm run eslint . && npm run jasmine",
     "eslint": "eslint",
     "jasmine": "jasmine",
+    "format": "prettier --write '**/*.js' '!codegen/**'",
     "generate-proto": "grpc_tools_node_protoc --js_out=import_style=commonjs,binary:./codegen --grpc_out=./codegen --plugin=protoc-gen-grpc=\"$(which grpc_tools_node_protoc_plugin)\" ./proto/riff-rpc.proto"
   },
   "dependencies": {
@@ -22,9 +23,12 @@
   },
   "devDependencies": {
     "eslint": "^6.8.0",
+    "eslint-config-prettier": "6.10.0",
     "eslint-plugin-jasmine": "^4.1.0",
+    "eslint-plugin-prettier": "3.1.2",
     "grpc-tools": "^1.8.1",
-    "jasmine": "^3.5.0"
+    "jasmine": "^3.5.0",
+    "prettier": "1.19.1"
   },
   "files": [
     "codegen/**/*.js",

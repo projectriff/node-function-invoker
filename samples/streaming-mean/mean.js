@@ -1,5 +1,5 @@
-const stats = require('simple-statistics');
-const miss = require('mississippi');
+const stats = require("simple-statistics");
+const miss = require("mississippi");
 
 module.exports = (inputs, outputs) => {
     let n = 0;
@@ -10,4 +10,4 @@ module.exports = (inputs, outputs) => {
     });
     inputs.$order[0].pipe(meanStream).pipe(outputs.$order[0]);
 };
-module.exports.$interactionModel = 'node-streams';
+module.exports.$interactionModel = "node-streams";

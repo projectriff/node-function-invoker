@@ -4,14 +4,7 @@ env:
   node: true
 parserOptions:
   ecmaVersion: 2017
-extends: "eslint:recommended"
+extends:
+- plugin:prettier/recommended
 plugins:
-  - jasmine
-rules:
-  indent:
-    - error
-    - 4
-    - SwitchCase: 1
-  no-console: 0
-globals:
-  proto: readonly
+- jasmine

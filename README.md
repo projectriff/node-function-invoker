@@ -5,7 +5,7 @@
 ## Purpose
 
 The node function invoker provides a host for functions consisting of a single NodeJS module.
-It adheres to [riff streaming protocol](https://github.com/projectriff/streaming-processor) 
+It adheres to [riff streaming protocol](https://github.com/projectriff/streaming-processor)
 and invokes functions accordingly.
 
 ## Supported functions
@@ -65,12 +65,12 @@ Input streams are [Readable streams](https://nodejs.org/api/stream.html#stream_r
 Output streams are [Writable streams](https://nodejs.org/api/stream.html#stream_class_stream_readable).
 
 The function **must** end the output streams when it is done emitting data or when an error occurs
-(if the output streams are [`pipe`](https://nodejs.org/api/stream.html#stream_readable_pipe_destination_options)'d from 
+(if the output streams are [`pipe`](https://nodejs.org/api/stream.html#stream_readable_pipe_destination_options)'d from
 input streams, then this is automatically managed by this invoker).
 
 ## Lifecycle
 
-Functions that communicate with external services, like a database, can use the `$init` and `$destroy` lifecycle hooks 
+Functions that communicate with external services, like a database, can use the `$init` and `$destroy` lifecycle hooks
 on the function.
 These methods are called once per **function invocation**.
 
@@ -105,14 +105,14 @@ Lifecycle functions have up to **10 seconds** to complete their work, or the fun
 
 ## Argument transformers
 
-Sometimes, the content-type information is not enough to extract the payload the user function is supposed to interact 
+Sometimes, the content-type information is not enough to extract the payload the user function is supposed to interact
 with.
 
 Argument transformers are custom functions that take a `Message` (as defined by [`@projectriff/message`](https://github.com/projectriff/node-message))
-and return whatever the function needs. 
+and return whatever the function needs.
 
-The `Message` payload is the result of the first content-type-based  conversion pass. For instance, if the input 
-content-type is `application/json` and its payload is `'{"key": "value"}'` the payload of the `Message` exposed to the 
+The `Message` payload is the result of the first content-type-based  conversion pass. For instance, if the input
+content-type is `application/json` and its payload is `'{"key": "value"}'` the payload of the `Message` exposed to the
 transformer will be the corresponding object representation (i.e. `{"key": "value"}`).
 
 Argument transformers are declared this way:
@@ -131,7 +131,7 @@ module.exports.$argumentTransformers = [
 ];
 ```
 
-If `$argumentTransformers` is not declared, the default transformer assigned to each input extracts the `Message` 
+If `$argumentTransformers` is not declared, the default transformer assigned to each input extracts the `Message`
 payload.
 
 ## Supported protocols
@@ -145,7 +145,7 @@ However, it is possible to send HTTP requests and receive HTTP responses if you 
 
  - [Node](https://nodejs.org/en/download/) version required: 10+.
  - Make sure to install the [EditorConfig](https://editorconfig.org/) plugin in your editing environment.
- 
+
 #### Build
 
  - Install dependencies by running `npm ci`.
@@ -176,3 +176,6 @@ Execute the following and enjoy some logs:
  $ FUNCTION_URI="$(pwd)/samples/streaming-repeater" NODE_DEBUG='riff' npm start
 ```
 
+### Source formatting
+
+We use [prettier](https://prettier.io) style checks to enforce code consistency. Many editors can automatically reformat source to match this style. To manually request formatted source run `npm run format`.

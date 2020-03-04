@@ -4,6 +4,8 @@ const userFunctionUri = process.env.FUNCTION_URI;
 if (typeof userFunctionUri === "undefined" || userFunctionUri.trim() === "") {
     throw "FUNCTION_URI envvar not set or empty. Aborting.";
 }
+
+console.time("riff-invoker");
 const port = process.env.GRPC_PORT || "8081";
 
 const shutdownSignal = new Promise((resolve) => {
@@ -19,8 +21,10 @@ const shutdownSignal = new Promise((resolve) => {
             shutdownSignal
         );
         await shutdownPromise;
+        console.timeEnd("riff-invoker");
         process.exit(0);
     } catch (err) {
+        console.timeEnd("riff-invoker");
         process.exit(1);
     }
 })();

@@ -8,9 +8,8 @@
   "license": "Apache-2.0",
   "private": false,
   "scripts": {
-    "test": "npm run eslint . && npm run jasmine",
+    "test": "npm run eslint . && node spec/run-tests.js",
     "eslint": "eslint",
-    "jasmine": "jasmine",
     "format": "prettier --write '**/*.js' '!codegen/**'",
     "generate-proto": "grpc_tools_node_protoc --js_out=import_style=commonjs,binary:./codegen --grpc_out=./codegen --plugin=protoc-gen-grpc=\"$(which grpc_tools_node_protoc_plugin)\" ./proto/riff-rpc.proto"
   },

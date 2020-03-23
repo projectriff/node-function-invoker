@@ -2,7 +2,7 @@ const { TextEncoder } = require("util");
 const {
     newFixedSource,
     newInputFrame,
-    newInputSignal
+    newInputSignal,
 } = require("./helpers/factories");
 const InputUnmarshaller = require("../lib/input-unmarshaller");
 
@@ -31,7 +31,7 @@ describe("input unmarshaller =>", () => {
                             "application/x-doom",
                             textEncoder.encode("???")
                         )
-                    )
+                    ),
                 ]);
             });
 
@@ -39,11 +39,11 @@ describe("input unmarshaller =>", () => {
                 unsupportedMediaTypeInputs.destroy();
             });
 
-            it("emits an error", done => {
+            it("emits an error", (done) => {
                 unmarshaller.on("data", () => {
                     done(new Error(`should not consume any elements`));
                 });
-                unmarshaller.on("error", err => {
+                unmarshaller.on("error", (err) => {
                     expect(err.type).toEqual(
                         "error-input-content-type-unsupported"
                     );
@@ -58,7 +58,7 @@ describe("input unmarshaller =>", () => {
         });
 
         ["application/json", "application/cloudevents+json"].forEach(
-            mediaType => {
+            (mediaType) => {
                 describe(`with invalid payloads for ${mediaType} =>`, () => {
                     let invalidInputs;
 
@@ -70,7 +70,7 @@ describe("input unmarshaller =>", () => {
                                     mediaType,
                                     textEncoder.encode("invalid payload")
                                 )
-                            )
+                            ),
                         ]);
                     });
 
@@ -78,11 +78,11 @@ describe("input unmarshaller =>", () => {
                         invalidInputs.destroy();
                     });
 
-                    it("emits an error", done => {
+                    it("emits an error", (done) => {
                         unmarshaller.on("data", () => {
                             done(new Error(`should not consume any elements`));
                         });
-                        unmarshaller.on("error", err => {
+                        unmarshaller.on("error", (err) => {
                             expect(err.type).toEqual("error-input-invalid");
                             expect(err.cause.name).toEqual("SyntaxError");
                             expect(err.cause.message).toEqual(
@@ -103,7 +103,7 @@ describe("input unmarshaller =>", () => {
         let inputs;
 
         beforeEach(() => {
-            unmarshaller = new InputUnmarshaller(message => {
+            unmarshaller = new InputUnmarshaller((message) => {
                 throw new Error(message.payload + " ko");
             });
             inputs = newFixedSource([
@@ -113,7 +113,7 @@ describe("input unmarshaller =>", () => {
                         "application/json",
                         textEncoder.encode("42")
                     )
-                )
+                ),
             ]);
         });
 
@@ -122,11 +122,11 @@ describe("input unmarshaller =>", () => {
             unmarshaller.destroy();
         });
 
-        it("emits an error", done => {
+        it("emits an error", (done) => {
             unmarshaller.on("data", () => {
                 done(new Error(`should not consume any elements`));
             });
-            unmarshaller.on("error", err => {
+            unmarshaller.on("error", (err) => {
                 expect(err.type).toEqual("error-argument-transformer");
                 expect(err.cause.name).toEqual("Error");
                 expect(err.cause.message).toEqual("42 ko");

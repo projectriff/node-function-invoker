@@ -1,6 +1,6 @@
 const _ = require("highland");
 
-const logError = err => {
+const logError = (err) => {
     console.error(err);
 };
 
@@ -9,7 +9,7 @@ module.exports = (inputs, outputs) => {
     const wordStream = _(inputs.$order[1]).errors(logError);
     numberStream
         .zip(wordStream)
-        .flatMap(numberWordPair => {
+        .flatMap((numberWordPair) => {
             const result = [];
             for (let i = 0; i < numberWordPair[0]; i++) {
                 result.push(numberWordPair[1]);

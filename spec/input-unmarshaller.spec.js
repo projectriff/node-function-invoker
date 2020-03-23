@@ -2,7 +2,7 @@ const { TextEncoder } = require("util");
 const {
     newFixedSource,
     newInputFrame,
-    newInputSignal
+    newInputSignal,
 } = require("./helpers/factories");
 const InputUnmarshaller = require("../lib/input-unmarshaller");
 
@@ -40,7 +40,7 @@ describe("input unmarshaller =>", () => {
                             "text/plain",
                             textEncoder.encode(expectedPayloads[1])
                         )
-                    )
+                    ),
                 ]);
             });
 
@@ -48,9 +48,9 @@ describe("input unmarshaller =>", () => {
                 inputs.destroy();
             });
 
-            it("transforms and forwards the received input signals", done => {
+            it("transforms and forwards the received input signals", (done) => {
                 let index = 0;
-                unmarshaller.on("data", chunk => {
+                unmarshaller.on("data", (chunk) => {
                     if (index === expectedPayloadCount) {
                         done(
                             new Error(
@@ -69,16 +69,16 @@ describe("input unmarshaller =>", () => {
         });
 
         ["application/json", "application/cloudevents+json"].forEach(
-            mediaType => {
+            (mediaType) => {
                 describe(`with ${mediaType} data =>`, () => {
                     let inputs;
                     const inputPayloads = [
                         '"and the answer obviously is: "',
-                        42
+                        42,
                     ];
                     const expectedPayloads = [
                         "and the answer obviously is: ",
-                        42
+                        42,
                     ];
                     const expectedPayloadCount = expectedPayloads.length;
 
@@ -97,7 +97,7 @@ describe("input unmarshaller =>", () => {
                                     "application/json",
                                     textEncoder.encode(inputPayloads[1])
                                 )
-                            )
+                            ),
                         ]);
                     });
 
@@ -105,9 +105,9 @@ describe("input unmarshaller =>", () => {
                         inputs.destroy();
                     });
 
-                    it("transforms and forwards the received input signals", done => {
+                    it("transforms and forwards the received input signals", (done) => {
                         let index = 0;
-                        unmarshaller.on("data", chunk => {
+                        unmarshaller.on("data", (chunk) => {
                             if (index === expectedPayloadCount) {
                                 done(
                                     new Error(
@@ -135,7 +135,7 @@ describe("input unmarshaller =>", () => {
         const outputData = [42, 2];
 
         beforeEach(() => {
-            unmarshaller = new InputUnmarshaller(msg => msg.payload.age);
+            unmarshaller = new InputUnmarshaller((msg) => msg.payload.age);
             inputs = newFixedSource([
                 newInputSignal(
                     newInputFrame(
@@ -150,7 +150,7 @@ describe("input unmarshaller =>", () => {
                         "application/json",
                         textEncoder.encode(inputData[1])
                     )
-                )
+                ),
             ]);
         });
 
@@ -159,9 +159,9 @@ describe("input unmarshaller =>", () => {
             unmarshaller.destroy();
         });
 
-        it("uses the custom argument transformer and forwards the result", done => {
+        it("uses the custom argument transformer and forwards the result", (done) => {
             let index = 0;
-            unmarshaller.on("data", chunk => {
+            unmarshaller.on("data", (chunk) => {
                 const length = outputData.length;
                 if (index === length) {
                     done(
@@ -186,7 +186,7 @@ describe("input unmarshaller =>", () => {
         const headers = ["the truth is...", "... still out there"];
 
         beforeEach(() => {
-            unmarshaller = new InputUnmarshaller(msg =>
+            unmarshaller = new InputUnmarshaller((msg) =>
                 msg.headers.getValue("X-Files")
             );
             inputs = newFixedSource([
@@ -205,7 +205,7 @@ describe("input unmarshaller =>", () => {
                         textEncoder.encode('"ignored"'),
                         [["X-Files", headers[1]]]
                     )
-                )
+                ),
             ]);
         });
 
@@ -214,9 +214,9 @@ describe("input unmarshaller =>", () => {
             unmarshaller.destroy();
         });
 
-        it("uses the custom argument transformer and forwards the result", done => {
+        it("uses the custom argument transformer and forwards the result", (done) => {
             let index = 0;
-            unmarshaller.on("data", chunk => {
+            unmarshaller.on("data", (chunk) => {
                 const length = headers.length;
                 if (index === length) {
                     done(

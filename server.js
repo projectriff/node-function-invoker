@@ -6,7 +6,7 @@ if (typeof userFunctionUri === "undefined" || userFunctionUri.trim() === "") {
 }
 const port = process.env.GRPC_PORT || "8081";
 
-const shutdownSignal = new Promise(resolve => {
+const shutdownSignal = new Promise((resolve) => {
     process.once("SIGTERM", resolve);
     process.once("SIGINT", resolve);
 });

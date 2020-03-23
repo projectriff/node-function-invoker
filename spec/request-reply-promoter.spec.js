@@ -4,7 +4,7 @@ const { PassThrough } = require("stream");
 
 describe("function promoter =>", () => {
     const data = [1, 2, 4];
-    const userFunction = x => x ** 2;
+    const userFunction = (x) => x ** 2;
     const streamingUserFunction = (inputs, outputs) => {
         const inputStream = inputs.$order[0];
         const outputStream = outputs.$order[0];
@@ -26,9 +26,9 @@ describe("function promoter =>", () => {
         streamingOutput.destroy();
     });
 
-    it("promotes request-reply functions to streaming", done => {
+    it("promotes request-reply functions to streaming", (done) => {
         let index = 0;
-        streamingOutput.on("data", chunk => {
+        streamingOutput.on("data", (chunk) => {
             expect(index).toBeLessThan(
                 expectedResults.length,
                 `expected only ${expectedResults.length} element(s)`
@@ -43,9 +43,9 @@ describe("function promoter =>", () => {
         result({ $order: [source] }, { $order: [streamingOutput] });
     });
 
-    it("returns streaming functions as-is", done => {
+    it("returns streaming functions as-is", (done) => {
         let index = 0;
-        streamingOutput.on("data", chunk => {
+        streamingOutput.on("data", (chunk) => {
             expect(index).toBeLessThan(
                 expectedResults.length,
                 `expected only ${expectedResults.length} element(s)`

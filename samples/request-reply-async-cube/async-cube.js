@@ -1,1 +1,1 @@
-module.exports = async x => x ** 3;
+module.exports = async (x) => x ** 3;

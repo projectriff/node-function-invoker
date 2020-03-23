@@ -8,7 +8,7 @@ const {
     newOutputFrame,
     newOutputSignal,
     newStartFrame,
-    newStartSignal
+    newStartSignal,
 } = require("./helpers/factories");
 const DeferredPromiseWrapper = require("./helpers/deferred-promise");
 
@@ -25,19 +25,19 @@ describe("invoker =>", () => {
     [
         {
             interactionType: "streaming",
-            functionUri: "../spec/helpers/functions/streaming-square.js"
+            functionUri: "../spec/helpers/functions/streaming-square.js",
         },
         {
             interactionType: "request-reply",
-            functionUri: "../spec/helpers/functions/request-reply-square.js"
-        }
-    ].forEach(testCase => {
+            functionUri: "../spec/helpers/functions/request-reply-square.js",
+        },
+    ].forEach((testCase) => {
         describe(`with a ${testCase.interactionType} square function =>`, () => {
             beforeEach(async () => {
                 jasmine.addCustomEqualityTester(outputSignalCustomEqual);
                 const {
                     address,
-                    shutdownPromise: shutdown
+                    shutdownPromise: shutdown,
                 } = await tryStartInvoker(
                     testCase.functionUri,
                     shutdownTrigger.getPromise()
@@ -46,7 +46,7 @@ describe("invoker =>", () => {
                 client = newClient(address);
             });
 
-            it("successfully invokes the function", done => {
+            it("successfully invokes the function", (done) => {
                 const inputs = [
                     newStartSignal(
                         newStartFrame(
@@ -68,7 +68,7 @@ describe("invoker =>", () => {
                             "application/json",
                             textEncoder.encode("3")
                         )
-                    )
+                    ),
                 ];
                 const expectedOutputs = [
                     newOutputSignal(
@@ -84,14 +84,14 @@ describe("invoker =>", () => {
                             "application/json",
                             textEncoder.encode("9")
                         )
-                    )
+                    ),
                 ];
                 const expectedOutputCount = expectedOutputs.length;
 
                 const call = client.invoke();
 
                 let seenOutputIndex = 0;
-                call.on("data", outputSignal => {
+                call.on("data", (outputSignal) => {
                     expect(seenOutputIndex).toBeLessThan(
                         expectedOutputCount,
                         `expected only ${expectedOutputCount} elements, received at least ${seenOutputIndex}`
@@ -108,7 +108,7 @@ describe("invoker =>", () => {
                     done();
                 });
 
-                inputs.forEach(input => {
+                inputs.forEach((input) => {
                     call.write(input);
                 });
                 call.end();
@@ -121,7 +121,7 @@ describe("invoker =>", () => {
             jasmine.addCustomEqualityTester(outputSignalCustomEqual);
             const {
                 address,
-                shutdownPromise: shutdown
+                shutdownPromise: shutdown,
             } = await tryStartInvoker(
                 "../spec/helpers/functions/request-reply-async-cube.js",
                 shutdownTrigger.getPromise()
@@ -130,7 +130,7 @@ describe("invoker =>", () => {
             shutdownPromise = shutdown;
         });
 
-        it("successfully invokes the function", done => {
+        it("successfully invokes the function", (done) => {
             const inputs = [
                 newStartSignal(
                     newStartFrame(["application/json"], ["numbers"], ["cubes"])
@@ -140,7 +140,7 @@ describe("invoker =>", () => {
                 ),
                 newInputSignal(
                     newInputFrame(0, "text/plain", textEncoder.encode("3"))
-                )
+                ),
             ];
             const expectedOutputs = [
                 newOutputSignal(
@@ -156,14 +156,14 @@ describe("invoker =>", () => {
                         "application/json",
                         textEncoder.encode("27")
                     )
-                )
+                ),
             ];
             const expectedOutputCount = expectedOutputs.length;
 
             const call = client.invoke();
 
             let seenOutputIndex = 0;
-            call.on("data", outputSignal => {
+            call.on("data", (outputSignal) => {
                 expect(seenOutputIndex).toBeLessThan(
                     expectedOutputCount,
                     `expected only ${expectedOutputCount} elements, received at least ${seenOutputIndex}`
@@ -180,7 +180,7 @@ describe("invoker =>", () => {
                 done();
             });
 
-            inputs.forEach(input => {
+            inputs.forEach((input) => {
                 call.write(input);
             });
             call.end();
@@ -192,7 +192,7 @@ describe("invoker =>", () => {
             jasmine.addCustomEqualityTester(outputSignalCustomEqual);
             const {
                 address,
-                shutdownPromise: shutdown
+                shutdownPromise: shutdown,
             } = await tryStartInvoker(
                 "../spec/helpers/functions/request-reply-async-cube.js",
                 shutdownTrigger.getPromise()
@@ -201,14 +201,14 @@ describe("invoker =>", () => {
             shutdownPromise = shutdown;
         });
 
-        it("successfully invokes the function several times", done => {
+        it("successfully invokes the function several times", (done) => {
             const inputs = [
                 newStartSignal(
                     newStartFrame(["application/json"], ["numbers"], ["cubes"])
                 ),
                 newInputSignal(
                     newInputFrame(0, "text/plain", textEncoder.encode("2"))
-                )
+                ),
             ];
             const expectedOutputs = [
                 newOutputSignal(
@@ -217,15 +217,15 @@ describe("invoker =>", () => {
                         "application/json",
                         textEncoder.encode("8")
                     )
-                )
+                ),
             ];
             const expectedOutputCount = expectedOutputs.length;
 
-            [1, 2].forEach(callNumber => {
+            [1, 2].forEach((callNumber) => {
                 const call = client.invoke();
 
                 let seenOutputIndex = 0;
-                call.on("data", outputSignal => {
+                call.on("data", (outputSignal) => {
                     expect(seenOutputIndex).toBeLessThan(
                         expectedOutputCount,
                         `[call #${callNumber}] expected only ${expectedOutputCount} elements, received at least ${seenOutputIndex}`
@@ -242,7 +242,7 @@ describe("invoker =>", () => {
                     done();
                 });
 
-                inputs.forEach(input => {
+                inputs.forEach((input) => {
                     call.write(input);
                 });
                 call.end();
@@ -256,7 +256,7 @@ describe("invoker =>", () => {
         beforeEach(async () => {
             const {
                 userFunction: userFn,
-                shutdownPromise: shutdown
+                shutdownPromise: shutdown,
             } = await tryStartInvoker(
                 "../spec/helpers/hooks/simple-lifecycle-streaming-function",
                 shutdownTrigger.getPromise()
@@ -275,7 +275,7 @@ describe("invoker =>", () => {
             expect(userFunction.$init).toHaveBeenCalledTimes(1);
         });
 
-        it("invokes the $destroy hook only once when the server shuts down", done => {
+        it("invokes the $destroy hook only once when the server shuts down", (done) => {
             shutdownPromise.then(() => {
                 expect(userFunction.$destroy).toHaveBeenCalledTimes(1);
                 done();

@@ -28,7 +28,7 @@
     "eslint-plugin-prettier": "3.1.2",
     "grpc-tools": "^1.8.1",
     "jasmine": "^3.5.0",
-    "prettier": "1.19.1"
+    "prettier": "2.0.1"
   },
   "files": [
     "codegen/**/*.js",

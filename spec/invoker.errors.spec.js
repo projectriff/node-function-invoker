@@ -36,7 +36,7 @@ describe("invoker =>", () => {
 
             const {
                 userFunction,
-                shutdownPromise
+                shutdownPromise,
             } = await tryStartInvoker(
                 "../spec/helpers/hooks/slow-destroy-hook-streaming-function",
                 shutdownTrigger.getPromise(),

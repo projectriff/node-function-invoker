@@ -9,10 +9,10 @@ describe("MappingTransform =>", () => {
 
     describe("when dealing with synchronous functions =>", () => {
         beforeEach(() => {
-            mappingTransform = new MappingTransform(x => x.foo());
+            mappingTransform = new MappingTransform((x) => x.foo());
         });
 
-        it("intercepts runtime errors and sends error events", done => {
+        it("intercepts runtime errors and sends error events", (done) => {
             mappingTransform.on("data", () => {
                 done(
                     new Error(
@@ -20,7 +20,7 @@ describe("MappingTransform =>", () => {
                     )
                 );
             });
-            mappingTransform.on("error", err => {
+            mappingTransform.on("error", (err) => {
                 expect(err.type).toEqual(
                     "request-reply-function-runtime-error"
                 );
@@ -34,10 +34,10 @@ describe("MappingTransform =>", () => {
 
     describe("when dealing with asynchronous functions =>", () => {
         beforeEach(() => {
-            mappingTransform = new MappingTransform(async x => x.foo());
+            mappingTransform = new MappingTransform(async (x) => x.foo());
         });
 
-        it("intercepts async runtime errors and sends error events", done => {
+        it("intercepts async runtime errors and sends error events", (done) => {
             mappingTransform.on("data", () => {
                 done(
                     new Error(
@@ -45,7 +45,7 @@ describe("MappingTransform =>", () => {
                     )
                 );
             });
-            mappingTransform.on("error", err => {
+            mappingTransform.on("error", (err) => {
                 expect(err.type).toEqual(
                     "request-reply-function-runtime-error"
                 );
@@ -59,12 +59,12 @@ describe("MappingTransform =>", () => {
 
     describe("when dealing with promise-based functions =>", () => {
         beforeEach(() => {
-            mappingTransform = new MappingTransform(x =>
+            mappingTransform = new MappingTransform((x) =>
                 Promise.resolve(x.foo())
             );
         });
 
-        it("intercepts async runtime errors and sends error events", done => {
+        it("intercepts async runtime errors and sends error events", (done) => {
             mappingTransform.on("data", () => {
                 done(
                     new Error(
@@ -72,7 +72,7 @@ describe("MappingTransform =>", () => {
                     )
                 );
             });
-            mappingTransform.on("error", err => {
+            mappingTransform.on("error", (err) => {
                 expect(err.type).toEqual(
                     "request-reply-function-runtime-error"
                 );

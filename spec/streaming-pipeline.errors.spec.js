@@ -7,7 +7,7 @@ const {
     newInputSignal,
     newMappingTransform,
     newStartFrame,
-    newStartSignal
+    newStartSignal,
 } = require("./helpers/factories");
 const grpc = require("grpc");
 
@@ -35,7 +35,7 @@ describe("streaming pipeline =>", () => {
             const inputStream = inputStreams.$order[0];
             const outputStream = outputStreams.$order[0];
             inputStream
-                .pipe(newMappingTransform(arg => arg + 42))
+                .pipe(newMappingTransform((arg) => arg + 42))
                 .pipe(outputStream);
         };
         userFunction.$interactionModel = "node-streams";
@@ -57,8 +57,8 @@ describe("streaming pipeline =>", () => {
                 fixedSource = newFixedSource(["not a signal"]);
             });
 
-            it("cancels the invocation", done => {
-                streamingPipeline.on("error", err => {
+            it("cancels the invocation", (done) => {
+                streamingPipeline.on("error", (err) => {
                     expect(err.type).toEqual(
                         "error-streaming-invalid-input-signal"
                     );
@@ -82,8 +82,8 @@ describe("streaming pipeline =>", () => {
                 fixedSource = newFixedSource([newInputSignal(null)]);
             });
 
-            it("cancels the invocation", done => {
-                streamingPipeline.on("error", err => {
+            it("cancels the invocation", (done) => {
+                streamingPipeline.on("error", (err) => {
                     expect(err.type).toEqual(
                         "error-streaming-invalid-input-signal"
                     );
@@ -114,15 +114,15 @@ describe("streaming pipeline =>", () => {
                             ["input"],
                             ["output"]
                         )
-                    )
+                    ),
                 ]);
             });
 
-            it("cancels the invocation", done => {
+            it("cancels the invocation", (done) => {
                 destinationStream.on("data", () => {
                     done(new Error("should not receive any data"));
                 });
-                streamingPipeline.on("error", err => {
+                streamingPipeline.on("error", (err) => {
                     expect(err.type).toEqual(
                         "error-streaming-too-many-start-signals"
                     );
@@ -152,15 +152,15 @@ describe("streaming pipeline =>", () => {
                             ["input"],
                             ["output"]
                         )
-                    )
+                    ),
                 ]);
             });
 
-            it("cancels the invocation", done => {
+            it("cancels the invocation", (done) => {
                 destinationStream.on("data", () => {
                     done(new Error("should not receive any data"));
                 });
-                streamingPipeline.on("error", err => {
+                streamingPipeline.on("error", (err) => {
                     expect(err.type).toEqual(
                         "error-streaming-invalid-output-count"
                     );
@@ -188,15 +188,15 @@ describe("streaming pipeline =>", () => {
                             "application/x-doom",
                             textEncoder.encode("??")
                         )
-                    )
+                    ),
                 ]);
             });
 
-            it("cancels the invocation", done => {
+            it("cancels the invocation", (done) => {
                 destinationStream.on("data", () => {
                     done(new Error("should not receive any data"));
                 });
-                streamingPipeline.on("error", err => {
+                streamingPipeline.on("error", (err) => {
                     expect(err.type).toEqual(
                         "error-streaming-missing-start-signal"
                     );
@@ -237,15 +237,15 @@ describe("streaming pipeline =>", () => {
                         "application/json",
                         textEncoder.encode("42")
                     )
-                )
+                ),
             ]);
         });
 
-        it("cancels the invocation", done => {
+        it("cancels the invocation", (done) => {
             destinationStream.on("data", () => {
                 done(new Error("should not receive any data"));
             });
-            streamingPipeline.on("error", err => {
+            streamingPipeline.on("error", (err) => {
                 expect(err.type).toEqual(
                     "error-output-content-type-unsupported"
                 );
@@ -283,15 +283,15 @@ describe("streaming pipeline =>", () => {
                         "application/jackson-five",
                         textEncoder.encode("1234")
                     )
-                )
+                ),
             ]);
         });
 
-        it("cancels the invocation", done => {
+        it("cancels the invocation", (done) => {
             destinationStream.on("data", () => {
                 done(new Error("should not receive any data"));
             });
-            streamingPipeline.on("error", err => {
+            streamingPipeline.on("error", (err) => {
                 expect(err.type).toEqual(
                     "error-input-content-type-unsupported"
                 );
@@ -323,7 +323,7 @@ describe("streaming pipeline =>", () => {
                 destinationStream
             );
             fixedSource = newFixedSource([
-                newStartSignal(newStartFrame(["text/plain"], ["in"], ["out"]))
+                newStartSignal(newStartFrame(["text/plain"], ["in"], ["out"])),
             ]);
         });
 
@@ -332,11 +332,11 @@ describe("streaming pipeline =>", () => {
             streamingPipeline.destroy();
         });
 
-        it("cancels the invocation", done => {
+        it("cancels the invocation", (done) => {
             destinationStream.on("data", () => {
                 done(new Error("should not receive any data"));
             });
-            streamingPipeline.on("error", err => {
+            streamingPipeline.on("error", (err) => {
                 expect(err.type).toEqual("streaming-function-runtime-error");
                 expect(err.cause.message).toEqual(
                     `Cannot read property 'nope' of null`
@@ -372,15 +372,15 @@ describe("streaming pipeline =>", () => {
                         "application/json",
                         textEncoder.encode("invalid-json")
                     )
-                )
+                ),
             ]);
         });
 
-        it("emits the error", done => {
+        it("emits the error", (done) => {
             destinationStream.on("data", () => {
                 done(new Error("should not receive any data"));
             });
-            streamingPipeline.on("error", err => {
+            streamingPipeline.on("error", (err) => {
                 expect(err.type).toEqual("error-input-invalid");
                 expect(err.cause.message).toEqual(
                     "Unexpected token i in JSON at position 0"
@@ -422,7 +422,7 @@ describe("streaming pipeline =>", () => {
                         "application/json",
                         textEncoder.encode("42")
                     )
-                )
+                ),
             ]);
         });
 
@@ -431,11 +431,11 @@ describe("streaming pipeline =>", () => {
             streamingPipeline.destroy();
         });
 
-        it("emits the error", done => {
+        it("emits the error", (done) => {
             destinationStream.on("data", () => {
                 done(new Error("should not receive any data"));
             });
-            streamingPipeline.on("error", err => {
+            streamingPipeline.on("error", (err) => {
                 expect(err.message).toEqual("Function failed");
                 expect(
                     destinationStream.call.cancelWithStatus
@@ -452,7 +452,7 @@ describe("streaming pipeline =>", () => {
     describe("with a function producing unmarshallable outputs =>", () => {
         const userFunction = (inputStreams, outputStreams) => {
             inputStreams.$order[0]
-                .pipe(new SimpleTransform(x => Symbol(x)))
+                .pipe(new SimpleTransform((x) => Symbol(x)))
                 .pipe(outputStreams.$order[0]);
         };
         userFunction.$interactionModel = "node-streams";
@@ -470,7 +470,7 @@ describe("streaming pipeline =>", () => {
                         "application/json",
                         textEncoder.encode("42")
                     )
-                )
+                ),
             ]);
         });
 
@@ -479,11 +479,11 @@ describe("streaming pipeline =>", () => {
             streamingPipeline.destroy();
         });
 
-        it("emits the error", done => {
+        it("emits the error", (done) => {
             destinationStream.on("data", () => {
                 done(new Error("should not receive any data"));
             });
-            streamingPipeline.on("error", err => {
+            streamingPipeline.on("error", (err) => {
                 expect(err.type).toEqual("error-output-invalid");
                 expect(err.cause.message).toEqual(
                     "Cannot convert a Symbol value to a string"
@@ -552,7 +552,7 @@ describe("streaming pipeline =>", () => {
             fixedSource = newFixedSource([
                 newStartSignal(
                     newStartFrame(["text/plain"], ["in1", "in2"], ["out"])
-                )
+                ),
             ]);
         });
 
@@ -561,11 +561,11 @@ describe("streaming pipeline =>", () => {
             streamingPipeline.destroy();
         });
 
-        it("emits an error", done => {
+        it("emits an error", (done) => {
             destinationStream.on("data", () => {
                 done(new Error("should not receive any data"));
             });
-            streamingPipeline.on("error", err => {
+            streamingPipeline.on("error", (err) => {
                 expect(err.type).toEqual("error-argument-transformer");
                 expect(err.cause).toEqual(
                     "Function must declare exactly 2 argument transformer(s). Found 1"

@@ -20,7 +20,7 @@ module.exports = async (functionUri, shutdownSignal, options) => {
             return {
                 address: `localhost:${port}`,
                 userFunction,
-                shutdownPromise
+                shutdownPromise,
             };
         } catch (err) {
             lastError = err;

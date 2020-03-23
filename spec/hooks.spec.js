@@ -8,7 +8,7 @@ describe("hook utilities =>", () => {
         it("successfully executes hooks", async () => {
             const fn = jasmine.createSpy("hook function");
             const hook = () =>
-                new Promise(resolve =>
+                new Promise((resolve) =>
                     setTimeout(() => {
                         fn();
                         resolve();
@@ -29,7 +29,7 @@ describe("hook utilities =>", () => {
         it("guards hooks against timeouts", async () => {
             const fn = jasmine.createSpy("hook function");
             const hook = () =>
-                new Promise(resolve =>
+                new Promise((resolve) =>
                     setTimeout(() => {
                         fn();
                         resolve();

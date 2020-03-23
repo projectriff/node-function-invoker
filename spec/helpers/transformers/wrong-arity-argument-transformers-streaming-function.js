@@ -4,4 +4,4 @@ module.exports = (inputStreams, outputStreams) => {
     inputStreams.$order[1].pipe(output);
 };
 module.exports.$interactionModel = "node-streams";
-module.exports.$argumentTransformers = [msg => msg, () => "constant"];
+module.exports.$argumentTransformers = [(msg) => msg, () => "constant"];

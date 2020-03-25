@@ -1,4 +1,5 @@
 const MappingTransform = require("../lib/mapping-transform");
+const { finished } = require("stream");
 
 describe("MappingTransform =>", () => {
     let mappingTransform;
@@ -20,7 +21,7 @@ describe("MappingTransform =>", () => {
                     )
                 );
             });
-            mappingTransform.on("error", (err) => {
+            finished(mappingTransform, (err) => {
                 expect(err.type).toEqual(
                     "request-reply-function-runtime-error"
                 );
@@ -45,7 +46,7 @@ describe("MappingTransform =>", () => {
                     )
                 );
             });
-            mappingTransform.on("error", (err) => {
+            finished(mappingTransform, (err) => {
                 expect(err.type).toEqual(
                     "request-reply-function-runtime-error"
                 );
@@ -72,7 +73,7 @@ describe("MappingTransform =>", () => {
                     )
                 );
             });
-            mappingTransform.on("error", (err) => {
+            finished(mappingTransform, (err) => {
                 expect(err.type).toEqual(
                     "request-reply-function-runtime-error"
                 );

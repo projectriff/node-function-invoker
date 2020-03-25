@@ -37,6 +37,6 @@
     "server.js"
   ],
   "engines": {
-    "node": ">=10 <13"
+    "node": ">=10"
   }
 }

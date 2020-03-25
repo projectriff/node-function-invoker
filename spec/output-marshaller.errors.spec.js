@@ -1,5 +1,6 @@
 const { newFixedSource } = require("./helpers/factories");
 const OutputMarshaller = require("../lib/output-marshaller");
+const { finished } = require("stream");
 
 describe("output marshaller =>", () => {
     ["application/json", "application/cloudevents+json"].forEach(
@@ -22,7 +23,7 @@ describe("output marshaller =>", () => {
                     marshaller.on("data", () => {
                         done(new Error("should not receive data"));
                     });
-                    marshaller.on("error", (err) => {
+                    finished(marshaller, (err) => {
                         expect(err.type).toEqual("error-output-invalid");
                         expect(err.cause.name).toEqual("Error");
                         expect(err.cause.message).toEqual(
@@ -31,7 +32,7 @@ describe("output marshaller =>", () => {
                         done();
                     });
 
-                    outputPayloadSource.pipe(marshaller);
+                    outputPayloadSource.pipe(marshaller, { end: false });
                 });
             });
         }

@@ -1,13 +1,12 @@
+const debug = (process.env.NODE_DEBUG || "").split(",");
+if (debug.indexOf("riff") >= 0) {
+    console.debug = () => {};
+}
 const startInvoker = require("./lib/invoker");
 
 const userFunctionUri = process.env.FUNCTION_URI;
 if (typeof userFunctionUri === "undefined" || userFunctionUri.trim() === "") {
     throw "FUNCTION_URI envvar not set or empty. Aborting.";
-}
-
-const debug = process.env.NODE_DEBUG;
-if (typeof debug === "undefined" || debug !== "riff") {
-    console.debug = () => {};
 }
 
 console.time("riff-invoker");

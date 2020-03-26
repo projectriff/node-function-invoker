@@ -168,6 +168,14 @@ However, it is possible to send HTTP requests and receive HTTP responses if you 
  - Run the [processor](https://github.com/projectriff/streaming-processor) with the appropriate parameters.
  - Start sending data via the Liiklus producers.
 
+### Invoker local debug run
+
+Execute the following and more detailed logs will be emitted:
+
+```shell script
+ $ FUNCTION_URI="$(pwd)/samples/streaming-repeater" NODE_DEBUG='riff' npm start
+```
+
 ### Source formatting
 
 We use [prettier](https://prettier.io) style checks to enforce code consistency. Many editors can automatically reformat source to match this style. To manually request formatted source run `npm run format`.

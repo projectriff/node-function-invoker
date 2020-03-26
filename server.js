@@ -5,6 +5,11 @@ if (typeof userFunctionUri === "undefined" || userFunctionUri.trim() === "") {
     throw "FUNCTION_URI envvar not set or empty. Aborting.";
 }
 
+const debug = process.env.NODE_DEBUG;
+if (typeof debug === "undefined" || debug !== "riff") {
+    console.debug = () => {};
+}
+
 console.time("riff-invoker");
 const port = process.env.GRPC_PORT || "8081";
 

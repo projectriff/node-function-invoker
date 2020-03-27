@@ -1,4 +1,4 @@
-if (process.env.NODE_DEBUG) {
+if (!process.env.NODE_DEBUG) {
     console.debug = () => {};
 }
 const startInvoker = require("./lib/invoker");

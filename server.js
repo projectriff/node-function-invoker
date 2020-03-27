@@ -1,5 +1,4 @@
-const debug = (process.env.NODE_DEBUG || "").split(",");
-if (debug.indexOf("riff") >= 0) {
+if (process.env.NODE_DEBUG) {
     console.debug = () => {};
 }
 const startInvoker = require("./lib/invoker");

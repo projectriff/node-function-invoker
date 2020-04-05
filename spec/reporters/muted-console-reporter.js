@@ -16,6 +16,7 @@ class MutedConsoleReporter {
             autoClose: true,
         });
         this.console = new Console({ stdout: this.out, stderr: this.err });
+        this.suiteStack = [];
     }
 
     jasmineStarted() {
@@ -23,7 +24,8 @@ class MutedConsoleReporter {
         fs.truncateSync(errorFilePath);
     }
 
-    suiteStarted() {
+    suiteStarted(suite) {
+        this.suiteStack.push(suite);
         console = this.console;
     }
 
@@ -33,7 +35,10 @@ class MutedConsoleReporter {
     }
 
     suiteDone() {
-        console = originalConsole;
+        this.suiteStack.pop();
+        if (this.suiteStack.length === 0) {
+            console = originalConsole;
+        }
     }
 
     jasmineDone() {

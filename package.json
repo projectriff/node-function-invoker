@@ -16,6 +16,7 @@
     "@grpc/grpc-js": "^1.0.0",
     "@grpc/proto-loader": "^0.5.4",
     "@projectriff/message": "^1.0.0",
+    "content-type": "^1.0.4",
     "negotiator": "^0.6.2",
     "querystring": "^0.2.0"
   },

@@ -67,7 +67,7 @@ describe("input unmarshaller =>", () => {
 
         ["application/json", "application/cloudevents+json"].forEach(
             (mediaType) => {
-                describe(`with ${mediaType} data =>`, () => {
+                describe(`with ${mediaType} data (and default charset) =>`, () => {
                     let inputs;
                     const inputPayloads = [
                         '"and the answer obviously is: "',
@@ -84,14 +84,14 @@ describe("input unmarshaller =>", () => {
                             newInputSignal(
                                 newInputFrame(
                                     0,
-                                    "application/json",
+                                    mediaType,
                                     textEncoder.encode(inputPayloads[0])
                                 )
                             ),
                             newInputSignal(
                                 newInputFrame(
                                     0,
-                                    "application/json",
+                                    mediaType,
                                     textEncoder.encode(inputPayloads[1])
                                 )
                             ),
@@ -121,6 +121,64 @@ describe("input unmarshaller =>", () => {
                         inputs.pipe(unmarshaller);
                     });
                 });
+
+                const quoteBytesLittleEndian = [0x22, 0]; // "
+                const euroBytesLittleEndian = [0xac, 0x20]; // €
+                [
+                    { charset: "UTF-16" },
+                    { charset: "UTF-16LE" },
+                    {
+                        charset: "UTF-16BE",
+                        bytesTransform: (bytes) => bytes.slice().reverse(),
+                    },
+                ].forEach(
+                    ({
+                        charset: utf16Charset,
+                        bytesTransform: transform = (bytes) => bytes,
+                    }) => {
+                        describe(`with ${mediaType} data (${utf16Charset} charset) =>`, () => {
+                            const input = Buffer.from([
+                                // "€"
+                                ...transform(quoteBytesLittleEndian),
+                                ...transform(euroBytesLittleEndian),
+                                ...transform(quoteBytesLittleEndian),
+                            ]);
+                            const expectedPayload = "€";
+
+                            beforeEach(() => {
+                                inputs = Readable.from([
+                                    newInputSignal(
+                                        newInputFrame(
+                                            0,
+                                            `${mediaType};charset=${utf16Charset}`,
+                                            input
+                                        )
+                                    ),
+                                ]);
+                            });
+
+                            afterEach(() => {
+                                inputs.destroy();
+                            });
+
+                            it("transforms and forwards the received input signals", (done) => {
+                                let processed = false;
+                                unmarshaller.on("data", (chunk) => {
+                                    expect(processed).toBeFalsy(
+                                        `should not consume more than 1 element`
+                                    );
+                                    processed = true;
+                                    expect(chunk).toEqual(expectedPayload);
+                                });
+                                unmarshaller.on("end", () => {
+                                    done();
+                                });
+
+                                inputs.pipe(unmarshaller);
+                            });
+                        });
+                    }
+                );
             }
         );
     });

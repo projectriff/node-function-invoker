@@ -1,52 +1,61 @@
-require("../../codegen/proto/riff-rpc_grpc_pb");
 const { Message, Headers } = require("@projectriff/message");
 const MappingTransform = require("../../lib/mapping-transform");
 const FixedSource = require("./fixed-source");
 
+function tuplesToObject(headers) {
+    const result = {};
+    headers.forEach((header) => {
+        result[header[0]] = header[1];
+    });
+    return result;
+}
+
 module.exports = {
     newInputFrame: (index, contentType, payload, headers = []) => {
-        const inputFrame = new proto.streaming.InputFrame();
-        inputFrame.setArgindex(index);
-        inputFrame.setContenttype(contentType);
-        inputFrame.setPayload(payload);
-        const headersMap = inputFrame.getHeadersMap();
-        headers.forEach((header) => {
-            headersMap.set(header[0], header[1]);
-        });
-        return inputFrame;
+        const result = {
+            payload,
+            contentType,
+            headers: tuplesToObject(headers),
+            argIndex: index,
+        };
+        if (Object.keys(result.headers).length === 0) {
+            delete result.headers;
+        }
+        return result;
     },
     newStartFrame: (contentTypes, inputNames = [], outputNames = []) => {
-        const startFrame = new proto.streaming.StartFrame();
-        startFrame.setInputnamesList(inputNames);
-        startFrame.setOutputnamesList(outputNames);
-        startFrame.setExpectedcontenttypesList(contentTypes);
-        return startFrame;
+        return {
+            expectedContentTypes: contentTypes,
+            inputNames,
+            outputNames,
+        };
     },
     newInputSignal: (inputFrame) => {
-        const inputSignal = new proto.streaming.InputSignal();
-        inputSignal.setData(inputFrame);
-        return inputSignal;
+        return {
+            data: inputFrame,
+        };
     },
     newStartSignal: (startFrame) => {
-        const inputSignal = new proto.streaming.InputSignal();
-        inputSignal.setStart(startFrame);
-        return inputSignal;
+        return {
+            start: startFrame,
+        };
     },
     newOutputFrame: (index, contentType, payload, headers = []) => {
-        const outputFrame = new proto.streaming.OutputFrame();
-        outputFrame.setResultindex(index);
-        outputFrame.setContenttype(contentType);
-        outputFrame.setPayload(payload);
-        const headersMap = outputFrame.getHeadersMap();
-        headers.forEach((header) => {
-            headersMap.set(header[0], header[1]);
-        });
-        return outputFrame;
+        const result = {
+            payload,
+            contentType,
+            headers: tuplesToObject(headers),
+            resultIndex: index,
+        };
+        // if (Object.keys(result.headers).length === 0) {
+        //     delete result.headers;
+        // }
+        return result;
     },
     newOutputSignal: (outputFrame) => {
-        const outputSignal = new proto.streaming.OutputSignal();
-        outputSignal.setData(outputFrame);
-        return outputSignal;
+        return {
+            data: outputFrame,
+        };
     },
     newFixedSource: (data) => {
         return new FixedSource(data);

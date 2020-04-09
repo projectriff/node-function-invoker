@@ -1,4 +1,5 @@
 const { TextEncoder } = require("util");
+const outputSignalCustomEqual = require("./helpers/output-signal-custom-equality");
 const OutputMarshaller = require("../lib/output-marshaller");
 const {
     newFixedSource,
@@ -21,6 +22,7 @@ describe("output marshaller =>", () => {
 
             describe(`with ${mediaType} data =>`, () => {
                 beforeEach(() => {
+                    jasmine.addCustomEqualityTester(outputSignalCustomEqual);
                     source = newFixedSource(outputPayloads);
                     marshaller = new OutputMarshaller(expectedIndex, mediaType);
                 });
@@ -68,6 +70,7 @@ describe("output marshaller =>", () => {
         const mediaType = "text/plain";
 
         beforeEach(() => {
+            jasmine.addCustomEqualityTester(outputSignalCustomEqual);
             const messageHeaders = newRiffHeaders()
                 .addHeader("Content-Type", "text/csv", "ignored")
                 .addHeader("X-Custom-Header", "custom value");

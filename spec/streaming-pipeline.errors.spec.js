@@ -9,7 +9,7 @@ const {
     newStartFrame,
     newStartSignal,
 } = require("./helpers/factories");
-const grpc = require("grpc");
+const grpc = require("@grpc/grpc-js");
 
 describe("streaming pipeline =>", () => {
     const textEncoder = new TextEncoder();
@@ -20,14 +20,12 @@ describe("streaming pipeline =>", () => {
     beforeEach(() => {
         destinationStream = new PassThrough({ objectMode: true });
         destinationStream.call = {};
-        destinationStream.call.cancelWithStatus = jasmine.createSpy(
-            "cancelWithStatus"
-        );
+        destinationStream.call.sendError = jasmine.createSpy("sendError");
     });
 
     afterEach(() => {
         destinationStream.destroy();
-        destinationStream.call.cancelWithStatus.calls.reset();
+        destinationStream.call.sendError.calls.reset();
     });
 
     describe("with a reliable function =>", () => {
@@ -69,11 +67,12 @@ describe("streaming pipeline =>", () => {
                         "Invalid input signal type [object String]"
                     );
                     expect(
-                        destinationStream.call.cancelWithStatus
-                    ).toHaveBeenCalledWith(
-                        grpc.status.UNKNOWN,
-                        "Invoker: Protocol Violation: Invalid input signal type [object String]"
-                    );
+                        destinationStream.call.sendError
+                    ).toHaveBeenCalledWith({
+                        code: grpc.status.UNKNOWN,
+                        details:
+                            "Invoker: Protocol Violation: Invalid input signal type [object String]",
+                    });
                     done();
                 });
                 fixedSource.pipe(streamingPipeline, { end: false });
@@ -97,11 +96,12 @@ describe("streaming pipeline =>", () => {
                         "Input is neither a start nor a data signal"
                     );
                     expect(
-                        destinationStream.call.cancelWithStatus
-                    ).toHaveBeenCalledWith(
-                        grpc.status.UNKNOWN,
-                        "Invoker: Protocol Violation: Input is neither a start nor a data signal"
-                    );
+                        destinationStream.call.sendError
+                    ).toHaveBeenCalledWith({
+                        code: grpc.status.UNKNOWN,
+                        details:
+                            "Invoker: Protocol Violation: Input is neither a start nor a data signal",
+                    });
                     done();
                 });
                 fixedSource.pipe(streamingPipeline, { end: false });
@@ -137,12 +137,13 @@ describe("streaming pipeline =>", () => {
                             "output content types: [application/x-doom], input names: [input], output names: [output]"
                     );
                     expect(
-                        destinationStream.call.cancelWithStatus
-                    ).toHaveBeenCalledWith(
-                        grpc.status.UNKNOWN,
-                        "Invoker: Protocol Violation: Start signal has already been received. Rejecting start signal " +
-                            "with: output content types: [application/x-doom], input names: [input], output names: [output]"
-                    );
+                        destinationStream.call.sendError
+                    ).toHaveBeenCalledWith({
+                        code: grpc.status.UNKNOWN,
+                        details:
+                            "Invoker: Protocol Violation: Start signal has already been received. Rejecting start signal " +
+                            "with: output content types: [application/x-doom], input names: [input], output names: [output]",
+                    });
                     done();
                 });
                 fixedSource.pipe(streamingPipeline, { end: false });
@@ -174,11 +175,12 @@ describe("streaming pipeline =>", () => {
                         "Invalid output count 3: function has only 1 output(s)"
                     );
                     expect(
-                        destinationStream.call.cancelWithStatus
-                    ).toHaveBeenCalledWith(
-                        grpc.status.UNKNOWN,
-                        "Invoker: Protocol Violation: Invalid output count 3: function has only 1 output(s)"
-                    );
+                        destinationStream.call.sendError
+                    ).toHaveBeenCalledWith({
+                        code: grpc.status.UNKNOWN,
+                        details:
+                            "Invoker: Protocol Violation: Invalid output count 3: function has only 1 output(s)",
+                    });
                     done();
                 });
                 fixedSource.pipe(streamingPipeline, { end: false });
@@ -210,11 +212,12 @@ describe("streaming pipeline =>", () => {
                         "Start signal has not been received or processed yet. Rejecting data signal"
                     );
                     expect(
-                        destinationStream.call.cancelWithStatus
-                    ).toHaveBeenCalledWith(
-                        grpc.status.UNKNOWN,
-                        "Invoker: Protocol Violation: Start signal has not been received or processed yet. Rejecting data signal"
-                    );
+                        destinationStream.call.sendError
+                    ).toHaveBeenCalledWith({
+                        code: grpc.status.UNKNOWN,
+                        details:
+                            "Invoker: Protocol Violation: Start signal has not been received or processed yet. Rejecting data signal",
+                    });
                     done();
                 });
                 fixedSource.pipe(streamingPipeline, { end: false });
@@ -258,12 +261,10 @@ describe("streaming pipeline =>", () => {
                 expect(err.cause).toEqual(
                     `Unsupported content-type 'text/zglorbf' for output #0`
                 );
-                expect(
-                    destinationStream.call.cancelWithStatus
-                ).toHaveBeenCalledWith(
-                    grpc.status.INVALID_ARGUMENT,
-                    `Invoker: Not Acceptable: Unsupported content-type 'text/zglorbf' for output #0`
-                );
+                expect(destinationStream.call.sendError).toHaveBeenCalledWith({
+                    code: grpc.status.INVALID_ARGUMENT,
+                    details: `Invoker: Not Acceptable: Unsupported content-type 'text/zglorbf' for output #0`,
+                });
                 done();
             });
             fixedSource.pipe(streamingPipeline, { end: false });
@@ -304,12 +305,10 @@ describe("streaming pipeline =>", () => {
                 expect(err.cause).toEqual(
                     `Unsupported content-type 'application/jackson-five' for input #0`
                 );
-                expect(
-                    destinationStream.call.cancelWithStatus
-                ).toHaveBeenCalledWith(
-                    grpc.status.INVALID_ARGUMENT,
-                    `Invoker: Unsupported Media Type: Unsupported content-type 'application/jackson-five' for input #0`
-                );
+                expect(destinationStream.call.sendError).toHaveBeenCalledWith({
+                    code: grpc.status.INVALID_ARGUMENT,
+                    details: `Invoker: Unsupported Media Type: Unsupported content-type 'application/jackson-five' for input #0`,
+                });
                 done();
             });
             fixedSource.pipe(streamingPipeline, { end: false });
@@ -347,12 +346,11 @@ describe("streaming pipeline =>", () => {
                 expect(err.cause.message).toEqual(
                     `Cannot read property 'nope' of null`
                 );
-                expect(
-                    destinationStream.call.cancelWithStatus
-                ).toHaveBeenCalledWith(
-                    grpc.status.UNKNOWN,
-                    "Invoker: Unexpected Invocation Error: Cannot read property 'nope' of null"
-                );
+                expect(destinationStream.call.sendError).toHaveBeenCalledWith({
+                    code: grpc.status.UNKNOWN,
+                    details:
+                        "Invoker: Unexpected Invocation Error: Cannot read property 'nope' of null",
+                });
                 done();
             });
             fixedSource.pipe(streamingPipeline, { end: false });
@@ -391,12 +389,11 @@ describe("streaming pipeline =>", () => {
                 expect(err.cause.message).toEqual(
                     "Unexpected token i in JSON at position 0"
                 );
-                expect(
-                    destinationStream.call.cancelWithStatus
-                ).toHaveBeenCalledWith(
-                    grpc.status.UNKNOWN,
-                    "Invoker: Unexpected Error: SyntaxError: Unexpected token i in JSON at position 0"
-                );
+                expect(destinationStream.call.sendError).toHaveBeenCalledWith({
+                    code: grpc.status.UNKNOWN,
+                    details:
+                        "Invoker: Unexpected Error: SyntaxError: Unexpected token i in JSON at position 0",
+                });
                 done();
             });
             fixedSource.pipe(streamingPipeline, { end: false });
@@ -443,12 +440,10 @@ describe("streaming pipeline =>", () => {
             });
             finished(streamingPipeline, (err) => {
                 expect(err.message).toEqual("Function failed");
-                expect(
-                    destinationStream.call.cancelWithStatus
-                ).toHaveBeenCalledWith(
-                    grpc.status.UNKNOWN,
-                    "Invoker: Unexpected Error: Function failed"
-                );
+                expect(destinationStream.call.sendError).toHaveBeenCalledWith({
+                    code: grpc.status.UNKNOWN,
+                    details: "Invoker: Unexpected Error: Function failed",
+                });
                 done();
             });
             fixedSource.pipe(streamingPipeline, { end: false });
@@ -494,12 +489,11 @@ describe("streaming pipeline =>", () => {
                 expect(err.cause.message).toEqual(
                     "Cannot convert a Symbol value to a string"
                 );
-                expect(
-                    destinationStream.call.cancelWithStatus
-                ).toHaveBeenCalledWith(
-                    grpc.status.UNKNOWN,
-                    "Invoker: Unexpected Error: TypeError: Cannot convert a Symbol value to a string"
-                );
+                expect(destinationStream.call.sendError).toHaveBeenCalledWith({
+                    code: grpc.status.UNKNOWN,
+                    details:
+                        "Invoker: Unexpected Error: TypeError: Cannot convert a Symbol value to a string",
+                });
                 done();
             });
             fixedSource.pipe(streamingPipeline, { end: false });

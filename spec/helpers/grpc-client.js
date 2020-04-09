@@ -1,6 +1,10 @@
-const grpc = require("grpc");
-const services = require("../../codegen/proto/riff-rpc_grpc_pb");
+const protoLoader = require("@grpc/proto-loader");
+const grpc = require("@grpc/grpc-js");
+
+const proto = grpc.loadPackageDefinition(
+    protoLoader.loadSync("./proto/riff-rpc.proto")
+);
 
 module.exports = (address) => {
-    return new services.RiffClient(address, grpc.credentials.createInsecure());
+    return new proto.streaming.Riff(address, grpc.credentials.createInsecure());
 };

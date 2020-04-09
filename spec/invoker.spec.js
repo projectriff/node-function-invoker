@@ -75,14 +75,14 @@ describe("invoker =>", () => {
                         newOutputFrame(
                             0,
                             "application/json",
-                            textEncoder.encode("4")
+                            Buffer.from(textEncoder.encode("4"))
                         )
                     ),
                     newOutputSignal(
                         newOutputFrame(
                             0,
                             "application/json",
-                            textEncoder.encode("9")
+                            Buffer.from(textEncoder.encode("9"))
                         )
                     ),
                 ];
@@ -147,14 +147,14 @@ describe("invoker =>", () => {
                     newOutputFrame(
                         0,
                         "application/json",
-                        textEncoder.encode("8")
+                        Buffer.from(textEncoder.encode("8"))
                     )
                 ),
                 newOutputSignal(
                     newOutputFrame(
                         0,
                         "application/json",
-                        textEncoder.encode("27")
+                        Buffer.from(textEncoder.encode("27"))
                     )
                 ),
             ];
@@ -215,7 +215,7 @@ describe("invoker =>", () => {
                     newOutputFrame(
                         0,
                         "application/json",
-                        textEncoder.encode("8")
+                        Buffer.from(textEncoder.encode("8"))
                     )
                 ),
             ];

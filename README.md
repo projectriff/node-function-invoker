@@ -149,7 +149,6 @@ However, it is possible to send HTTP requests and receive HTTP responses if you 
 #### Build
 
  - Install dependencies by running `npm ci`.
- - Generate the Protobuf client and server with `npm run generate-proto`
  - Run the tests with `npm test`
 
 #### Full streaming setup

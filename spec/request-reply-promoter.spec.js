@@ -1,6 +1,6 @@
-const { newFixedSource, newMappingTransform } = require("./helpers/factories");
+const { newMappingTransform } = require("./helpers/factories");
 const promoteFunction = require("../lib/request-reply-promoter");
-const { PassThrough } = require("stream");
+const { PassThrough, Readable } = require("stream");
 
 describe("function promoter =>", () => {
     const data = [1, 2, 4];
@@ -17,7 +17,7 @@ describe("function promoter =>", () => {
     let source;
 
     beforeEach(() => {
-        source = newFixedSource(data);
+        source = Readable.from(data);
         streamingOutput = new PassThrough({ objectMode: true });
     });
 

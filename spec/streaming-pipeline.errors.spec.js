@@ -1,8 +1,7 @@
 const { TextEncoder } = require("util");
 const StreamingPipeline = require("../lib/streaming-pipeline");
-const { finished, PassThrough, Transform } = require("stream");
+const { finished, PassThrough, Readable, Transform } = require("stream");
 const {
-    newFixedSource,
     newInputFrame,
     newInputSignal,
     newMappingTransform,
@@ -52,7 +51,7 @@ describe("streaming pipeline =>", () => {
 
         describe("with malformed input signals =>", () => {
             beforeEach(() => {
-                fixedSource = newFixedSource(["not a signal"]);
+                fixedSource = Readable.from(["not a signal"]);
             });
 
             it("cancels the invocation", (done) => {
@@ -81,7 +80,7 @@ describe("streaming pipeline =>", () => {
 
         describe("with an incomplete input signal =>", () => {
             beforeEach(() => {
-                fixedSource = newFixedSource([newInputSignal(null)]);
+                fixedSource = Readable.from([newInputSignal(null)]);
             });
 
             it("cancels the invocation", (done) => {
@@ -110,7 +109,7 @@ describe("streaming pipeline =>", () => {
 
         describe("with too many start signals =>", () => {
             beforeEach(() => {
-                fixedSource = newFixedSource([
+                fixedSource = Readable.from([
                     newStartSignal(
                         newStartFrame(["text/plain"], ["input"], ["output"])
                     ),
@@ -152,7 +151,7 @@ describe("streaming pipeline =>", () => {
 
         describe("with a start signal with too many output content types =>", () => {
             beforeEach(() => {
-                fixedSource = newFixedSource([
+                fixedSource = Readable.from([
                     newStartSignal(
                         newStartFrame(
                             ["text/plain", "text/sgml", "text/yaml"],
@@ -189,7 +188,7 @@ describe("streaming pipeline =>", () => {
 
         describe("with no start signal to start with =>", () => {
             beforeEach(() => {
-                fixedSource = newFixedSource([
+                fixedSource = Readable.from([
                     newInputSignal(
                         newInputFrame(
                             42,
@@ -236,7 +235,7 @@ describe("streaming pipeline =>", () => {
                 userFunction,
                 destinationStream
             );
-            fixedSource = newFixedSource([
+            fixedSource = Readable.from([
                 newStartSignal(
                     newStartFrame(["text/zglorbf"], ["in"], ["out"])
                 ),
@@ -282,7 +281,7 @@ describe("streaming pipeline =>", () => {
                 userFunction,
                 destinationStream
             );
-            fixedSource = newFixedSource([
+            fixedSource = Readable.from([
                 newStartSignal(newStartFrame(["text/plain"], ["in"], ["out"])),
                 newInputSignal(
                     newInputFrame(
@@ -327,7 +326,7 @@ describe("streaming pipeline =>", () => {
                 userFunction,
                 destinationStream
             );
-            fixedSource = newFixedSource([
+            fixedSource = Readable.from([
                 newStartSignal(newStartFrame(["text/plain"], ["in"], ["out"])),
             ]);
         });
@@ -368,7 +367,7 @@ describe("streaming pipeline =>", () => {
                 userFunction,
                 destinationStream
             );
-            fixedSource = newFixedSource([
+            fixedSource = Readable.from([
                 newStartSignal(newStartFrame(["text/plain"], ["in"], ["out"])),
                 newInputSignal(
                     newInputFrame(
@@ -417,7 +416,7 @@ describe("streaming pipeline =>", () => {
                 userFunction,
                 destinationStream
             );
-            fixedSource = newFixedSource([
+            fixedSource = Readable.from([
                 newStartSignal(newStartFrame(["text/plain"], ["in"], ["out"])),
                 newInputSignal(
                     newInputFrame(
@@ -463,7 +462,7 @@ describe("streaming pipeline =>", () => {
                 userFunction,
                 destinationStream
             );
-            fixedSource = newFixedSource([
+            fixedSource = Readable.from([
                 newStartSignal(newStartFrame(["text/plain"], ["in"], ["out"])),
                 newInputSignal(
                     newInputFrame(
@@ -549,7 +548,7 @@ describe("streaming pipeline =>", () => {
                 userFunction,
                 destinationStream
             );
-            fixedSource = newFixedSource([
+            fixedSource = Readable.from([
                 newStartSignal(
                     newStartFrame(["text/plain"], ["in1", "in2"], ["out"])
                 ),

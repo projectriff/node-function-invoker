@@ -1,9 +1,6 @@
 const { TextEncoder } = require("util");
-const {
-    newFixedSource,
-    newInputFrame,
-    newInputSignal,
-} = require("./helpers/factories");
+const { Readable } = require("stream");
+const { newInputFrame, newInputSignal } = require("./helpers/factories");
 const InputUnmarshaller = require("../lib/input-unmarshaller");
 
 describe("input unmarshaller =>", () => {
@@ -26,7 +23,7 @@ describe("input unmarshaller =>", () => {
             const expectedPayloadCount = expectedPayloads.length;
 
             beforeEach(() => {
-                inputs = newFixedSource([
+                inputs = Readable.from([
                     newInputSignal(
                         newInputFrame(
                             0,
@@ -83,7 +80,7 @@ describe("input unmarshaller =>", () => {
                     const expectedPayloadCount = expectedPayloads.length;
 
                     beforeEach(() => {
-                        inputs = newFixedSource([
+                        inputs = Readable.from([
                             newInputSignal(
                                 newInputFrame(
                                     0,
@@ -136,7 +133,7 @@ describe("input unmarshaller =>", () => {
 
         beforeEach(() => {
             unmarshaller = new InputUnmarshaller((msg) => msg.payload.age);
-            inputs = newFixedSource([
+            inputs = Readable.from([
                 newInputSignal(
                     newInputFrame(
                         0,
@@ -189,7 +186,7 @@ describe("input unmarshaller =>", () => {
             unmarshaller = new InputUnmarshaller((msg) =>
                 msg.headers.getValue("X-Files")
             );
-            inputs = newFixedSource([
+            inputs = Readable.from([
                 newInputSignal(
                     newInputFrame(
                         0,

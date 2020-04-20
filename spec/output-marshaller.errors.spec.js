@@ -1,6 +1,5 @@
-const { newFixedSource } = require("./helpers/factories");
 const OutputMarshaller = require("../lib/output-marshaller");
-const { finished } = require("stream");
+const { finished, Readable } = require("stream");
 
 describe("output marshaller =>", () => {
     ["application/json", "application/cloudevents+json"].forEach(
@@ -11,7 +10,7 @@ describe("output marshaller =>", () => {
 
                 beforeEach(() => {
                     marshaller = new OutputMarshaller(0, mediaType);
-                    outputPayloadSource = newFixedSource([Symbol(42)]);
+                    outputPayloadSource = Readable.from([Symbol(42)]);
                 });
 
                 afterEach(() => {

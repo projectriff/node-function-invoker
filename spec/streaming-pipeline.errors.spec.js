@@ -9,7 +9,7 @@ const {
     newStartFrame,
     newStartSignal,
 } = require("./helpers/factories");
-const grpc = require("grpc");
+const grpc = require("@grpc/grpc-js");
 
 describe("streaming pipeline =>", () => {
     const textEncoder = new TextEncoder();

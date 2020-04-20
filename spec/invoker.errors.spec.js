@@ -1,7 +1,7 @@
 const startInvoker = require("../lib/invoker");
 const tryStartInvoker = require("./helpers/try-start-invoker");
 const RiffError = require("../lib/riff-error");
-const grpc = require("grpc");
+const grpc = require("@grpc/grpc-js");
 const DeferredPromiseWrapper = require("./helpers/deferred-promise");
 
 describe("invoker =>", () => {

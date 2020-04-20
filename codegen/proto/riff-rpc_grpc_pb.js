@@ -3,7 +3,6 @@
 // Original file comments:
 // This protobuf definition defines how riff encodes messages on the wire when doing an RPC function invocation.
 'use strict';
-var grpc = require('grpc');
 var proto_riff$rpc_pb = require('../proto/riff-rpc_pb.js');
 
 function serialize_streaming_InputSignal(arg) {
@@ -29,7 +28,7 @@ function deserialize_streaming_OutputSignal(buffer_arg) {
 }
 
 
-var RiffService = exports.RiffService = {
+var RiffService = exports['streaming.Riff'] = {
   invoke: {
     path: '/streaming.Riff/Invoke',
     requestStream: true,
@@ -43,4 +42,3 @@ var RiffService = exports.RiffService = {
   },
 };
 
-exports.RiffClient = grpc.makeGenericClientConstructor(RiffService);

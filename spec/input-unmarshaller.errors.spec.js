@@ -1,11 +1,7 @@
 const { TextEncoder } = require("util");
-const {
-    newFixedSource,
-    newInputFrame,
-    newInputSignal,
-} = require("./helpers/factories");
+const { newInputFrame, newInputSignal } = require("./helpers/factories");
 const InputUnmarshaller = require("../lib/input-unmarshaller");
-const { finished } = require("stream");
+const { finished, Readable } = require("stream");
 
 describe("input unmarshaller =>", () => {
     const textEncoder = new TextEncoder();
@@ -25,7 +21,7 @@ describe("input unmarshaller =>", () => {
             let unsupportedMediaTypeInputs;
 
             beforeEach(() => {
-                unsupportedMediaTypeInputs = newFixedSource([
+                unsupportedMediaTypeInputs = Readable.from([
                     newInputSignal(
                         newInputFrame(
                             0,
@@ -64,7 +60,7 @@ describe("input unmarshaller =>", () => {
                     let invalidInputs;
 
                     beforeEach(() => {
-                        invalidInputs = newFixedSource([
+                        invalidInputs = Readable.from([
                             newInputSignal(
                                 newInputFrame(
                                     0,
@@ -107,7 +103,7 @@ describe("input unmarshaller =>", () => {
             unmarshaller = new InputUnmarshaller((message) => {
                 throw new Error(message.payload + " ko");
             });
-            inputs = newFixedSource([
+            inputs = Readable.from([
                 newInputSignal(
                     newInputFrame(
                         0,

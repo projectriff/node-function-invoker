@@ -1,8 +1,7 @@
 const { TextEncoder } = require("util");
 const StreamingPipeline = require("../lib/streaming-pipeline");
-const { PassThrough } = require("stream");
+const { PassThrough, Readable } = require("stream");
 const {
-    newFixedSource,
     newInputFrame,
     newInputSignal,
     newMappingTransform,
@@ -45,7 +44,7 @@ describe("streaming pipeline =>", () => {
 
         describe("with valid input signals =>", () => {
             beforeEach(() => {
-                fixedSource = newFixedSource([
+                fixedSource = Readable.from([
                     newStartSignal(
                         newStartFrame(["text/plain"], ["input1"], ["output1"])
                     ),
@@ -92,7 +91,7 @@ describe("streaming pipeline =>", () => {
 
         describe("with a closed input stream =>", () => {
             beforeEach(() => {
-                fixedSource = newFixedSource([
+                fixedSource = Readable.from([
                     newStartSignal(newStartFrame([], ["ignored"], [])),
                 ]);
             });
@@ -125,7 +124,7 @@ describe("streaming pipeline =>", () => {
         describe("with an immediately closing output stream =>", () => {
             const data = ["1", "4", "9"];
             beforeEach(() => {
-                fixedSource = newFixedSource([
+                fixedSource = Readable.from([
                     newStartSignal(
                         newStartFrame(
                             ["text/plain", "text/plain"],

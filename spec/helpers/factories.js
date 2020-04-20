@@ -1,6 +1,5 @@
 const { Message, Headers } = require("@projectriff/message");
 const MappingTransform = require("../../lib/mapping-transform");
-const FixedSource = require("./fixed-source");
 
 function tuplesToObject(headers) {
     const result = {};
@@ -56,9 +55,6 @@ module.exports = {
         return {
             data: outputFrame,
         };
-    },
-    newFixedSource: (data) => {
-        return new FixedSource(data);
     },
     newMappingTransform: (fn) => {
         return new MappingTransform(fn);

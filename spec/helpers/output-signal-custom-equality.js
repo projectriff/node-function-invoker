@@ -1,29 +1,11 @@
 module.exports = (firstOutputSignal, secondOutputSignal) => {
-    if (
-        !firstOutputSignal.getStart &&
-        !firstOutputSignal.getData &&
-        !secondOutputSignal.getStart &&
-        !secondOutputSignal.getData
-    ) {
+    if (!firstOutputSignal.getData && !secondOutputSignal.getData) {
         // pass on to other equality tester
         return undefined;
     }
 
-    if (xor(firstOutputSignal.getStart, secondOutputSignal.getStart)) {
-        return false;
-    }
     if (xor(firstOutputSignal.getData, secondOutputSignal.getData)) {
         return false;
-    }
-
-    if (firstOutputSignal.getStart) {
-        const firstContentTypes = firstOutputSignal
-            .getStart()
-            .getExpectedcontenttypesList();
-        const secondContentTypes = secondOutputSignal
-            .getStart()
-            .getExpectedcontenttypesList();
-        return firstContentTypes === secondContentTypes;
     }
 
     const firstData = firstOutputSignal.getData();

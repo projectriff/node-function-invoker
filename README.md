@@ -143,7 +143,7 @@ However, it is possible to send HTTP requests and receive HTTP responses if you 
 
 ### Prereqs
 
- - [Node](https://nodejs.org/en/download/) version required: 10+.
+ - [Node](https://nodejs.org/en/download/) version required: 10 (LTS), 12 (LTS) or 13.
  - Make sure to install the [EditorConfig](https://editorconfig.org/) plugin in your editing environment.
 
 #### Build

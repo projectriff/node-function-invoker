@@ -151,23 +151,7 @@ However, it is possible to send HTTP requests and receive HTTP responses if you 
  - Install dependencies by running `npm ci`.
  - Run the tests with `npm test`
 
-#### Full streaming setup
-
-1. Set up Kafka onto your K8s cluster (`kubectl apply` the file `kafka-broker.yaml` included in the [streaming processor project](https://github.com/projectriff/streaming-processor)).
-1. Set up Liiklus (`kubectl apply` the file `liiklus.yaml` included in the [streaming processor project](https://github.com/projectriff/streaming-processor)).
-1. Set up the Kafka Gateway by following these [instructions](https://github.com/projectriff/kafka-gateway).
-
-### End-to-end local run
-
- - Run Liiklus producers and consumers with this [project](https://github.com/projectriff-samples/liiklus-client).
- - Run this invoker:
-```shell script
- $ FUNCTION_URI="$(pwd)/samples/streaming-repeater" npm start
-```
- - Run the [processor](https://github.com/projectriff/streaming-processor) with the appropriate parameters.
- - Start sending data via the Liiklus producers.
-
-### Invoker local debug run
+### Run
 
 Execute the following and more detailed logs will be emitted:
 

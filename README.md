@@ -143,7 +143,7 @@ However, it is possible to send HTTP requests and receive HTTP responses if you 
 
 ### Prereqs
 
- - [Node](https://nodejs.org/en/download/) version required: 10+.
+ - [Node](https://nodejs.org/en/download/) version required: 10 (LTS), 12 (LTS) or 13.
  - Make sure to install the [EditorConfig](https://editorconfig.org/) plugin in your editing environment.
 
 #### Build
@@ -151,29 +151,28 @@ However, it is possible to send HTTP requests and receive HTTP responses if you 
  - Install dependencies by running `npm ci`.
  - Run the tests with `npm test`
 
-#### Full streaming setup
+### Run
 
-1. Set up Kafka onto your K8s cluster (`kubectl apply` the file `kafka-broker.yaml` included in the [streaming processor project](https://github.com/projectriff/streaming-processor)).
-1. Set up Liiklus (`kubectl apply` the file `liiklus.yaml` included in the [streaming processor project](https://github.com/projectriff/streaming-processor)).
-1. Set up the Kafka Gateway by following these [instructions](https://github.com/projectriff/kafka-gateway).
+#### Streaming
 
-### End-to-end local run
-
- - Run Liiklus producers and consumers with this [project](https://github.com/projectriff-samples/liiklus-client).
- - Run this invoker:
-```shell script
- $ FUNCTION_URI="$(pwd)/samples/streaming-repeater" npm start
-```
- - Run the [processor](https://github.com/projectriff/streaming-processor) with the appropriate parameters.
- - Start sending data via the Liiklus producers.
-
-### Invoker local debug run
-
-Execute the following and more detailed logs will be emitted:
+Execute the following:
 
 ```shell script
- $ FUNCTION_URI="$(pwd)/samples/streaming-repeater" NODE_DEBUG='riff' npm start
+ $ cd /path/to/node-function-invoker
+ $ FUNCTION_URI="/absolute/path/to/function.js" NODE_DEBUG='riff' node server.js
 ```
+
+#### Request-reply only
+
+If you just want to test request-reply functions, clone the [Streaming HTTP adapter](https://github.com/projectriff/streaming-http-adapter) and run:
+
+```shell script
+ $ cd /path/to/streaming-http-adapter
+ $ make
+ $ FUNCTION_URI="/absolute/path/to/function.js" NODE_DEBUG='riff' ./streaming-http-adapter node /path/to/node-function-invoker/server.js
+```
+
+You can then send HTTP POST requests to `http://localhost:8080` and interact with the function.
 
 ### Source formatting
 

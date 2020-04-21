@@ -153,11 +153,26 @@ However, it is possible to send HTTP requests and receive HTTP responses if you 
 
 ### Run
 
-Execute the following and more detailed logs will be emitted:
+#### Streaming
+
+Execute the following:
 
 ```shell script
- $ FUNCTION_URI="$(pwd)/samples/streaming-repeater" NODE_DEBUG='riff' npm start
+ $ cd /path/to/node-function-invoker
+ $ FUNCTION_URI="/absolute/path/to/function.js" NODE_DEBUG='riff' node server.js
 ```
+
+#### Request-reply only
+
+If you just want to test request-reply functions, clone the [Streaming HTTP adapter](https://github.com/projectriff/streaming-http-adapter) and run:
+
+```shell script
+ $ cd /path/to/streaming-http-adapter
+ $ make
+ $ FUNCTION_URI="/absolute/path/to/function.js" NODE_DEBUG='riff' ./streaming-http-adapter node /path/to/node-function-invoker/server.js
+```
+
+You can then send HTTP POST requests to `http://localhost:8080` and interact with the function.
 
 ### Source formatting
 

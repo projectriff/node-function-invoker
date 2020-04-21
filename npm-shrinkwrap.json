@@ -25,9 +25,9 @@
       }
     },
     "@grpc/grpc-js": {
-      "version": "0.7.7",
-      "resolved": "https://registry.npmjs.org/@grpc/grpc-js/-/grpc-js-0.7.7.tgz",
-      "integrity": "sha512-6FxMQaRPb173o6nYdg9ipjFu5NjcOk1lQwx17BFV6mXaXB3xElrqPyssiPa7NAFOm9Nc8/eBW7we4vBdL7pT8g==",
+      "version": "1.0.0",
+      "resolved": "https://registry.npmjs.org/@grpc/grpc-js/-/grpc-js-1.0.0.tgz",
+      "integrity": "sha512-i4Dd3ScEmfyw/zQsKwYwaA/aAxd++1Oyvw7xB/xqt8K/2959U4lQeMIcaU7cpeYiZMEHtt1l+MOtY0pz93Q6rQ==",
       "requires": {
         "semver": "^6.2.0"
       }

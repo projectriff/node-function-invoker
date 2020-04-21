@@ -100,7 +100,8 @@ module.exports.$destroy = async () => {
 ```
 
 The lifecycle methods are optional, and should only be implemented when needed.
-The hooks may be either traditional or async functions.
+Note that the lifecycle hooks must be fields on the exported function.
+The hooks may be either synchronous or async functions.
 Lifecycle functions have up to **10 seconds** to complete their work, or the function invoker will abort.
 
 ## Argument transformers

@@ -7,7 +7,7 @@ NVM_SOURCE=${NVM:-/usr/local/opt/nvm/nvm.sh}
 source "${NVM_SOURCE}"
 
 failed=false
-supported_node_versions=(10 12 13)
+supported_node_versions=(10 12 13 14)
 for node_version in "${supported_node_versions[@]}"; do
 	nvm use "${node_version}" \
 	&& npm --silent rebuild 1>/dev/null \

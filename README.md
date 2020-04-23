@@ -10,7 +10,7 @@ and invokes functions accordingly.
 
 ## Supported functions
 
-### Non-streaming functions
+### Non-streaming functions (a.k.a. request-reply functions)
 
 Non-streaming functions, more specifically "request-reply" functions, such as:
 ```js
@@ -68,6 +68,58 @@ The function **must** end the output streams when it is done emitting data or wh
 (if the output streams are [`pipe`](https://nodejs.org/api/stream.html#stream_readable_pipe_destination_options)'d from
 input streams, then this is automatically managed by this invoker).
 
+## Message support
+
+A message is an object that contains both headers and a payload.
+Message headers are a map with case-insensitive keys and multiple string values.
+
+Since JavaScript and Node have no built-in type for messages or headers, riff uses the [@projectriff/message](https://github.com/projectriff/node-message/) npm module. To use messages, functions should install the `@projectriff/message` package:
+```bash
+npm install --save @projectriff/message
+```
+
+By default, request-reply functions accept and produce payloads.
+They can be configured instead to **receive** either the entire message or the headers only.
+
+> Streaming functions can only receive messages. Configuring them with `$argumentType` will trigger an error.
+> However, they can produce either messages or payloads, just like request-reply functions.
+
+##### Receiving messages
+
+```js
+const { Message } = require('@projectriff/message');
+
+// a request-reply function that accepts a message, which is an instance of Message
+module.exports = message => {
+    const authorization = message.headers.getValue('Authorization');
+    // [...]
+};
+
+// tell the invoker the function wants to receive messages
+module.exports.$argumentType = 'message';
+```
+
+##### Producing messages
+
+```js
+const { Message } = require('@projectriff/message');
+
+const instanceId = Math.round(Math.random() * 10000);
+let invocationCount = 0;
+
+// a request-reply function that produces a Message
+module.exports = name => {
+    return Message.builder()
+        .addHeader('X-Riff-Instance', instanceId)
+        .addHeader('X-Riff-Count', invocationCount++)
+        .payload(`Hello ${name}!`)
+        .build();
+};
+
+// even if the function receives payloads, it can still produce a message
+module.exports.$argumentType = 'payload';
+```
+
 ## Lifecycle
 
 Functions that communicate with external services, like a database, can use the `$init` and `$destroy` lifecycle hooks
@@ -103,37 +155,6 @@ The lifecycle methods are optional, and should only be implemented when needed.
 Note that the lifecycle hooks must be fields on the exported function.
 The hooks may be either synchronous or async functions.
 Lifecycle functions have up to **10 seconds** to complete their work, or the function invoker will abort.
-
-## Argument transformers
-
-Sometimes, the content-type information is not enough to extract the payload the user function is supposed to interact
-with.
-
-Argument transformers are custom functions that take a `Message` (as defined by [`@projectriff/message`](https://github.com/projectriff/node-message))
-and return whatever the function needs.
-
-The `Message` payload is the result of the first content-type-based  conversion pass. For instance, if the input
-content-type is `application/json` and its payload is `'{"key": "value"}'` the payload of the `Message` exposed to the
-transformer will be the corresponding object representation (i.e. `{"key": "value"}`).
-
-Argument transformers are declared this way:
-
-```js
-module.exports.$argumentTransformers = [
-    // transformer for first input
-    (message) => {
-        return message.payload;
-    },
-    // transformer for second input
-    (message) => {
-        return message.headers.getValue('x-some-header');
-    },
-    // ...
-];
-```
-
-If `$argumentTransformers` is not declared, the default transformer assigned to each input extracts the `Message`
-payload.
 
 ## Supported protocols
 

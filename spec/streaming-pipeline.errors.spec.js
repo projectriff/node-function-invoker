@@ -58,6 +58,15 @@ describe("streaming pipeline =>", () => {
                 destinationStream.on("data", () => {
                     done(new Error("should not receive any data"));
                 });
+                let destinationErrored = false;
+                destinationStream.on("error", (err) => {
+                    destinationErrored = true;
+                    expect(err).toEqual({
+                        code: grpc.status.UNKNOWN,
+                        details:
+                            "Invoker: Protocol Violation: Invalid input signal type [object String]",
+                    });
+                });
                 finished(streamingPipeline, (err) => {
                     expect(err.type).toEqual(
                         "error-streaming-invalid-input-signal"
@@ -65,13 +74,9 @@ describe("streaming pipeline =>", () => {
                     expect(err.cause).toEqual(
                         "Invalid input signal type [object String]"
                     );
-                    expect(
-                        destinationStream.call.sendError
-                    ).toHaveBeenCalledWith({
-                        code: grpc.status.UNKNOWN,
-                        details:
-                            "Invoker: Protocol Violation: Invalid input signal type [object String]",
-                    });
+                    expect(destinationErrored).toBeTruthy(
+                        "destination stream should emit propagated error"
+                    );
                     done();
                 });
                 fixedSource.pipe(streamingPipeline, { end: false });
@@ -87,6 +92,15 @@ describe("streaming pipeline =>", () => {
                 destinationStream.on("data", () => {
                     done(new Error("should not receive any data"));
                 });
+                let destinationErrored = false;
+                destinationStream.on("error", (err) => {
+                    destinationErrored = true;
+                    expect(err).toEqual({
+                        code: grpc.status.UNKNOWN,
+                        details:
+                            "Invoker: Protocol Violation: Input is neither a start nor a data signal",
+                    });
+                });
                 finished(streamingPipeline, (err) => {
                     expect(err.type).toEqual(
                         "error-streaming-invalid-input-signal"
@@ -94,13 +108,9 @@ describe("streaming pipeline =>", () => {
                     expect(err.cause).toEqual(
                         "Input is neither a start nor a data signal"
                     );
-                    expect(
-                        destinationStream.call.sendError
-                    ).toHaveBeenCalledWith({
-                        code: grpc.status.UNKNOWN,
-                        details:
-                            "Invoker: Protocol Violation: Input is neither a start nor a data signal",
-                    });
+                    expect(destinationErrored).toBeTruthy(
+                        "destination stream should emit propagated error"
+                    );
                     done();
                 });
                 fixedSource.pipe(streamingPipeline, { end: false });
@@ -127,6 +137,17 @@ describe("streaming pipeline =>", () => {
                 destinationStream.on("data", () => {
                     done(new Error("should not receive any data"));
                 });
+
+                let destinationErrored = false;
+                destinationStream.on("error", (err) => {
+                    destinationErrored = true;
+                    expect(err).toEqual({
+                        code: grpc.status.UNKNOWN,
+                        details:
+                            "Invoker: Protocol Violation: Start signal has already been received. Rejecting start signal " +
+                            "with: output content types: [application/x-doom], input names: [input], output names: [output]",
+                    });
+                });
                 finished(streamingPipeline, (err) => {
                     expect(err.type).toEqual(
                         "error-streaming-too-many-start-signals"
@@ -135,14 +156,9 @@ describe("streaming pipeline =>", () => {
                         "Start signal has already been received. Rejecting start signal with: " +
                             "output content types: [application/x-doom], input names: [input], output names: [output]"
                     );
-                    expect(
-                        destinationStream.call.sendError
-                    ).toHaveBeenCalledWith({
-                        code: grpc.status.UNKNOWN,
-                        details:
-                            "Invoker: Protocol Violation: Start signal has already been received. Rejecting start signal " +
-                            "with: output content types: [application/x-doom], input names: [input], output names: [output]",
-                    });
+                    expect(destinationErrored).toBeTruthy(
+                        "destination stream should emit propagated error"
+                    );
                     done();
                 });
                 fixedSource.pipe(streamingPipeline, { end: false });
@@ -166,6 +182,15 @@ describe("streaming pipeline =>", () => {
                 destinationStream.on("data", () => {
                     done(new Error("should not receive any data"));
                 });
+                let destinationErrored = false;
+                destinationStream.on("error", (err) => {
+                    destinationErrored = true;
+                    expect(err).toEqual({
+                        code: grpc.status.UNKNOWN,
+                        details:
+                            "Invoker: Protocol Violation: Invalid output count 3: function has only 1 output(s)",
+                    });
+                });
                 finished(streamingPipeline, (err) => {
                     expect(err.type).toEqual(
                         "error-streaming-invalid-output-count"
@@ -173,13 +198,9 @@ describe("streaming pipeline =>", () => {
                     expect(err.cause).toEqual(
                         "Invalid output count 3: function has only 1 output(s)"
                     );
-                    expect(
-                        destinationStream.call.sendError
-                    ).toHaveBeenCalledWith({
-                        code: grpc.status.UNKNOWN,
-                        details:
-                            "Invoker: Protocol Violation: Invalid output count 3: function has only 1 output(s)",
-                    });
+                    expect(destinationErrored).toBeTruthy(
+                        "destination stream should emit propagated error"
+                    );
                     done();
                 });
                 fixedSource.pipe(streamingPipeline, { end: false });
@@ -203,6 +224,15 @@ describe("streaming pipeline =>", () => {
                 destinationStream.on("data", () => {
                     done(new Error("should not receive any data"));
                 });
+                let destinationErrored = false;
+                destinationStream.on("error", (err) => {
+                    destinationErrored = true;
+                    expect(err).toEqual({
+                        code: grpc.status.UNKNOWN,
+                        details:
+                            "Invoker: Protocol Violation: Start signal has not been received or processed yet. Rejecting data signal",
+                    });
+                });
                 finished(streamingPipeline, (err) => {
                     expect(err.type).toEqual(
                         "error-streaming-missing-start-signal"
@@ -210,13 +240,9 @@ describe("streaming pipeline =>", () => {
                     expect(err.cause).toEqual(
                         "Start signal has not been received or processed yet. Rejecting data signal"
                     );
-                    expect(
-                        destinationStream.call.sendError
-                    ).toHaveBeenCalledWith({
-                        code: grpc.status.UNKNOWN,
-                        details:
-                            "Invoker: Protocol Violation: Start signal has not been received or processed yet. Rejecting data signal",
-                    });
+                    expect(destinationErrored).toBeTruthy(
+                        "destination stream should emit propagated error"
+                    );
                     done();
                 });
                 fixedSource.pipe(streamingPipeline, { end: false });
@@ -253,6 +279,14 @@ describe("streaming pipeline =>", () => {
             destinationStream.on("data", () => {
                 done(new Error("should not receive any data"));
             });
+            let destinationErrored = false;
+            destinationStream.on("error", (err) => {
+                destinationErrored = true;
+                expect(err).toEqual({
+                    code: grpc.status.INVALID_ARGUMENT,
+                    details: `Invoker: Not Acceptable: Unsupported content-type 'text/zglorbf' for output #0`,
+                });
+            });
             finished(streamingPipeline, (err) => {
                 expect(err.type).toEqual(
                     "error-output-content-type-unsupported"
@@ -260,10 +294,9 @@ describe("streaming pipeline =>", () => {
                 expect(err.cause).toEqual(
                     `Unsupported content-type 'text/zglorbf' for output #0`
                 );
-                expect(destinationStream.call.sendError).toHaveBeenCalledWith({
-                    code: grpc.status.INVALID_ARGUMENT,
-                    details: `Invoker: Not Acceptable: Unsupported content-type 'text/zglorbf' for output #0`,
-                });
+                expect(destinationErrored).toBeTruthy(
+                    "destination stream should emit propagated error"
+                );
                 done();
             });
             fixedSource.pipe(streamingPipeline, { end: false });
@@ -297,6 +330,14 @@ describe("streaming pipeline =>", () => {
             destinationStream.on("data", () => {
                 done(new Error("should not receive any data"));
             });
+            let destinationErrored = false;
+            destinationStream.on("error", (err) => {
+                destinationErrored = true;
+                expect(err).toEqual({
+                    code: grpc.status.INVALID_ARGUMENT,
+                    details: `Invoker: Unsupported Media Type: Unsupported content-type 'application/jackson-five' for input #0`,
+                });
+            });
             finished(streamingPipeline, (err) => {
                 expect(err.type).toEqual(
                     "error-input-content-type-unsupported"
@@ -304,10 +345,9 @@ describe("streaming pipeline =>", () => {
                 expect(err.cause).toEqual(
                     `Unsupported content-type 'application/jackson-five' for input #0`
                 );
-                expect(destinationStream.call.sendError).toHaveBeenCalledWith({
-                    code: grpc.status.INVALID_ARGUMENT,
-                    details: `Invoker: Unsupported Media Type: Unsupported content-type 'application/jackson-five' for input #0`,
-                });
+                expect(destinationErrored).toBeTruthy(
+                    "destination stream should emit propagated error"
+                );
                 done();
             });
             fixedSource.pipe(streamingPipeline, { end: false });
@@ -340,16 +380,23 @@ describe("streaming pipeline =>", () => {
             destinationStream.on("data", () => {
                 done(new Error("should not receive any data"));
             });
+            let destinationErrored = false;
+            destinationStream.on("error", (err) => {
+                destinationErrored = true;
+                expect(err).toEqual({
+                    code: grpc.status.UNKNOWN,
+                    details:
+                        "Invoker: Unexpected Invocation Error: Cannot read property 'nope' of null",
+                });
+            });
             finished(streamingPipeline, (err) => {
                 expect(err.type).toEqual("streaming-function-runtime-error");
                 expect(err.cause.message).toEqual(
                     `Cannot read property 'nope' of null`
                 );
-                expect(destinationStream.call.sendError).toHaveBeenCalledWith({
-                    code: grpc.status.UNKNOWN,
-                    details:
-                        "Invoker: Unexpected Invocation Error: Cannot read property 'nope' of null",
-                });
+                expect(destinationErrored).toBeTruthy(
+                    "destination stream should emit propagated error"
+                );
                 done();
             });
             fixedSource.pipe(streamingPipeline, { end: false });
@@ -383,16 +430,23 @@ describe("streaming pipeline =>", () => {
             destinationStream.on("data", () => {
                 done(new Error("should not receive any data"));
             });
+            let destinationErrored = false;
+            destinationStream.on("error", (err) => {
+                destinationErrored = true;
+                expect(err).toEqual({
+                    code: grpc.status.UNKNOWN,
+                    details:
+                        "Invoker: Unexpected Error: SyntaxError: Unexpected token i in JSON at position 0",
+                });
+            });
             finished(streamingPipeline, (err) => {
                 expect(err.type).toEqual("error-input-invalid");
                 expect(err.cause.message).toEqual(
                     "Unexpected token i in JSON at position 0"
                 );
-                expect(destinationStream.call.sendError).toHaveBeenCalledWith({
-                    code: grpc.status.UNKNOWN,
-                    details:
-                        "Invoker: Unexpected Error: SyntaxError: Unexpected token i in JSON at position 0",
-                });
+                expect(destinationErrored).toBeTruthy(
+                    "destination stream should emit propagated error"
+                );
                 done();
             });
             fixedSource.pipe(streamingPipeline, { end: false });
@@ -437,12 +491,19 @@ describe("streaming pipeline =>", () => {
             destinationStream.on("data", () => {
                 done(new Error("should not receive any data"));
             });
-            finished(streamingPipeline, (err) => {
-                expect(err.message).toEqual("Function failed");
-                expect(destinationStream.call.sendError).toHaveBeenCalledWith({
+            let destinationErrored = false;
+            destinationStream.on("error", (err) => {
+                destinationErrored = true;
+                expect(err).toEqual({
                     code: grpc.status.UNKNOWN,
                     details: "Invoker: Unexpected Error: Function failed",
                 });
+            });
+            finished(streamingPipeline, (err) => {
+                expect(err.message).toEqual("Function failed");
+                expect(destinationErrored).toBeTruthy(
+                    "destination stream should emit propagated error"
+                );
                 done();
             });
             fixedSource.pipe(streamingPipeline, { end: false });
@@ -483,16 +544,23 @@ describe("streaming pipeline =>", () => {
             destinationStream.on("data", () => {
                 done(new Error("should not receive any data"));
             });
+            let destinationErrored = false;
+            destinationStream.on("error", (err) => {
+                destinationErrored = true;
+                expect(err).toEqual({
+                    code: grpc.status.UNKNOWN,
+                    details:
+                        "Invoker: Unexpected Error: TypeError: Cannot convert a Symbol value to a string",
+                });
+            });
             finished(streamingPipeline, (err) => {
                 expect(err.type).toEqual("error-output-invalid");
                 expect(err.cause.message).toEqual(
                     "Cannot convert a Symbol value to a string"
                 );
-                expect(destinationStream.call.sendError).toHaveBeenCalledWith({
-                    code: grpc.status.UNKNOWN,
-                    details:
-                        "Invoker: Unexpected Error: TypeError: Cannot convert a Symbol value to a string",
-                });
+                expect(destinationErrored).toBeTruthy(
+                    "destination stream should emit propagated error"
+                );
                 done();
             });
             fixedSource.pipe(streamingPipeline, { end: false });
@@ -560,14 +628,26 @@ describe("streaming pipeline =>", () => {
             streamingPipeline.destroy();
         });
 
-        it("emits an error", (done) => {
+        it("cancels the call", (done) => {
             destinationStream.on("data", () => {
                 done(new Error("should not receive any data"));
+            });
+            let destinationErrored = false;
+            destinationStream.on("error", (err) => {
+                destinationErrored = true;
+                expect(err).toEqual({
+                    code: grpc.status.UNKNOWN,
+                    details:
+                        "Invoker: Unexpected Error: Function must declare exactly 2 argument transformer(s). Found 1",
+                });
             });
             finished(streamingPipeline, (err) => {
                 expect(err.type).toEqual("error-argument-transformer");
                 expect(err.cause).toEqual(
                     "Function must declare exactly 2 argument transformer(s). Found 1"
+                );
+                expect(destinationErrored).toBeTruthy(
+                    "destination stream should emit propagated error"
                 );
                 done();
             });

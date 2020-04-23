@@ -11,8 +11,8 @@ module.exports = (inputs, outputs) => {
         .zip(wordStream)
         .flatMap((numberWordPair) => {
             const result = [];
-            for (let i = 0; i < numberWordPair[0]; i++) {
-                result.push(numberWordPair[1]);
+            for (let i = 0; i < numberWordPair[0].payload; i++) {
+                result.push(numberWordPair[1].payload);
             }
             return _(result);
         })

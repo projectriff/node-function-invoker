@@ -1,4 +1,5 @@
 const MappingTransform = require("../lib/mapping-transform");
+const { Message } = require("@projectriff/message");
 
 describe("MappingTransform =>", () => {
     let mappingTransform;
@@ -18,7 +19,11 @@ describe("MappingTransform =>", () => {
                 expect(chunk).toEqual(42);
                 done();
             });
-            mappingTransform.write({ foo: () => 42 });
+            mappingTransform.write(
+                Message.builder()
+                    .payload({ foo: () => 42 })
+                    .build()
+            );
         });
     });
 
@@ -33,7 +38,11 @@ describe("MappingTransform =>", () => {
                 expect(chunk).toEqual(42);
                 done();
             });
-            mappingTransform.write({ foo: () => 42 });
+            mappingTransform.write(
+                Message.builder()
+                    .payload({ foo: () => 42 })
+                    .build()
+            );
         });
     });
 
@@ -48,7 +57,47 @@ describe("MappingTransform =>", () => {
                 expect(chunk).toEqual(42);
                 done();
             });
-            mappingTransform.write({ foo: () => 42 });
+            mappingTransform.write(
+                Message.builder()
+                    .payload({ foo: () => 42 })
+                    .build()
+            );
+        });
+    });
+
+    describe("when dealing with headers argument type =>", () => {
+        beforeEach(() => {
+            const fn = (headers) => headers.getValue("X-Square") ** 2;
+            fn.$argumentType = "headers";
+            mappingTransform = new MappingTransform(fn);
+        });
+
+        it("maps them to streaming transform", (done) => {
+            mappingTransform.on("data", (chunk) => {
+                expect(chunk).toEqual(9);
+                done();
+            });
+            mappingTransform.write(
+                Message.builder().addHeader("X-Square", 3).build()
+            );
+        });
+    });
+
+    describe("when dealing with message argument type =>", () => {
+        beforeEach(() => {
+            const fn = (msg) => msg.headers.getValue("X-Sum") + msg.payload;
+            fn.$argumentType = "message";
+            mappingTransform = new MappingTransform(fn);
+        });
+
+        it("maps them to streaming transform", (done) => {
+            mappingTransform.on("data", (chunk) => {
+                expect(chunk).toEqual(5);
+                done();
+            });
+            mappingTransform.write(
+                Message.builder().addHeader("X-Sum", 3).payload(2).build()
+            );
         });
     });
 });

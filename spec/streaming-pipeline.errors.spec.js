@@ -567,94 +567,6 @@ describe("streaming pipeline =>", () => {
         });
     });
 
-    describe("with a function with incorrect argument transformers =>", () => {
-        it("rejects the function with an invalid declaration of transformers ", () => {
-            try {
-                const userFunction = require("./helpers/transformers/invalid-argument-transformers-streaming-function");
-                new StreamingPipeline(userFunction, destinationStream);
-                fail("should fail");
-            } catch (err) {
-                expect(err.type).toEqual("error-argument-transformer");
-                expect(err.cause).toEqual(
-                    "Argument transformers must be declared in an array. Found: string"
-                );
-            }
-        });
-
-        it("rejects the function with an invalid transformer ", () => {
-            try {
-                const userFunction = require("./helpers/transformers/invalid-argument-transformer-streaming-function");
-                new StreamingPipeline(userFunction, destinationStream);
-                fail("should fail");
-            } catch (err) {
-                expect(err.type).toEqual("error-argument-transformer");
-                expect(err.cause).toEqual(
-                    "Argument transformer #2 must be a function. Found: number"
-                );
-            }
-        });
-
-        it("rejects the function with a transformer with a wrong arity", () => {
-            try {
-                const userFunction = require("./helpers/transformers/wrong-arity-argument-transformers-streaming-function");
-                new StreamingPipeline(userFunction, destinationStream);
-                fail("should fail");
-            } catch (err) {
-                expect(err.type).toEqual("error-argument-transformer");
-                expect(err.cause).toEqual(
-                    "Argument transformer #2 must be a single-parameter function. Found: 0 parameter(s)"
-                );
-            }
-        });
-    });
-
-    describe("with an invalid count of argument transformers =>", () => {
-        const userFunction = require("./helpers/transformers/invalid-argument-transformer-count-streaming-function");
-
-        beforeEach(() => {
-            streamingPipeline = new StreamingPipeline(
-                userFunction,
-                destinationStream
-            );
-            fixedSource = Readable.from([
-                newStartSignal(
-                    newStartFrame(["text/plain"], ["in1", "in2"], ["out"])
-                ),
-            ]);
-        });
-
-        afterEach(() => {
-            fixedSource.destroy();
-            streamingPipeline.destroy();
-        });
-
-        it("cancels the call", (done) => {
-            destinationStream.on("data", () => {
-                done(new Error("should not receive any data"));
-            });
-            let destinationErrored = false;
-            destinationStream.on("error", (err) => {
-                destinationErrored = true;
-                expect(err).toEqual({
-                    code: grpc.status.UNKNOWN,
-                    details:
-                        "Invoker: Unexpected Error: Function must declare exactly 2 argument transformer(s). Found 1",
-                });
-            });
-            finished(streamingPipeline, (err) => {
-                expect(err.type).toEqual("error-argument-transformer");
-                expect(err.cause).toEqual(
-                    "Function must declare exactly 2 argument transformer(s). Found 1"
-                );
-                expect(destinationErrored).toBeTruthy(
-                    "destination stream should emit propagated error"
-                );
-                done();
-            });
-            fixedSource.pipe(streamingPipeline, { end: false });
-        });
-    });
-
     describe("with a request-reply function =>", () => {
         it("throws an error when constructing", () => {
             const userFunction = () => 42;
@@ -664,6 +576,21 @@ describe("streaming pipeline =>", () => {
             ).toThrow(
                 new Error(
                     `SteamingPipeline expects a function with "node-streams" interaction model, but was "request-reply" instead`
+                )
+            );
+        });
+    });
+
+    describe("with an $argumentType set => ", () => {
+        it("throws an error when constructing", () => {
+            const userFunction = () => 42;
+            userFunction.$interactionModel = "node-streams";
+            userFunction.$argumentType = "payload";
+            expect(
+                () => new StreamingPipeline(userFunction, destinationStream)
+            ).toThrow(
+                new Error(
+                    `Streaming functions cannot be configured with $argumentType`
                 )
             );
         });

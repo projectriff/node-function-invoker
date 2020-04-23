@@ -5,7 +5,7 @@ module.exports = (inputs, outputs) => {
     let n = 0;
     let mean = 0;
     const meanStream = miss.through.obj((newValue, _, callback) => {
-        mean = stats.addToMean(mean, n++, newValue);
+        mean = stats.addToMean(mean, n++, newValue.payload);
         callback(null, mean);
     });
     inputs.$order[0].pipe(meanStream).pipe(outputs.$order[0]);

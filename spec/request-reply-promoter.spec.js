@@ -1,6 +1,7 @@
 const { newMappingTransform } = require("./helpers/factories");
 const promoteFunction = require("../lib/request-reply-promoter");
 const { PassThrough, Readable } = require("stream");
+const { Message } = require("@projectriff/message");
 
 describe("function promoter =>", () => {
     const data = [1, 2, 4];
@@ -17,7 +18,9 @@ describe("function promoter =>", () => {
     let source;
 
     beforeEach(() => {
-        source = Readable.from(data);
+        source = Readable.from(
+            data.map((payload) => Message.builder().payload(payload).build())
+        );
         streamingOutput = new PassThrough({ objectMode: true });
     });
 
@@ -58,33 +61,5 @@ describe("function promoter =>", () => {
 
         const result = promoteFunction(streamingUserFunction);
         result({ $order: [source] }, { $order: [streamingOutput] });
-    });
-
-    describe("when called with functions with an argument transformer => ", () => {
-        it("adapts the argument transformer", () => {
-            const someFunction = require("./helpers/transformers/valid-argument-transformers-request-reply-function");
-
-            const promotedFunction = promoteFunction(someFunction);
-
-            const originalTransformer = someFunction["$argumentTransformers"];
-            expect(originalTransformer).toBeTruthy();
-            expect(promotedFunction["$argumentTransformers"]).toEqual(
-                originalTransformer
-            );
-        });
-    });
-
-    describe("when called with functions with an invalid number of argument transformers => ", () => {
-        it("adapts the argument transformer", () => {
-            const someFunction = require("./helpers/transformers/valid-argument-transformers-request-reply-function");
-
-            const promotedFunction = promoteFunction(someFunction);
-
-            const originalTransformer = someFunction["$argumentTransformers"];
-            expect(originalTransformer).toBeTruthy();
-            expect(promotedFunction["$argumentTransformers"]).toEqual(
-                originalTransformer
-            );
-        });
     });
 });

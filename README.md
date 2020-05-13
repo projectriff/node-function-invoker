@@ -39,6 +39,18 @@ module.exports.$interactionModel = 'request-reply';
 Streaming functions must comply to the following signature:
 ```js
 module.exports = (inputStreams, outputStreams) => {
+    const { numbers, letters } = inputStreams;
+    const { repetitions } = outputStreams;
+    // do something
+};
+module.exports.$interactionModel = 'node-streams';
+```
+
+Please note that streaming functions must always declare the corresponding interaction mode.
+
+Streams can also be looked up by index:
+```js
+module.exports = (inputStreams, outputStreams) => {
     const firstInputStream = inputStreams.$order[0];
     const firstOutputStream = outputStreams.$order[0];
     const secondOutputStream = outputStreams.$order[1];
@@ -47,36 +59,20 @@ module.exports = (inputStreams, outputStreams) => {
 module.exports.$interactionModel = 'node-streams';
 ```
 
-Please note that streaming functions must always declare the corresponding interaction mode.
-
-Parameters can also be looked up by name:
-```js
-module.exports = (inputStreams, outputStreams) => {
-    const { numbers, letters } = inputStreams;
-    const { repetitions } = outputStreams;
-    // do something
-};
-module.exports.$interactionModel = 'node-streams';
-```
-
-
 Input streams are [Readable streams](https://nodejs.org/api/stream.html#stream_readable_streams).
 
 Output streams are [Writable streams](https://nodejs.org/api/stream.html#stream_class_stream_readable).
 
 The function **must** end the output streams when it is done emitting data or when an error occurs
 (if the output streams are [`pipe`](https://nodejs.org/api/stream.html#stream_readable_pipe_destination_options)'d from
-input streams, then this is automatically managed by this invoker).
+input streams, then this is automatically managed).
 
 ## Message support
 
 A message is an object that contains both headers and a payload.
 Message headers are a map with case-insensitive keys and multiple string values.
 
-Since JavaScript and Node have no built-in type for messages or headers, riff uses the [@projectriff/message](https://github.com/projectriff/node-message/) npm module. To use messages, functions should install the `@projectriff/message` package:
-```bash
-npm install --save @projectriff/message
-```
+Since JavaScript and Node have no built-in type for messages or headers, riff uses the [@projectriff/message](https://github.com/projectriff/node-message/) npm module.
 
 By default, request-reply functions accept and produce payloads.
 They can be configured instead to **receive** either the entire message or the headers only.
@@ -87,8 +83,6 @@ They can be configured instead to **receive** either the entire message or the h
 ##### Receiving messages
 
 ```js
-const { Message } = require('@projectriff/message');
-
 // a request-reply function that accepts a message, which is an instance of Message
 module.exports = message => {
     const authorization = message.headers.getValue('Authorization');
@@ -100,6 +94,11 @@ module.exports.$argumentType = 'message';
 ```
 
 ##### Producing messages
+
+To produce messages, functions should install the `@projectriff/message` package:
+```bash
+npm install --save @projectriff/message
+```
 
 ```js
 const { Message } = require('@projectriff/message');
@@ -115,9 +114,6 @@ module.exports = name => {
         .payload(`Hello ${name}!`)
         .build();
 };
-
-// even if the function receives payloads, it can still produce a message
-module.exports.$argumentType = 'payload';
 ```
 
 ## Lifecycle

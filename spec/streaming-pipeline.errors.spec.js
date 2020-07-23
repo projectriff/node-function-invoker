@@ -436,7 +436,7 @@ describe("streaming pipeline =>", () => {
                 expect(err).toEqual({
                     code: grpc.status.INVALID_ARGUMENT,
                     details:
-                        "Invoker: Bad Request: SyntaxError: Unexpected token i in JSON at position 0",
+                        "Invoker: Bad Input Signal: SyntaxError: Unexpected token i in JSON at position 0",
                 });
             });
             finished(streamingPipeline, (err) => {

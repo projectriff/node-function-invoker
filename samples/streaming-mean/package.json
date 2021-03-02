@@ -10,6 +10,6 @@
   "license": "Apache-2.0",
   "dependencies": {
     "mississippi": "^4.0.0",
-    "simple-statistics": "^7.4.0"
+    "simple-statistics": "^7.6.0"
   }
 }
